@@ -1,7 +1,10 @@
-#include "envcheck.h"
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+
+#include "envcheck.h"
+#include "s3m.h"
+#include "stm.h"
 
 int main(int argc, char *argv[]) {
     int return_value = EXIT_SUCCESS;
@@ -15,8 +18,12 @@ int main(int argc, char *argv[]) {
     S3Mfile = fopen(argv[1], "rb");
     STMfile = fopen(argv[2], "wb");
     
-    if (S3Mfile == NULL || STMfile == NULL)
+    if (S3Mfile == NULL || STMfile == NULL) {
+        return_value = EXIT_FAILURE;
+        perror("Failed to open file");
         goto closefiledescriptors;
+    }
+        
     
     /* more code soon */
     

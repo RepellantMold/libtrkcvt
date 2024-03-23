@@ -3,3 +3,5 @@
 #include <string.h>
 
 #include "envcheck.h"
+#include "s3m.h"
+#include "stm.h"
