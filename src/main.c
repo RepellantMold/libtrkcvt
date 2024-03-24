@@ -3,6 +3,7 @@
 #include <string.h>
 
 #include "envcheck.h"
+#include "ext.h"
 #include "s3m.h"
 #include "stm.h"
 

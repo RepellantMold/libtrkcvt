@@ -1,6 +1,8 @@
+#include "envcheck.h"
+#include "ext.h"
 #include "stm.h"
 
-unsigned char stm_song_header[48] = {
+u8 stm_song_header[48] = {
   /* song title (ASCIIZ) */
   '\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0', 
   '\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0',
@@ -27,10 +29,10 @@ unsigned char stm_song_header[48] = {
   0x40,
 
   /* reserved */
-  0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+  0x58, 0x58, 0x58, 0x58, 0x58, 0x58, 0x58, 0x58, 0x58, 0x58, 0x58, 0x58, 0x58
 };
 
-unsigned char stm_sample_header[32] = {
+u8 stm_sample_header[32] = {
   /* filename (ASCIIZ) */
   '\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0', 
 
@@ -64,3 +66,4 @@ unsigned char stm_sample_header[32] = {
   /* internal segment address/(in modules:)length in paragraphs */
   0, 0
 };
+

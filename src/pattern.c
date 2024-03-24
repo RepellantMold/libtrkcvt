@@ -2,10 +2,11 @@
 #include <stdio.h>
 
 #include "envcheck.h"
+#include "ext.h"
 #include "s3m.h"
 #include "stm.h"
 
-void convert_effect(unsigned char effect, unsigned char parameter) {
+void convert_effect(u8 effect, u8 parameter) {
   switch (effect) {
     default:
       puts("WARNING: unknown effect!");
@@ -77,4 +78,33 @@ void convert_effect(unsigned char effect, unsigned char parameter) {
   if (!parameter)
     puts("WARNING: there's no effect memory, this will be treated as a no-op.");
   return;
+}
+
+/* prototype function (NOT TESTED) */
+char* parse_s3m_pattern(FILE* file, usize position) {
+  usize pattern_size;
+  char* buffer;
+  u8 c = 1, r = 1, cv = 0;
+  char* p[S3M_UNPACKED_PATTERN_SIZE];
+
+  fseek(file, position, SEEK_SET);
+
+  fread(pattern_size, sizeof(short int), 1, file);
+  buffer = malloc(pattern_size);
+
+  fread(buffer, sizeof(char), pattern_size, file);
+
+  loop {
+    cv = *(buffer++);
+    if(!cv) {r++; break;}
+    c = (cv & 15) + 1;
+
+    p[c*r*1] = (cv & 0x20) ? *(buffer++) : 0xFF;
+    p[c*r*2] = (cv & 0x20) ? *(buffer++) : 0x00;
+    p[c*r*3] = (cv & 0x40) ? *(buffer++) : 0xFF;
+    p[c*r*4] = (cv & 0x80) ? *(buffer++) : 0x00;
+    p[c*r*5] = (cv & 0x80) ? *(buffer++) : 0x00;
+  }
+
+  return p;
 }
