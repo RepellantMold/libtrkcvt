@@ -7,6 +7,8 @@
 #include "stm.h"
 
 void convert_effect(u8 effect, u8 parameter) {
+  u8 hinib = parameter >> 4;
+  u8 lownib = parameter & 0x0F;
   switch (effect) {
     default:
       puts("WARNING: unknown effect!");
@@ -37,8 +39,10 @@ void convert_effect(u8 effect, u8 parameter) {
 
     /* volume slide */
     case 4:
-      if ((parameter & 0xF0) == 0xF || (parameter & 0x0F) == 0xF)
+      if (hinib == 0xF || lownib == 0xF)
         puts("WARNING: there's no fine volume slides!");
+      else if (hinib != 0 && lownib != 0)
+        printf("WARNING: both x and y specified (not allowed!); x = %d, y = %d, y will take priority!", hinib, lownib);
       goto noeffectmemory;
       break;
 
@@ -46,7 +50,7 @@ void convert_effect(u8 effect, u8 parameter) {
     case 6:
     case 5:
       if (parameter >= 0xE0)
-        puts("WARNING: there's no fine porta up/down!");
+        puts("WARNING: there's no fine/extra-fine porta up/down!");
       goto noeffectmemory;
       break;
 
@@ -81,32 +85,27 @@ void convert_effect(u8 effect, u8 parameter) {
 }
 
 /* prototype function (NOT TESTED) */
-char* parse_s3m_pattern(FILE* file, usize position) {
+void parse_s3m_pattern(FILE* file, usize position) {
   u16 pattern_size = 0;
   char* buffer;
-  u8 c = 1, r = 1, cv = 0;
-  char* p;
+  u8 c = 0, r = 0, cv = 0;
 
   fseek(file, position, SEEK_SET);
 
   fread(&pattern_size, sizeof(short int), 1, file);
   buffer = malloc(pattern_size);
 
-  p = calloc(S3M_UNPACKED_PATTERN_SIZE, sizeof(char));
-
   fread(buffer, sizeof(char), pattern_size, file);
 
   loop {
     cv = *(buffer++);
     if(!cv) {r++; break;}
-    c = (cv & 15) + 1;
+    c = (cv & 15);
 
-    p[c*r*1] = (cv & 0x20) ? *(buffer++) : 0xFF;
-    p[c*r*2] = (cv & 0x20) ? *(buffer++) : 0x00;
-    p[c*r*3] = (cv & 0x40) ? *(buffer++) : 0xFF;
-    p[c*r*4] = (cv & 0x80) ? *(buffer++) : 0x00;
-    p[c*r*5] = (cv & 0x80) ? *(buffer++) : 0x00;
+    s3m_unpacked_pattern[r][c][0] = (cv & 0x20) ? *(buffer++) : 0xFF;
+    s3m_unpacked_pattern[r][c][1] = (cv & 0x20) ? *(buffer++) : 0x00;
+    s3m_unpacked_pattern[r][c][2] = (cv & 0x40) ? *(buffer++) : 0xFF;
+    s3m_unpacked_pattern[r][c][3] = (cv & 0x80) ? *(buffer++) : 0x00;
+    s3m_unpacked_pattern[r][c][4] = (cv & 0x80) ? *(buffer++) : 0x00;
   }
-
-  return p;
 }

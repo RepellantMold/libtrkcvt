@@ -22,4 +22,4 @@ enable_c_compiler_flag_if_supported("-Wall")
 enable_c_compiler_flag_if_supported("-Wextra")
 enable_c_compiler_flag_if_supported("-pedantic")
 
-add_executable(s3m2stm src/main.c src/header.c src/sample.c src/pattern.c)
+add_executable(s3m2stm src/main.c)
