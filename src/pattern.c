@@ -37,7 +37,7 @@ void convert_effect(u8 effect, u8 parameter) {
 
     /* volume slide */
     case 4:
-      if ((parameter & 0xF0) || (parameter & 0x0F)) 
+      if ((parameter & 0xF0) == 0xF || (parameter & 0x0F) == 0xF)
         puts("WARNING: there's no fine volume slides!");
       goto noeffectmemory;
       break;
@@ -54,7 +54,7 @@ void convert_effect(u8 effect, u8 parameter) {
     case 7:
       goto noeffectmemory;
       break;
-    
+
     /* vibrato */
     case 8:
       puts("WARNING: vibrato depth is doubled compared to other trackers.");
@@ -82,15 +82,17 @@ void convert_effect(u8 effect, u8 parameter) {
 
 /* prototype function (NOT TESTED) */
 char* parse_s3m_pattern(FILE* file, usize position) {
-  usize pattern_size;
+  u16 pattern_size = 0;
   char* buffer;
   u8 c = 1, r = 1, cv = 0;
-  char* p[S3M_UNPACKED_PATTERN_SIZE];
+  char* p;
 
   fseek(file, position, SEEK_SET);
 
-  fread(pattern_size, sizeof(short int), 1, file);
+  fread(&pattern_size, sizeof(short int), 1, file);
   buffer = malloc(pattern_size);
+
+  p = calloc(S3M_UNPACKED_PATTERN_SIZE, sizeof(char));
 
   fread(buffer, sizeof(char), pattern_size, file);
 

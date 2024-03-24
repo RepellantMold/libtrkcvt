@@ -67,3 +67,12 @@ u8 stm_sample_header[32] = {
   0, 0
 };
 
+void convert_song_orders(unsigned char *s3m_order_array, usize length) {
+  usize i = 0;
+  for (; i < STM_ORDER_LIST_SIZE; i++) {
+    stm_song_header[i] = (s3m_order_array[i] >= STM_MAXPAT)
+                         ? s3m_order_array
+                         : STM_ORDER_END;
+    if (i >= length) break;
+  }
+}
