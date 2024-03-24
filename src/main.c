@@ -4,6 +4,7 @@
 
 #include "envcheck.h"
 #include "ext.h"
+#include "main.h"
 #include "s3m.h"
 #include "stm.h"
 

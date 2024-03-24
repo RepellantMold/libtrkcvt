@@ -2,7 +2,6 @@
  * Helpful preprocessor things
  */
 
-#pragma once
 #ifndef __S3M_H
 #define __S3M_H
 

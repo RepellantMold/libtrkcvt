@@ -1,4 +1,3 @@
-#pragma once
 #ifndef __STM_H
 #define __STM_H
 
@@ -79,5 +78,7 @@ u8 stm_sample_header[32] = {
 };
 
 u8 stm_order_list[STM_ORDER_LIST_SIZE] = {STM_ORDER_END};
+
+u8 stm_pattern[64][4][4] = {{{0xFF, 0x01, 0x80, 0x00}}};
 
 #endif

@@ -6,7 +6,7 @@
 #include "s3m.h"
 #include "stm.h"
 
-void convert_effect(u8 effect, u8 parameter) {
+void check_effect(u8 effect, u8 parameter) {
   u8 hinib = parameter >> 4;
   u8 lownib = parameter & 0x0F;
   switch (effect) {
@@ -107,5 +107,27 @@ void parse_s3m_pattern(FILE* file, usize position) {
     s3m_unpacked_pattern[r][c][2] = (cv & 0x40) ? *(buffer++) : 0xFF;
     s3m_unpacked_pattern[r][c][3] = (cv & 0x80) ? *(buffer++) : 0x00;
     s3m_unpacked_pattern[r][c][4] = (cv & 0x80) ? *(buffer++) : 0x00;
+  }
+}
+
+void convert_s3m_pattern_to_stm(void) {
+  usize r = 0, c = 0;
+  u8 note = 0xFF, ins = 0, volume = 0xFF, effect = 0, parameter = 0;
+  
+  for(c = 0; c < 4; c++) {
+    for(r = 0; r < 64; r++) {
+      note = s3m_unpacked_pattern[r][c][0],
+      ins = s3m_unpacked_pattern[r][c][1],
+      volume = s3m_unpacked_pattern[r][c][2],
+      effect = s3m_unpacked_pattern[r][c][3],
+      parameter = s3m_unpacked_pattern[r][c][4];
+
+
+      check_effect(effect, parameter);
+      stm_pattern[r][c][0] = note;
+      stm_pattern[r][c][1] = (ins << 4) | (volume & 15);
+      stm_pattern[r][c][2] = ((volume & 7) << 3) | (effect & 15);
+      stm_pattern[r][c][3] = parameter;
+    }
   }
 }

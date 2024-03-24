@@ -2,7 +2,6 @@
  * some ANSI C "extensions" to help code readability
  * based on https://github.com/vkclarke/ansi-c-extensions
  */
-#pragma once
 #ifndef __ANSI_EXT_H
 #define __ANSI_EXT_H
 #include <stddef.h>
