@@ -22,11 +22,59 @@ enum s3m_song_flags {
     S3M_CUSTOMDATA = 128
 };
 
+enum s3m_sample_type {
+    S3MSMPTYPE_MSG = 0,
+    S3MSMPTYPE_SMP = 1,
+    S3MSMPTYPE_ADLIBMEL = 2,
+    S3MSMPTYPE_ADLIBDRUM = 3
+};
+
 enum s3m_sample_flags {
     S3MSMP_LOOP = 1,
     S3MSMP_STEREO = 2,
     S3MSMP_16BIT = 4
 };
+
+enum s3m_channel_type {
+    S3MCHN_LEFT1 = 0,
+    S3MCHN_LEFT2 = 1,
+    S3MCHN_LEFT3 = 2,
+    S3MCHN_LEFT4 = 3,
+    S3MCHN_LEFT5 = 4,
+    S3MCHN_LEFT6 = 5,
+    S3MCHN_LEFT7 = 6,
+    S3MCHN_LEFT8 = 7,
+
+    S3MCHN_RIGHT1 = 8,
+    S3MCHN_RIGHT2 = 9,
+    S3MCHN_RIGHT3 = 10,
+    S3MCHN_RIGHT4 = 11,
+    S3MCHN_RIGHT5 = 12,
+    S3MCHN_RIGHT6 = 13,
+    S3MCHN_RIGHT7 = 14,
+    S3MCHN_RIGHT8 = 15,
+
+    S3MCHN_ADLIBMEL1 = 16,
+    S3MCHN_ADLIBMEL2 = 17,
+    S3MCHN_ADLIBMEL3 = 18,
+    S3MCHN_ADLIBMEL4 = 19,
+    S3MCHN_ADLIBMEL5 = 20,
+    S3MCHN_ADLIBMEL6 = 21,
+    S3MCHN_ADLIBMEL7 = 22,
+    S3MCHN_ADLIBMEL8 = 23,
+    S3MCHN_ADLIBMEL9 = 24,
+
+    S3MCHN_ADLIBKICKDRUM = 25,
+    S3MCHN_ADLIBSNAREDRUM = 26,
+    S3MCHN_ADLIBTOMDRUM = 27,
+    S3MCHN_ADLIBTOPDRUM = 28,
+    S3MCHN_ADLIBHATDRUM = 29,
+
+    S3MCHN_MUTE = 128,
+
+    S3MCHN_DISABLE = 255
+};
+
 
 /* 320 bytes per channel
  * 64 sequential rows per channel

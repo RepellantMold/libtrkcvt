@@ -4,6 +4,7 @@
 
 #include "envcheck.h"
 #include "ext.h"
+#include "main.h"
 #include "s3m.h"
 #include "stm.h"
 
@@ -22,7 +23,7 @@ void show_s3m_header(void) {
 
 /* s3m_song_header is expected to be filled beforehand */
 void convert_song_header(void) {
-  strncpy((char *)stm_song_header, (char *)s3m_song_header, 20);
+  strncpy((char *)stm_song_header, (char *)s3m_song_header, 19);
 
   if (s3m_song_header[38] & S3M_ENABLEFILTER)
     puts("WARNING: Ignoring Amiga frequency limit");
@@ -31,9 +32,12 @@ void convert_song_header(void) {
     puts("WARNING: Do not expect the song to play in stereo.");
 
   /* TODO: deal with speed factor */
-  stm_song_header[20] = s3m_song_header[49] << 4;
+  stm_song_header[34] = s3m_song_header[49] << 4;
 
-  stm_song_header[22] = s3m_song_header[48];
+  /* global volume */
+  stm_song_header[36] = s3m_song_header[48];
+
+  stm_song_header[33] = pattern_count;
 }
 
 void convert_song_orders(unsigned char *s3m_order_array, usize length) {

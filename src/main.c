@@ -48,7 +48,13 @@ int main(int argc, char *argv[]) {
   rewind(S3Mfile);
 
   fread(s3m_song_header, sizeof(u8), 96, S3Mfile);
+  order_count = s3m_song_header[32];
+  sample_count = s3m_song_header[34];
+  pattern_count = s3m_song_header[36];
   show_s3m_header();
+
+  convert_song_header();
+  fwrite(stm_song_header, sizeof(u8), 48, STMfile);
 
 
   closefiledescriptors:

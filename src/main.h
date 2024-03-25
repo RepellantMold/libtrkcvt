@@ -6,6 +6,7 @@
 #include "stm.h"
 
 u8 order_count;
+u8 sample_count;
 u8 pattern_count;
 
 #endif
