@@ -46,6 +46,6 @@ void convert_song_orders(unsigned char *s3m_order_array, usize length) {
     stm_order_list[i] = (s3m_order_array[i] >= STM_MAXPAT)
                         ? s3m_order_array[i]
                         : STM_ORDER_END;
-    if (i >= length) break;
+    if (i >= length) return;
   }
 }
