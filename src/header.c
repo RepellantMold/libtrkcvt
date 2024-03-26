@@ -56,10 +56,12 @@ void convert_song_orders(u8* s3m_order_array, usize length) {
   }
 }
 
-void convert_s3m_intstrument(void) {
-  usize i = 0;
-  usize type = s3m_inst_header[0], flags = s3m_inst_header[31];
-  u8 parapointer[2] = {0, 0};
+void convert_s3m_intstrument(usize id, bool isblank) {
+  usize i = 0,
+        type = s3m_inst_header[0], flags = s3m_inst_header[31];
+  u16 length = s3m_inst_header[17] << 8 | s3m_inst_header[16],
+      parapointer = convert_to_parapointer(id, length);
+  
 
   switch(type) {
     case 0:
@@ -86,7 +88,7 @@ void convert_s3m_intstrument(void) {
     stm_sample_header[22] = 0;
 
     /* c2spd */
-    stm_sample_header[25] = 0, stm_sample_header[24] = 0x21;
+    stm_sample_header[25] = 0x21, stm_sample_header[24] = 0;
     break;
 
     case 1:
@@ -94,24 +96,24 @@ void convert_s3m_intstrument(void) {
     if (s3m_inst_header[1] != 0)
       memcpy((char *)stm_sample_header, (char *)&s3m_inst_header[1], 12);
     else if (s3m_inst_header[48] != 0) {
-      strncpy((char *)stm_sample_header, (char *)&s3m_inst_header[48], 8);
-      for(i = 0; i < 8; i++) {
+      strncpy((char *)stm_sample_header, (char *)&s3m_inst_header[48], 7);
+      for(i = 0; i < 7; i++) {
         if(stm_sample_header[i] == ' ') {
           stm_sample_header[i] = '_';
         }
       }
-      stm_sample_header[9] = '.',
+      stm_sample_header[8] = '.',
+      stm_sample_header[9] = (crc32(s3m_inst_header, 80) | '0') & '9',
       stm_sample_header[10] = (crc32(s3m_inst_header, 80) | '0') & '9',
-      stm_sample_header[11] = (crc32(s3m_inst_header, 80) | '0') & '9',
-      stm_sample_header[12] = (crc32(s3m_inst_header, 80) | '0') & '9';
+      stm_sample_header[11] = (crc32(s3m_inst_header, 80) | '0') & '9';
     } else {
-      for(i = 0; i < 8; i++) {
+      for(i = 0; i < 7; i++) {
         stm_sample_header[i] = (crc32(s3m_inst_header, 80) | '0') & '9';
       }
-      stm_sample_header[9] = '.',
+      stm_sample_header[8] = '.',
+      stm_sample_header[9] = (crc32(s3m_inst_header, 80) | '0') & '9',
       stm_sample_header[10] = (crc32(s3m_inst_header, 80) | '0') & '9',
-      stm_sample_header[11] = (crc32(s3m_inst_header, 80) | '0') & '9',
-      stm_sample_header[12] = (crc32(s3m_inst_header, 80) | '0') & '9';
+      stm_sample_header[11] = (crc32(s3m_inst_header, 80) | '0') & '9';
     }
 
     /* instrument disk */
@@ -134,6 +136,9 @@ void convert_s3m_intstrument(void) {
 
     /* c2spd */
     stm_sample_header[25] = s3m_inst_header[33], stm_sample_header[24] = s3m_inst_header[32];
+
+    /* parapointer */
+    stm_sample_header[31] = parapointer >> 8, stm_sample_header[30] = parapointer & 0xFF;
     break;
 
     default:

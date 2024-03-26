@@ -5,7 +5,8 @@
 A command line tool to downgrade Scream Tracker 3 modules to Scream Tracker 2 modules, written in pure ANSI C/C89 (with 16-bit DOS compilers in mind).
 
 > [!WARNING]
-> This code is unlikely to work correctly on non-little endian/x86 machines!
+> This code might not work correctly on non-x86/little-endian machines.
+> You are free to fork it and attempt to fix it up, but it's not a goal to support those machines.
 
 ## Table of Contents
 

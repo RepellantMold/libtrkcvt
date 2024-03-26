@@ -14,7 +14,11 @@
 u16 calculate_stm_sample_parapointer(usize id, usize sample_size) {
   usize pos = 1168 + (STM_PATSIZE * pattern_count) * id;
   pos += sample_size + calculate_sample_padding(sample_size);
-  return pos >> 4;
+  return convert_to_parapointer(pos);
+}
+
+usize convert_to_parapointer(usize pointer) {
+  return pointer >> 4;
 }
 
 usize convert_from_parapointer(usize parapointer) {
