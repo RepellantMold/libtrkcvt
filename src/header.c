@@ -10,6 +10,7 @@
 
 #include "header.h"
 #include "sample.h"
+#include "parapnt.h"
 
 void show_s3m_song_header(void) {
   printf( "Song title: %s\n"
@@ -56,11 +57,11 @@ void convert_song_orders(u8* s3m_order_array, usize length) {
   }
 }
 
-void convert_s3m_intstrument(usize id, bool isblank) {
+void convert_s3m_intstrument(usize id) {
   usize i = 0,
         type = s3m_inst_header[0], flags = s3m_inst_header[31];
   u16 length = s3m_inst_header[17] << 8 | s3m_inst_header[16],
-      parapointer = convert_to_parapointer(id, length);
+      parapointer = calculate_stm_sample_parapointer(id, length);
   
 
   switch(type) {
