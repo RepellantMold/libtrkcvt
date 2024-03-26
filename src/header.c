@@ -25,6 +25,25 @@ void show_s3m_song_header(void) {
         );
 }
 
+void grab_s3m_parapointers(FILE* file) {
+  usize i = 0;
+  fseek(file, 96, SEEK_SET);
+
+  fread(s3m_order_array, sizeof(u8), order_count, file);
+
+  fread(s3m_inst_pointers, sizeof(u16), sample_count, file);
+
+  for(i = 0; i < sample_count; i++) {
+    s3m_inst_pointers[i] = (u16)convert_from_parapointer(s3m_inst_pointers[i]);
+  }
+
+  fread(s3m_pat_pointers, sizeof(u16), pattern_count, file);
+
+  for(i = 0; i < pattern_count; i++) {
+    s3m_pat_pointers[i] = (u16)convert_from_parapointer(s3m_pat_pointers[i]);
+  }
+}
+
 /* s3m_song_header is expected to be filled beforehand */
 void convert_song_header(void) {
   strncpy((char*)stm_song_header, (char*)s3m_song_header, 19);
@@ -47,7 +66,7 @@ void convert_song_header(void) {
   stm_song_header[33] = pattern_count;
 }
 
-void convert_song_orders(u8* s3m_order_array, usize length) {
+void convert_song_orders(usize length) {
   usize i = 0;
   for (; i < STM_ORDER_LIST_SIZE; i++) {
     stm_order_list[i] = (s3m_order_array[i] >= STM_MAXPAT)
@@ -99,7 +118,7 @@ void convert_s3m_intstrument(usize id) {
     else if (s3m_inst_header[48] != 0) {
       strncpy((char *)stm_sample_header, (char *)&s3m_inst_header[48], 7);
       for(i = 0; i < 7; i++) {
-        if(stm_sample_header[i] == ' ' | stm_sample_header[i] >= 0x7F) {
+        if((stm_sample_header[i] == ' ') | (stm_sample_header[i] >= 0x7F)) {
           stm_sample_header[i] = '_';
         }
       }

@@ -75,6 +75,8 @@ int main(int argc, char *argv[]) {
   convert_song_header();
   fwrite(stm_song_header, sizeof(u8), 48, STMfile);
 
+  grab_s3m_parapointers(S3Mfile);
+
   closefiledescriptors:
   fclose(S3Mfile);
   fclose(STMfile);

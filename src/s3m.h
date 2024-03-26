@@ -5,6 +5,7 @@
 #define S3M_MAXPAT 253
 #define S3M_MAXCHN 32
 #define S3M_MAXSMP 99
+#define S3M_ORDER_LIST_SIZE 255
 #define S3M_ORDER_MARKER 0xFE
 #define S3M_ORDER_END 0xFF
 
@@ -77,6 +78,8 @@ enum s3m_channel_type {
  * 5 bytes per row
  */
 #define S3M_UNPACKED_PATTERN_SIZE ((5*32)*64)
+
+u8 s3m_order_array[S3M_ORDER_LIST_SIZE] = {S3M_ORDER_END};
 
 u8 s3m_song_header[96] = {0};
 u8 s3m_inst_header[80] = {0};
