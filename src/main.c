@@ -34,8 +34,8 @@ bool check_valid_s3m(FILE *S3Mfile) {
 
   fread(scrm, sizeof(char), 4, S3Mfile);
 
-  if (!memcmp(scrm, "SCRM", 4)) {
-    fprintf(stderr, "Not an S3M file!");
+  if (memcmp(scrm, "SCRM", 4)) {
+    eprintf("This is not an S3M file!");
     return false;
   }
 
