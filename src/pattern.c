@@ -65,6 +65,10 @@ void check_effect(u8 effect, u8 parameter) {
     /* vibrato */
     case 8:
       puts("WARNING: vibrato depth is doubled compared to other trackers.");
+      if((lownib >> 1) != 0)
+        if(!(s3m_song_header[38] & S3M_ST2VIB))
+          lownib >>= 1;
+
       goto noeffectmemory;
       break;
 
