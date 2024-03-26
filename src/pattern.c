@@ -6,12 +6,15 @@
 #include "s3m.h"
 #include "stm.h"
 
+#include "pattern.h"
+
 void check_effect(u8 effect, u8 parameter) {
   u8 hinib = parameter >> 4;
   u8 lownib = parameter & 0x0F;
   switch (effect) {
     default:
-      puts("WARNING: unknown effect!");
+      printf("WARNING: unsupported effect %c!", ('A' - 1) + effect);
+      effect = 0;
       break;
 
     /* no effect */
@@ -90,6 +93,8 @@ void parse_s3m_pattern(FILE* file, usize position) {
   char* buffer;
   u8 c = 0, r = 0, cv = 0;
 
+  if(!file) return;
+
   fseek(file, position, SEEK_SET);
 
   fread(&pattern_size, sizeof(short int), 1, file);
@@ -97,7 +102,7 @@ void parse_s3m_pattern(FILE* file, usize position) {
 
   fread(buffer, sizeof(char), pattern_size, file);
 
-  loop {
+  while (r < 64) {
     cv = *(buffer++);
     if(!cv) {r++; break;}
     c = (cv & 15);
@@ -122,8 +127,8 @@ void convert_s3m_pattern_to_stm(void) {
       effect = s3m_unpacked_pattern[r][c][3],
       parameter = s3m_unpacked_pattern[r][c][4];
 
-
       check_effect(effect, parameter);
+
       stm_pattern[r][c][0] = note;
       stm_pattern[r][c][1] = (ins << 4) | (volume & 15);
       stm_pattern[r][c][2] = ((volume & 7) << 3) | (effect & 15);

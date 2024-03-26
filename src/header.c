@@ -8,7 +8,9 @@
 #include "s3m.h"
 #include "stm.h"
 
-void show_s3m_header(void) {
+#include "header.h"
+
+void show_s3m_song_header(void) {
   printf( "Song title: %s\n"
           "Global volume: %d\n"
           "Initial speed/tempo: %02X/%02X\n"
@@ -23,7 +25,7 @@ void show_s3m_header(void) {
 
 /* s3m_song_header is expected to be filled beforehand */
 void convert_song_header(void) {
-  strncpy((char *)stm_song_header, (char *)s3m_song_header, 19);
+  (void)strncpy((char *)stm_song_header, (char *)s3m_song_header, 19);
 
   if (s3m_song_header[38] & S3M_ENABLEFILTER)
     puts("WARNING: Ignoring Amiga frequency limit");
