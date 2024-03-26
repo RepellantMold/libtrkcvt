@@ -13,26 +13,26 @@
 
 void show_s3m_song_header(void) {
   printf( "Song title: %s\n"
-          "Global volume: %d\n"
+          "Global volume: %u\n"
           "Initial speed/tempo: %02X/%02X\n"
           "Song flags: %02X\n",
           s3m_song_header,
-          s3m_song_header[48],
-          s3m_song_header[49],
-          s3m_song_header[50],
-          s3m_song_header[38]
+          (unsigned int)s3m_song_header[48],
+          (unsigned int)s3m_song_header[49],
+          (unsigned int)s3m_song_header[50],
+          (unsigned int)s3m_song_header[38]
         );
 }
 
 /* s3m_song_header is expected to be filled beforehand */
 void convert_song_header(void) {
-  (void)strncpy((char *)stm_song_header, (char *)s3m_song_header, 19);
+  strncpy((char*)stm_song_header, (char*)s3m_song_header, 19);
 
   if (s3m_song_header[38] & S3M_AMIGAFREQLIMITS)
-    puts("WARNING: Ignoring Amiga frequency limit");
+    eputs("WARNING: Ignoring Amiga frequency limit");
 
   if (s3m_song_header[51] & 128)
-    puts("WARNING: Do not expect the song to play in stereo.");
+    eputs("WARNING: Do not expect the song to play in stereo.");
 
   if (s3m_song_header[38] & S3M_ST2TEMPO)
     stm_song_header[34] = s3m_song_header[49];
@@ -46,7 +46,7 @@ void convert_song_header(void) {
   stm_song_header[33] = pattern_count;
 }
 
-void convert_song_orders(unsigned char *s3m_order_array, usize length) {
+void convert_song_orders(u8* s3m_order_array, usize length) {
   usize i = 0;
   for (; i < STM_ORDER_LIST_SIZE; i++) {
     stm_order_list[i] = (s3m_order_array[i] >= STM_MAXPAT)

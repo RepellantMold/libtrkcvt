@@ -8,12 +8,15 @@
 
 #include "pattern.h"
 
+#define EFFBASE ('A' - 1)
+#define EFF(e) (e - EFFBASE)
+
 void check_effect(u8 effect, u8 parameter) {
   u8 hinib = parameter >> 4;
   u8 lownib = parameter & 0x0F;
   switch (effect) {
     default:
-      printf("WARNING: unsupported effect %c!", ('A' - 1) + effect);
+      printf("WARNING: unsupported effect %c!", EFFBASE + effect);
       effect = 0;
       break;
 
@@ -22,48 +25,48 @@ void check_effect(u8 effect, u8 parameter) {
       break;
 
     /* set speed */
-    case 1:
+    case EFF('A'):
       /* TODO: implement speed factor? */
       parameter <<= 4;
       break;
 
     /* set position */
-    case 2:
-      puts("WARNING: set position does not do a pattern break, please use a pattern break alongside this if it's intended!");
+    case EFF('B'):
+      eputs("WARNING: set position does not do a pattern break, please use a pattern break alongside this if it's intended!");
       break;
 
     /* pattern break */
-    case 3:
-      if (parameter > 0) {
-        puts("WARNING: pattern break ignores parameter!");
+    case EFF('C'):
+      if (parameter) {
+        eputs("WARNING: pattern break ignores parameter!");
         parameter = 0;
       }
       break;
 
     /* volume slide */
-    case 4:
+    case EFF('D'):
       if (hinib == 0xF || lownib == 0xF)
-        puts("WARNING: there's no fine volume slides!");
-      else if (hinib != 0 && lownib != 0)
-        printf("WARNING: both x and y specified (not allowed!); x = %d, y = %d, y will take priority!", hinib, lownib);
+        eputs("WARNING: there's no fine volume slides!");
+      else if (hinib && lownib)
+        eprintf("WARNING: both x and y specified (not allowed!); x = %hhu, y = %hhu, y will take priority!\n", hinib, lownib);
       goto noeffectmemory;
       break;
 
     /* porta up/down */
-    case 6:
-    case 5:
+    case EFF('E'):
+    case EFF('F'):
       if (parameter >= 0xE0)
-        puts("WARNING: there's no fine/extra-fine porta up/down!");
+        eputs("WARNING: there's no fine/extra-fine porta up/down!");
       goto noeffectmemory;
       break;
 
     /* tone porta */
-    case 7:
+    case EFF('G'):
       goto noeffectmemory;
       break;
 
     /* vibrato */
-    case 8:
+    case EFF('H'):
       puts("WARNING: vibrato depth is doubled compared to other trackers.");
       if((lownib >> 1) != 0)
         if(!(s3m_song_header[38] & S3M_ST2VIB))
@@ -73,12 +76,12 @@ void check_effect(u8 effect, u8 parameter) {
       break;
 
     /* tremor */
-    case 9:
+    case EFF('I'):
       goto noeffectmemory;
       break;
 
     /* arpeggio */
-    case 10:
+    case EFF('J'):
       goto noeffectmemory;
       break;
   }
@@ -101,7 +104,7 @@ void parse_s3m_pattern(FILE* file, usize position) {
 
   fseek(file, position, SEEK_SET);
 
-  fread(&pattern_size, sizeof(short int), 1, file);
+  fread(&pattern_size, sizeof(u16), 1, file);
   buffer = malloc(pattern_size);
 
   fread(buffer, sizeof(char), pattern_size, file);
