@@ -35,13 +35,13 @@ void convert_song_header(void) {
     eputs("WARNING: Do not expect the song to play in stereo.");
 
   if (s3m_song_header[38] & S3M_ST2TEMPO)
-    stm_song_header[34] = s3m_song_header[49];
+    stm_song_header[32] = s3m_song_header[49];
   else
     /* TODO: deal with speed factor */
-    stm_song_header[34] = s3m_song_header[49] << 4;
+    stm_song_header[32] = s3m_song_header[49] << 4;
 
   /* global volume */
-  stm_song_header[36] = s3m_song_header[48];
+  stm_song_header[34] = s3m_song_header[48];
 
   stm_song_header[33] = pattern_count;
 }
