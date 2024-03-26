@@ -2,7 +2,7 @@
 
 [![standard-readme compliant](https://img.shields.io/badge/standard--readme-OK-green.svg?style=plastic)](https://github.com/RichardLitt/standard-readme)
 
-A command line tool to downgrade Scream Tracker 3 modules to Scream Tracker 2 modules, written in pure ANSI C/C89 (with 16-bit DOS compilers in mind).
+A command line tool to downgrade Scream Tracker 3 modules to Scream Tracker 2 (and Scream Tracker Music Interface Kit) modules, written in pure ANSI C/C89 (with 16-bit DOS compilers in mind).
 
 ## Table of Contents
 
@@ -22,11 +22,11 @@ A command line tool to downgrade Scream Tracker 3 modules to Scream Tracker 2 mo
 > 
 > - 4 channels preferably (it only converts the first four channels.)
 > - Sample sizes cannot exceed 65535 (and no 16-bit samples.)
-> - No panning or Adlib, ScreamTracker 2 is mono.
+> - No panning or Adlib, Scream Tracker 2/Scream Tracker Music Interface Kit is mono.
 > - Sample names are gonna be truncated heavily to 8.3 filenames, mainly for the purposes of being able to save it to disk.
 > - You can only use effects A - J, with some caveats with the table shown below.
 > 
-> | Effect | Function in ST2 - in ST3/others | Notes/Quirks (Effect memory **does not exist** in ScreamTracker 2, so a parameter of 0 will act like a no-op for any effect that normally has it. (e.g. volume slide, portamento slides, vibrato, etc.)) |
+> | Effect | Function in ST2/STMIK - in ST3/others | Notes/Quirks (Effect memory **does not exist** in Scream Tracker 2, so a parameter of 0 will act like a no-op for any effect that normally has it. (e.g. volume slide, portamento slides, vibrato, etc.)) |
 > |---:|:---:|---|
 > | Axx | Set speed - Set ticks per row | It has a scaling factor (TODO: handle it) alongside setting ticks per row. |
 > | Bxx | Set next order - Position jump | It does not perform an immediate pattern break unlike most other trackers, so it's best to place it alongside a Pattern break. |

@@ -99,7 +99,7 @@ void convert_s3m_intstrument(usize id) {
     else if (s3m_inst_header[48] != 0) {
       strncpy((char *)stm_sample_header, (char *)&s3m_inst_header[48], 7);
       for(i = 0; i < 7; i++) {
-        if(stm_sample_header[i] == ' ') {
+        if(stm_sample_header[i] == ' ' | stm_sample_header[i] >= 0x7F) {
           stm_sample_header[i] = '_';
         }
       }

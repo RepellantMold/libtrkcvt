@@ -1,7 +1,3 @@
-/* S3M.h
- * Helpful preprocessor things
- */
-
 #ifndef __S3M_H
 #define __S3M_H
 
