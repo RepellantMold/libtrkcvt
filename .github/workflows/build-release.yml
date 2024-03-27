@@ -1,3 +1,4 @@
+# based on https://github.com/saxbophone/CPP20-Cross-Platform-Template/blob/master/.github/workflows/build-release.yml
 name: build-release
 
 on:
