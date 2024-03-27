@@ -54,5 +54,5 @@ jobs:
       - name: Upload
         uses: actions/upload-artifact@v2
         with:
-          name: my-hovercraft-is-full-of-eels_build_${{ github.run_number }}_${{ matrix.platform_name }}
+          name: s3m2stm_build_${{ github.run_number }}_${{ matrix.platform_name }}
           path: ${{github.workspace}}/artifacts
