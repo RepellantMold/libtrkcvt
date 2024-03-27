@@ -11,7 +11,7 @@
  * NOTE: the STX instrument header format is
  * identical to S3M's, so it's not included here.
  */
-u8 stx_song_header[] {
+u8 stx_song_header[] = {
     /* song title (ASCIIZ) */
     '\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0', 
     '\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0', 
