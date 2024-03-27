@@ -5,7 +5,7 @@
 #include "ext.h"
 #include "s3m.h"
 #include "stm.h"
-
+#include "main.h"
 #include "pattern.h"
 
 #define EFFBASE ('A' - 1)
@@ -90,14 +90,14 @@ void check_effect(u8 effect, u8 parameter) {
 
   noeffectmemory:
   if (!parameter)
-    puts("WARNING: there's no effect memory, this will be treated as a no-op.");
+    eputs("WARNING: there's no effect memory, this will be treated as a no-op.");
   return;
 }
 
 /* prototype function (NOT TESTED) */
 void parse_s3m_pattern(FILE* file, usize position) {
   u16 pattern_size = 0;
-  char* buffer;
+  unsigned char* buffer;
   u8 c = 0, r = 0, cv = 0;
 
   if(!file) return;
@@ -136,14 +136,16 @@ void convert_s3m_pattern_to_stm(void) {
 
       check_effect(effect, parameter);
 
-      stm_pattern[r][c][0] = note;
-      stm_pattern[r][c][1] = (ins << 4) | (volume & 15);
-      stm_pattern[r][c][2] = ((volume & 7) << 3) | (effect & 15);
+      stm_pattern[r][c][0] = note,
+      stm_pattern[r][c][1] = (ins << 4) | (volume & 15),
+      stm_pattern[r][c][2] = ((volume & 7) << 3) | (effect & 15),
       stm_pattern[r][c][3] = parameter;
     }
   }
 }
 
+/*
 void convert_s3m_pattern_to_stx(unsigned char* buffer) {
-  /* TODO */
+  // TODO
 }
+*/

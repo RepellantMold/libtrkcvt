@@ -71,6 +71,7 @@ int main(int argc, char *argv[]) {
   sample_count = s3m_song_header[34];
   pattern_count = s3m_song_header[36];
   show_s3m_song_header();
+  check_s3m_channels();
 
   convert_song_header();
   fwrite(stm_song_header, sizeof(u8), 48, STMfile);

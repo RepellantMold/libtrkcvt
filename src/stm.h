@@ -7,9 +7,6 @@
 #define STM_ORDER_END 99
 #define STM_ORDER_LIST_SIZE 128
 
-/* placed at loop end */
-#define STMSMP_NOLOOP 0xFFFF
-
 #define STM_PATSIZE ((4*4)*64)
 
 u8 stm_song_header[] = {

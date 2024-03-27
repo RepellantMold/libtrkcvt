@@ -27,7 +27,10 @@ void show_s3m_song_header(void) {
 
 void grab_s3m_parapointers(FILE* file) {
   usize i = 0;
-  fseek(file, 96, SEEK_SET);
+
+  if (!file) return;
+
+  fseek(file, S3M_ORDERPOS, SEEK_SET);
 
   fread(s3m_order_array, sizeof(u8), order_count, file);
 
@@ -41,6 +44,30 @@ void grab_s3m_parapointers(FILE* file) {
 
   for(i = 0; i < pattern_count; i++) {
     s3m_pat_pointers[i] = (u16)convert_from_parapointer(s3m_pat_pointers[i]);
+  }
+}
+
+void check_s3m_channels(void) {
+  usize i = 0;
+  usize channel = 0;
+
+  while(i++ < S3M_MAXCHN) {
+    channel = s3m_song_header[S3M_CHANNELARRAYPOS+(i-1)];
+
+    if (channel == S3MCHN_DISABLED) break;
+
+    if (i > 4) {
+      eputs("WARNING: There's more than 4 channels, they'll be truncated.");
+      break;
+    }
+    
+
+    if (channel & S3MCHN_MUTE)
+      eprintf("WARNING: Channel %u is muted which is unsupported, the notes will be converted anyway.", i);
+
+    if (channel >= S3MCHN_ADLIBMEL1 && channel <= S3MCHN_ADLIBHATDRUM) {
+      eprintf("WARNING: Adlib channel detected (channel %u), the notes will be converted as is without the instrument data.\n", i);
+    }
   }
 }
 
@@ -77,14 +104,15 @@ void convert_song_orders(usize length) {
 }
 
 void convert_s3m_intstrument(usize id) {
-  usize i = 0,
-        type = s3m_inst_header[0], flags = s3m_inst_header[31];
+  usize i = 0;
+  const usize type = s3m_inst_header[0], flags = s3m_inst_header[31];
   u16 length = s3m_inst_header[17] << 8 | s3m_inst_header[16],
       parapointer = calculate_stm_sample_parapointer(id, length);
-  
+
 
   switch(type) {
-    case 0:
+    case S3MSMPTYPE_MSG:
+    generateblanksample:
     /* instrument name */
     if (s3m_inst_header[1] != 0)
       memcpy((char *)stm_sample_header, (char *)&s3m_inst_header[1], 12);
@@ -111,13 +139,14 @@ void convert_s3m_intstrument(usize id) {
     stm_sample_header[25] = 0x21, stm_sample_header[24] = 0;
     break;
 
-    case 1:
+    case S3MSMPTYPE_SMP:
     /* instrument name */
     if (s3m_inst_header[1] != 0)
       memcpy((char *)stm_sample_header, (char *)&s3m_inst_header[1], 12);
     else if (s3m_inst_header[48] != 0) {
       strncpy((char *)stm_sample_header, (char *)&s3m_inst_header[48], 7);
       for(i = 0; i < 7; i++) {
+        /* sanitization for 8.3 filenames */
         if((stm_sample_header[i] == ' ') | (stm_sample_header[i] >= 0x7F)) {
           stm_sample_header[i] = '_';
         }
@@ -141,7 +170,7 @@ void convert_s3m_intstrument(usize id) {
 
     /* lengths */
     stm_sample_header[17] = s3m_inst_header[17], stm_sample_header[16] = s3m_inst_header[16];
-    
+
     /* loop points */
     if(flags & S3MSMP_LOOP) {
       stm_sample_header[19] = s3m_inst_header[21], stm_sample_header[18] = s3m_inst_header[20];
@@ -150,7 +179,7 @@ void convert_s3m_intstrument(usize id) {
       stm_sample_header[19] = 0, stm_sample_header[18] = 0;
       stm_sample_header[21] = 0xFF, stm_sample_header[20] = 0xFF;
     }
-    
+
     /* volume */
     stm_sample_header[22] = s3m_inst_header[28];
 
@@ -162,7 +191,8 @@ void convert_s3m_intstrument(usize id) {
     break;
 
     default:
-      puts("WARNING: Adlib is not supported!");
+    eputs("WARNING: Adlib instrument is not supported, only converting sample name.");
+    goto generateblanksample;
     break;
   }
 }
