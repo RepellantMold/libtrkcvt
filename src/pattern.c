@@ -48,7 +48,7 @@ void check_effect(u8 effect, u8 parameter) {
       if (hinib == 0xF || lownib == 0xF)
         eputs("WARNING: there's no fine volume slides!");
       else if (hinib && lownib)
-        eprintf("WARNING: both x and y specified (not allowed!); x = %hhu, y = %hhu, y will take priority!\n", hinib, lownib);
+        eprintf("WARNING: both x (%hhu) and y (%hhu) specified, y will take priority!\n", hinib, lownib);
       goto noeffectmemory;
       break;
 
@@ -67,7 +67,7 @@ void check_effect(u8 effect, u8 parameter) {
 
     /* vibrato */
     case EFF('H'):
-      puts("WARNING: vibrato depth is doubled compared to other trackers, attempting to make adjustment.");
+      eputs("WARNING: vibrato depth is doubled compared to other trackers, attempting to make adjustment.");
       if((lownib >> 1) != 0)
         if(!(s3m_song_header[38] & S3M_ST2VIB))
           lownib >>= 1;
@@ -142,4 +142,8 @@ void convert_s3m_pattern_to_stm(void) {
       stm_pattern[r][c][3] = parameter;
     }
   }
+}
+
+void convert_s3m_pattern_to_stx(unsigned char* buffer) {
+  /* TODO */
 }

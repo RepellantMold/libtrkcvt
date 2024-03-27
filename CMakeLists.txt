@@ -1,28 +1,14 @@
 cmake_minimum_required(VERSION 3.0)
 
-# https://stackoverflow.com/a/33266748
-include(CheckCCompilerFlag)
-
-function(enable_c_compiler_flag_if_supported flag)
-    string(FIND "${CMAKE_C_FLAGS}" "${flag}" flag_already_set)
-    if(flag_already_set EQUAL -1)
-        check_c_compiler_flag("${flag}" flag_supported)
-        if(flag_supported)
-            set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${flag}" PARENT_SCOPE)
-        endif()
-        unset(flag_supported CACHE)
-    endif()
-endfunction()
-
 
 project(S3M2STM)
 set(CMAKE_C_STANDARD 90)
 set(CMAKE_C_EXTENSIONS OFF)
-enable_c_compiler_flag_if_supported("-Wall")
-enable_c_compiler_flag_if_supported("-Wextra")
-enable_c_compiler_flag_if_supported("-Wshadow")
-enable_c_compiler_flag_if_supported("-Wpointer-arith")
-enable_c_compiler_flag_if_supported("-Wcast-qual")
-enable_c_compiler_flag_if_supported("-pedantic")
 
 add_executable(s3m2stm src/main.c)
+# https://stackoverflow.com/a/50882216
+if(MSVC)
+  target_compile_options(s3m2stm PRIVATE /W4 /WX)
+else()
+  target_compile_options(s3m2stm PRIVATE -Wall -Wextra -Wpedantic -Werror -march=native)
+endif()

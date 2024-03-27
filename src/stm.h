@@ -1,7 +1,6 @@
 #ifndef __STM_H
 #define __STM_H
 
-#define STX_ORDERPOS 1024
 #define STM_MAXCHN 4
 #define STM_MAXSMP 31
 #define STM_MAXPAT 63
