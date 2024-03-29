@@ -215,6 +215,22 @@ void convert_s3m_intstrument(void) {
   }
 }
 
+u32 grab_s3m_pcm_pointer(void) {
+  u32 parapointer = s3m_inst_header[13] << 16 | s3m_inst_header[15] << 8 | s3m_inst_header[14];
+  parapointer <<= 4;
+  printf("PCM Parapointer: %lx\n", parapointer);
+  return parapointer;
+}
+
+u16 grab_s3m_pcm_len(void) {
+  u16 length = s3m_inst_header[17] << 8 | s3m_inst_header[16];
+
+  if((s3m_inst_header[19] << 8 | s3m_inst_header[18]) != 0)
+    eprintf("WARNING: the sample is too long, only converting the first 64kb of it.\n");
+
+  return length;
+}
+
 void generate_blank_stm_instrument(void) {
   memset(stm_sample_header, 0, 12);
 

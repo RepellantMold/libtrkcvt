@@ -2,10 +2,12 @@
 
 - give either an optional verbose option or a quiet option to reduce the amount of output
 
+
 ### todo
 
+- [ ] add a remap system if there's muted channels, it would prevent someone from muting the first 4 channel and breaking the conversion
 - [ ] work on stx conversion (and switch based on file extension of the output file)
-- [ ] work on sign conversion with the samples
+- [ ] have the order conversion discard markers
 
 ### in progress
 
@@ -15,3 +17,4 @@
 ### complete
 
 - [x] song header conversion
+- [x] work on sign conversion with the samples

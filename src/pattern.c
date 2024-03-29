@@ -16,7 +16,7 @@ void check_effect(u8 effect, u8 parameter) {
   u8 lownib = parameter & 0x0F;
   switch (effect) {
     default:
-      eprintf("WARNING: unsupported effect %c!", EFFBASE + effect);
+      eprintf("WARNING: unsupported effect %c!\n", EFFBASE + effect);
       effect = 0;
       break;
 
@@ -96,32 +96,56 @@ void check_effect(u8 effect, u8 parameter) {
 
 /* prototype function (NOT TESTED) */
 void parse_s3m_pattern(FILE* file, usize position) {
-  u16 pattern_size = 0;
-  unsigned char* buffer;
   u8 c = 0, r = 0, cv = 0;
+  u8 note = 0xFF, ins = 0x00, volume = 0xFF, effect = 0x00, parameter = 0x00;
 
-  if(!file) return;
+  if(!file || !position) return;
 
   fseek(file, position, SEEK_SET);
 
-  fread(&pattern_size, sizeof(u16), 1, file);
-  buffer = malloc(pattern_size);
+  fseek(file, 2, SEEK_CUR);
 
-  fread(buffer, sizeof(u8), pattern_size, file);
+  do {
+    fread(&cv, sizeof(u8), 1, file);
 
-  while (r < 64) {
-    cv = *(buffer++);
-    if(!cv) {r++; break;}
-    c = (cv & 15);
+    if(!cv) {break;}
 
-    s3m_unpacked_pattern[r][c][0] = (cv & 0x20) ? *(buffer++) : 0xFF;
-    s3m_unpacked_pattern[r][c][1] = (cv & 0x20) ? *(buffer++) : 0x00;
-    s3m_unpacked_pattern[r][c][2] = (cv & 0x40) ? *(buffer++) : 0xFF;
-    s3m_unpacked_pattern[r][c][3] = (cv & 0x80) ? *(buffer++) : 0x00;
-    s3m_unpacked_pattern[r][c][4] = (cv & 0x80) ? *(buffer++) : 0x00;
-  }
+    c = (cv & 31);
 
-  free(buffer);
+    if (cv & 0x20)
+    {
+      fread(&note, sizeof(u8), 1, file);
+      fread(&ins, sizeof(u8), 1, file);
+    } else {
+      note = 0xFF;
+      ins = 0x00;
+    }
+
+    if (cv & 0x40)
+    {
+      fread(&volume, sizeof(u8), 1, file);
+    } else {
+      volume = 0xFF;
+    }
+
+    if (cv & 0x80)
+    {
+      fread(&effect, sizeof(u8), 1, file);
+      fread(&parameter, sizeof(u8), 1, file);
+    } else {
+      effect = 0x00;
+      parameter = 0x00;
+    }
+
+    printf("r:%02u c:%02u %.2s%01u %02u %02u %c%02X\n",
+            r, c, (note < 0xFE) ? notetable[note % 12] : (note == 0xFE) ? (u8*)"^^" : (u8*)"--", (note < 0xFE) ? note/12 : 0, ins, (volume <= 64) ? volume : 0, EFFBASE + effect, parameter);
+
+    s3m_unpacked_pattern[r][c][0] = note;
+    s3m_unpacked_pattern[r][c][1] = ins;
+    s3m_unpacked_pattern[r][c][2] = volume;
+    s3m_unpacked_pattern[r][c][3] = effect;
+    s3m_unpacked_pattern[r][c][4] = parameter;
+  } while (r++ < 64);
 
 }
 
@@ -141,7 +165,7 @@ void convert_s3m_pattern_to_stm(void) {
 
       stm_pattern[r][c][0] = note,
       stm_pattern[r][c][1] = (ins << 4) | (volume & 15),
-      stm_pattern[r][c][2] = ((volume & 15) << 4) | (effect & 15),
+      stm_pattern[r][c][2] = ((volume & 7) << 3) | (effect & 15),
       stm_pattern[r][c][3] = parameter;
     }
   }

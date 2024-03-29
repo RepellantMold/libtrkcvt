@@ -53,6 +53,9 @@ bool check_valid_s3m(FILE *S3Mfile) {
 
 int convert_s3m_to_stm(FILE *S3Mfile, FILE *STMfile) {
   usize i = 0;
+  u8* stm_sample_data = NULL;
+  u16 sample_len = 0;
+  u16 padding_len = 0;
 
   if(!S3Mfile ||!STMfile) return 2;
   if(!check_valid_s3m(S3Mfile)) return 1;
@@ -60,7 +63,9 @@ int convert_s3m_to_stm(FILE *S3Mfile, FILE *STMfile) {
   fread(s3m_song_header, sizeof(u8), 96, S3Mfile);
   order_count = s3m_song_header[32];
   sample_count = s3m_song_header[34];
+  if (sample_count > STM_MAXSMP) eprintf("WARNING: Sample count exceeds 31 (%u > %u), only using %u.\n", sample_count, STM_MAXSMP, STM_MAXSMP);
   pattern_count = s3m_song_header[36];
+  if (pattern_count > STM_MAXPAT) eprintf("WARNING: Pattern count exceeds 98 (%u > %u), only converting %u.\n", pattern_count, STM_MAXPAT, STM_MAXPAT);
   show_s3m_song_header();
   check_s3m_channels();
 
@@ -69,9 +74,12 @@ int convert_s3m_to_stm(FILE *S3Mfile, FILE *STMfile) {
 
   grab_s3m_parapointers(S3Mfile);
 
-  for(; i < 31; i++) {
+  for(i = 0; i < STM_MAXSMP; i++) {
     if(i < sample_count) {
+      printf("Sample %u:\n", (u8)i);
       grab_sample_data(S3Mfile, s3m_inst_pointers[i]);
+      s3m_pcm_pointers[i] = grab_s3m_pcm_pointer();
+      s3m_pcm_lens[i] = grab_s3m_pcm_len();
       show_s3m_inst_header();
       convert_s3m_intstrument();
     } else {
@@ -83,6 +91,47 @@ int convert_s3m_to_stm(FILE *S3Mfile, FILE *STMfile) {
 
   convert_song_orders(order_count);
   fwrite(stm_order_list, sizeof(u8), sizeof(stm_order_list), STMfile);
+
+  for(i = 0; i < STM_MAXPAT; i++) {
+    if (i < pattern_count) {
+      printf("Pattern %u:\n", (u8)i);
+      parse_s3m_pattern(S3Mfile, s3m_pat_pointers[i]);
+      convert_s3m_pattern_to_stm();
+      fwrite(stm_pattern, sizeof(u8), sizeof(stm_pattern), STMfile);
+    } else {
+      break;
+    }
+  }
+
+  for(i = 0; i < STM_MAXSMP; i++) {
+    if(i < sample_count) {
+      sample_len = s3m_pcm_lens[i];
+      padding_len = (u16)calculate_sample_padding(sample_len);
+
+      stm_sample_data = calloc(sample_len, sizeof(u8));
+      if (!stm_sample_data) {
+        eprintf("Could not allocate memory for sample data!\n");
+        return 1;
+      }
+
+      dump_sample_data(S3Mfile, s3m_pcm_pointers[i], stm_sample_data, sample_len);
+      convert_unsigned_to_signed(stm_sample_data, sample_len);
+
+      if (padding_len) {
+        sample_len += padding_len;
+
+        stm_sample_data = realloc(stm_sample_data, sample_len);
+        if (!stm_sample_data) {
+          eprintf("Could not reallocate memory for sample data!\n");
+          return 1;
+        }
+      }
+
+      fwrite(stm_sample_data, sizeof(u8), sample_len, STMfile);
+
+      free(stm_sample_data);
+    }
+  }
 
   return 0;
 }
@@ -116,7 +165,10 @@ int main(int argc, char *argv[]) {
   /* TODO: check if the user used an
    * STM or STX extension on the output name and
    * switch operation to STX conversion if they did */
-  convert_s3m_to_stm(infile, outfile);
+  if(convert_s3m_to_stm(infile, outfile)) {
+    eprintf("Failed to convert S3M to STM\n");
+    return_value = EXIT_FAILURE;
+  };
 
   closefiledescriptors:
   fclose(infile);

@@ -3,6 +3,11 @@
 
 #define STM_MAXCHN 4
 #define STM_MAXSMP 31
+/*
+ * Strangely, in ST2, you can actually add orders above 63
+ * (it even writes the bytes to the file),
+ * but the pattern editor does not go above 63 so...
+ */
 #define STM_MAXPAT 63
 #define STM_ORDER_END 99
 #define STM_ORDER_LIST_SIZE 128

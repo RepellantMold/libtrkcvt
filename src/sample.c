@@ -10,13 +10,19 @@
 
 #include "sample.h"
 
-void convert_unsigned_to_signed(char* pcm, usize length) {
+void dump_sample_data(FILE* file, usize position, u8* pcm, usize length) {
+	fseek(file, position, SEEK_SET);
+
+	fread(pcm, sizeof(u8), length, file);
+}
+
+void convert_unsigned_to_signed(u8* pcm, usize length) {
   usize i = 0;
 
   if (!length || !pcm) return;
 
-  while (i < length)
-    pcm[i++] ^= 128;
+  while (i++ < length)
+    pcm[i] ^= 128;
 }
 
 usize calculate_sample_padding(size_t sample_size) {
