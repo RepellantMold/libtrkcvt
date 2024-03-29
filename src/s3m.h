@@ -87,6 +87,7 @@ u8 s3m_inst_header[80] = {0};
 
 u16 s3m_inst_pointers[S3M_MAXSMP] = {0};
 u16 s3m_pat_pointers[S3M_MAXPAT] = {0};
+u32 s3m_pcm_pointers[S3M_MAXSMP] = {0};
 
 u8 s3m_unpacked_pattern[64][32][5] = {0};
 

@@ -16,7 +16,7 @@ void check_effect(u8 effect, u8 parameter) {
   u8 lownib = parameter & 0x0F;
   switch (effect) {
     default:
-      printf("WARNING: unsupported effect %c!", EFFBASE + effect);
+      eprintf("WARNING: unsupported effect %c!", EFFBASE + effect);
       effect = 0;
       break;
 
@@ -55,7 +55,7 @@ void check_effect(u8 effect, u8 parameter) {
     /* porta up/down */
     case EFF('E'):
     case EFF('F'):
-      if (parameter >= 0xE0)
+      if (hinib >= 0xE)
         eputs("WARNING: there's no fine/extra-fine porta up/down!");
       goto noeffectmemory;
       break;
@@ -107,7 +107,7 @@ void parse_s3m_pattern(FILE* file, usize position) {
   fread(&pattern_size, sizeof(u16), 1, file);
   buffer = malloc(pattern_size);
 
-  fread(buffer, sizeof(char), pattern_size, file);
+  fread(buffer, sizeof(u8), pattern_size, file);
 
   while (r < 64) {
     cv = *(buffer++);
@@ -120,6 +120,9 @@ void parse_s3m_pattern(FILE* file, usize position) {
     s3m_unpacked_pattern[r][c][3] = (cv & 0x80) ? *(buffer++) : 0x00;
     s3m_unpacked_pattern[r][c][4] = (cv & 0x80) ? *(buffer++) : 0x00;
   }
+
+  free(buffer);
+
 }
 
 void convert_s3m_pattern_to_stm(void) {
@@ -138,8 +141,20 @@ void convert_s3m_pattern_to_stm(void) {
 
       stm_pattern[r][c][0] = note,
       stm_pattern[r][c][1] = (ins << 4) | (volume & 15),
-      stm_pattern[r][c][2] = ((volume & 7) << 3) | (effect & 15),
+      stm_pattern[r][c][2] = ((volume & 15) << 4) | (effect & 15),
       stm_pattern[r][c][3] = parameter;
+    }
+  }
+}
+
+void generate_blank_stm_pattern(void) {
+  usize r = 0, c = 0;
+  for(c = 0; c < 4; c++) {
+    for(r = 0; r < 64; r++) {
+      stm_pattern[r][c][0] = 0xFF,
+      stm_pattern[r][c][1] = 0x01,
+      stm_pattern[r][c][2] = 0x80,
+      stm_pattern[r][c][3] = 0x00;
     }
   }
 }

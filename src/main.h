@@ -12,4 +12,7 @@ u8 pattern_count;
 void eprintf(const char* format, ...);
 void eputs(const char* msg);
 
+int convert_s3m_to_stm(FILE *S3Mfile, FILE *STMfile);
+int convert_s3m_to_stx(FILE *S3Mfile, FILE *STXfile);
+
 #endif

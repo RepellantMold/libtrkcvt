@@ -25,6 +25,23 @@ void show_s3m_song_header(void) {
         );
 }
 
+void show_s3m_inst_header(void) {
+  printf( "Sample name/filename: %.28s/%.12s\n"
+          "Default volume: %02u\n"
+          "Sample flags: %01X\n"
+          "C frequency: %06u\n"
+          "Length/Loop start/end: %06u/%06u/%06u\n",
+          &s3m_inst_header[48],
+          &s3m_inst_header[1],
+          (unsigned int)s3m_inst_header[28],
+          (unsigned int)s3m_inst_header[31],
+          (unsigned int)(s3m_inst_header[33] << 8 | s3m_inst_header[32]),
+          (unsigned int)(s3m_inst_header[17] << 8 | s3m_inst_header[16]),
+          (unsigned int)(s3m_inst_header[21] << 8 | s3m_inst_header[20]),
+          (unsigned int)(s3m_inst_header[25] << 8 | s3m_inst_header[24])
+        );
+}
+
 void grab_s3m_parapointers(FILE* file) {
   usize i = 0;
 
@@ -56,18 +73,16 @@ void check_s3m_channels(void) {
 
     if (channel == S3MCHN_DISABLED) break;
 
-    if (i > 4) {
+    if (i > STM_MAXCHN) {
       eputs("WARNING: There's more than 4 channels, they'll be truncated.");
       break;
     }
-    
 
     if (channel & S3MCHN_MUTE)
       eprintf("WARNING: Channel %u is muted which is unsupported, the notes will be converted anyway.", i);
 
-    if (channel >= S3MCHN_ADLIBMEL1 && channel <= S3MCHN_ADLIBHATDRUM) {
+    if (channel >= S3MCHN_ADLIBMEL1 && channel <= S3MCHN_ADLIBHATDRUM)
       eprintf("WARNING: Adlib channel detected (channel %u), the notes will be converted as is without the instrument data.\n", i);
-    }
   }
 }
 
@@ -95,20 +110,26 @@ void convert_song_header(void) {
 
 void convert_song_orders(usize length) {
   usize i = 0;
-  for (; i < STM_ORDER_LIST_SIZE; i++) {
+
+  memset(stm_order_list, STM_ORDER_END, STM_ORDER_LIST_SIZE);
+
+  do {
+    if (i >= length) break;
     stm_order_list[i] = (s3m_order_array[i] >= STM_MAXPAT)
-                        ? s3m_order_array[i]
-                        : STM_ORDER_END;
-    if (i >= length) return;
-  }
+                        ? STM_ORDER_END
+                        : s3m_order_array[i];
+  } while (i++ < STM_ORDER_LIST_SIZE);
 }
 
-void convert_s3m_intstrument(usize id) {
+void grab_sample_data(FILE* file, usize position) {
+  if (!file) return;
+  fseek(file, position, SEEK_SET);
+  fread(s3m_inst_header, sizeof(u8), 80, file);
+}
+
+void convert_s3m_intstrument(void) {
   usize i = 0;
   const usize type = s3m_inst_header[0], flags = s3m_inst_header[31];
-  u16 length = s3m_inst_header[17] << 8 | s3m_inst_header[16],
-      parapointer = calculate_stm_sample_parapointer(id, length);
-
 
   switch(type) {
     case S3MSMPTYPE_MSG:
@@ -147,7 +168,7 @@ void convert_s3m_intstrument(usize id) {
       strncpy((char *)stm_sample_header, (char *)&s3m_inst_header[48], 7);
       for(i = 0; i < 7; i++) {
         /* sanitization for 8.3 filenames */
-        if((stm_sample_header[i] == ' ') | (stm_sample_header[i] >= 0x7F)) {
+        if((stm_sample_header[i] <= ' ') || (stm_sample_header[i] >= 0x7F)) {
           stm_sample_header[i] = '_';
         }
       }
@@ -185,9 +206,6 @@ void convert_s3m_intstrument(usize id) {
 
     /* c2spd */
     stm_sample_header[25] = s3m_inst_header[33], stm_sample_header[24] = s3m_inst_header[32];
-
-    /* parapointer */
-    stm_sample_header[31] = parapointer >> 8, stm_sample_header[30] = parapointer & 0xFF;
     break;
 
     default:
@@ -195,4 +213,24 @@ void convert_s3m_intstrument(usize id) {
     goto generateblanksample;
     break;
   }
+}
+
+void generate_blank_stm_instrument(void) {
+  memset(stm_sample_header, 0, 12);
+
+  /* instrument disk */
+  stm_sample_header[13] = 0;
+
+  /* lengths */
+  stm_sample_header[17] = 0, stm_sample_header[16] = 0;
+
+  /* loop points */
+  stm_sample_header[19] = 0, stm_sample_header[18] = 0;
+  stm_sample_header[21] = 0xFF, stm_sample_header[20] = 0xFF;
+
+  /* volume */
+  stm_sample_header[22] = 0;
+
+  /* c2spd */
+  stm_sample_header[25] = 0x21, stm_sample_header[24] = 0;
 }
