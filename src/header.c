@@ -50,7 +50,7 @@ void grab_s3m_parapointers(FILE* file) {
 
   fseek(file, S3M_ORDERPOS, SEEK_SET);
 
-  fread(s3m_order_array, sizeof(u8), order_count, file);
+  (void)!fread(s3m_order_array, sizeof(u8), order_count, file);
 
   /* see section "2.6 Load Order Data" from "FireLight S3M Player Tutorial.txt" */
   for(count = 0; count < order_count; count++) {
@@ -64,13 +64,13 @@ void grab_s3m_parapointers(FILE* file) {
   }
   order_count = i;
 
-  fread(s3m_inst_pointers, sizeof(u16), sample_count, file);
+  (void)!fread(s3m_inst_pointers, sizeof(u16), sample_count, file);
 
   for(i = 0; i < sample_count; i++) {
     s3m_inst_pointers[i] = (u16)convert_from_parapointer(s3m_inst_pointers[i]);
   }
 
-  fread(s3m_pat_pointers, sizeof(u16), pattern_count, file);
+  (void)!fread(s3m_pat_pointers, sizeof(u16), pattern_count, file);
 
   for(i = 0; i < pattern_count; i++) {
     s3m_pat_pointers[i] = (u16)convert_from_parapointer(s3m_pat_pointers[i]);
@@ -137,7 +137,7 @@ void convert_song_orders(usize length) {
 void grab_sample_data(FILE* file, usize position) {
   if (!file) return;
   fseek(file, position, SEEK_SET);
-  fread(s3m_inst_header, sizeof(u8), 80, file);
+  (void)!fread(s3m_inst_header, sizeof(u8), 80, file);
 }
 
 void convert_s3m_intstrument(void) {

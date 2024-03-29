@@ -40,7 +40,7 @@ bool check_valid_s3m(FILE *S3Mfile) {
 
   fseek(S3Mfile, 44, SEEK_SET);
 
-  fread(scrm, sizeof(char), 4, S3Mfile);
+  (void)!fread(scrm, sizeof(char), 4, S3Mfile);
 
   if (memcmp(scrm, "SCRM", 4)) {
     eprintf("This is not an S3M file!");
@@ -54,13 +54,14 @@ bool check_valid_s3m(FILE *S3Mfile) {
 int convert_s3m_to_stm(FILE *S3Mfile, FILE *STMfile) {
   usize i = 0;
   u8* stm_sample_data = NULL;
+  u8* temp;
   u16 sample_len = 0;
   u16 padding_len = 0;
 
   if(!S3Mfile ||!STMfile) return 2;
   if(!check_valid_s3m(S3Mfile)) return 1;
 
-  fread(s3m_song_header, sizeof(u8), sizeof(s3m_song_header), S3Mfile);
+  (void)!fread(s3m_song_header, sizeof(u8), sizeof(s3m_song_header), S3Mfile);
   order_count = s3m_song_header[32];
   sample_count = s3m_song_header[34];
   if (sample_count > STM_MAXSMP) eprintf("WARNING: Sample count exceeds 31 (%u > %u), only using %u.\n", sample_count, STM_MAXSMP, STM_MAXSMP);
@@ -127,11 +128,13 @@ int convert_s3m_to_stm(FILE *S3Mfile, FILE *STMfile) {
       if (padding_len) {
         sample_len += padding_len;
 
-        stm_sample_data = realloc(stm_sample_data, sample_len);
-        if (!stm_sample_data) {
+        temp = realloc(stm_sample_data, sample_len);
+        if (!temp) {
+          free(stm_sample_data);
           eprintf("Could not reallocate memory for sample data!\n");
           return 1;
         }
+        stm_sample_data = temp;
       }
 
       fwrite(stm_sample_data, sizeof(u8), sample_len, STMfile);

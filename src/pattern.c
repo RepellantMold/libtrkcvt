@@ -105,17 +105,17 @@ void parse_s3m_pattern(FILE* file, usize position) {
 
   fseek(file, 2, SEEK_CUR);
 
-  while (r++ < MAXROWS) {
-    fread(&cv, sizeof(u8), 1, file);
+  while (r < MAXROWS) {
+    (void)!fread(&cv, sizeof(u8), 1, file);
 
-    if(!cv) {break;}
+    if(!cv) {r++; continue;}
 
     c = (cv & 31);
 
     if (cv & 0x20)
     {
-      fread(&note, sizeof(u8), 1, file);
-      fread(&ins, sizeof(u8), 1, file);
+      (void)!fread(&note, sizeof(u8), 1, file);
+      (void)!fread(&ins, sizeof(u8), 1, file);
     } else {
       note = 0xFF;
       ins = 0x00;
@@ -123,22 +123,37 @@ void parse_s3m_pattern(FILE* file, usize position) {
 
     if (cv & 0x40)
     {
-      fread(&volume, sizeof(u8), 1, file);
+      (void)!fread(&volume, sizeof(u8), 1, file);
     } else {
       volume = 0xFF;
     }
 
     if (cv & 0x80)
     {
-      fread(&effect, sizeof(u8), 1, file);
-      fread(&parameter, sizeof(u8), 1, file);
+      (void)!fread(&effect, sizeof(u8), 1, file);
+      (void)!fread(&parameter, sizeof(u8), 1, file);
     } else {
       effect = 0x00;
       parameter = 0x00;
     }
 
-    printf("r:%02u c:%02u %.2s%01u %02u %02u %c%02X\n",
-            r, c, (note < 0xFE) ? notetable[note % 12] : (note == 0xFE) ? (u8*)"^^" : (u8*)"--", (note < 0xFE) ? note/12 : 0, ins, (volume <= 64) ? volume : 0, EFFBASE + effect, parameter);
+    printf("r:%02u c:%02u ", r, c);
+
+    if (note < 0xFE)
+    printf("%.2s%01u", notetable[note % 12], note/12);
+    else if (note == 0xFE) printf("^^^");
+    else printf("...");
+
+    printf(" %02u ", ins);
+
+    if (volume <= 64) 
+    printf("%02u ", volume);
+    else printf(".. ");
+
+    if (effect)
+    printf("%c%02X\n", EFFBASE + effect, parameter);
+    else
+    printf("...\n");
 
     s3m_unpacked_pattern[r][c][0] = note;
     s3m_unpacked_pattern[r][c][1] = ins;
