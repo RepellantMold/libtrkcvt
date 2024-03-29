@@ -264,3 +264,4 @@ void generate_blank_stm_instrument(void) {
   /* c2spd */
   stm_sample_header[25] = 0x21, stm_sample_header[24] = 0;
 }
+
