@@ -46,7 +46,7 @@ void grab_s3m_parapointers(FILE* file) {
   usize i = 0;
   usize count = 0;
 
-  if (!file) return;
+  if (!file || feof(file) || ferror(file)) return;
 
   fseek(file, S3M_ORDERPOS, SEEK_SET);
 
@@ -135,7 +135,7 @@ void convert_song_orders(usize length) {
 }
 
 void grab_sample_data(FILE* file, usize position) {
-  if (!file) return;
+  if (!file || feof(file) || ferror(file)) return;
   fseek(file, position, SEEK_SET);
   (void)!fread(s3m_inst_header, sizeof(u8), 80, file);
 }

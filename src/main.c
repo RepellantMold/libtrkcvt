@@ -73,7 +73,8 @@ int convert_s3m_to_stm(FILE *S3Mfile, FILE *STMfile) {
   u16 sample_len = 0;
   u16 padding_len = 0;
 
-  if(!S3Mfile ||!STMfile) return FOC_OPEN_FAILURE;
+  if(!S3Mfile || !STMfile) return FOC_OPEN_FAILURE;
+  if(ferror(S3Mfile) || ferror(STMfile)) return FOC_MALFORMED_FILE;
   if(!check_valid_s3m(S3Mfile)) return FOC_NOT_S3M_FILE;
 
   (void)!fread(s3m_song_header, sizeof(u8), sizeof(s3m_song_header), S3Mfile);
