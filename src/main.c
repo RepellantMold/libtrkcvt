@@ -60,13 +60,14 @@ int convert_s3m_to_stm(FILE *S3Mfile, FILE *STMfile) {
   if(!S3Mfile ||!STMfile) return 2;
   if(!check_valid_s3m(S3Mfile)) return 1;
 
-  fread(s3m_song_header, sizeof(u8), 96, S3Mfile);
+  fread(s3m_song_header, sizeof(u8), sizeof(s3m_song_header), S3Mfile);
   order_count = s3m_song_header[32];
   sample_count = s3m_song_header[34];
   if (sample_count > STM_MAXSMP) eprintf("WARNING: Sample count exceeds 31 (%u > %u), only using %u.\n", sample_count, STM_MAXSMP, STM_MAXSMP);
   pattern_count = s3m_song_header[36];
   if (pattern_count > STM_MAXPAT) eprintf("WARNING: Pattern count exceeds 98 (%u > %u), only converting %u.\n", pattern_count, STM_MAXPAT, STM_MAXPAT);
   show_s3m_song_header();
+
   check_s3m_channels();
 
   convert_song_header();
@@ -98,6 +99,7 @@ int convert_s3m_to_stm(FILE *S3Mfile, FILE *STMfile) {
       parse_s3m_pattern(S3Mfile, s3m_pat_pointers[i]);
       convert_s3m_pattern_to_stm();
       fwrite(stm_pattern, sizeof(u8), sizeof(stm_pattern), STMfile);
+      printf("Pattern %u written.\n", (u8)i);
     } else {
       break;
     }
@@ -106,6 +108,9 @@ int convert_s3m_to_stm(FILE *S3Mfile, FILE *STMfile) {
   for(i = 0; i < STM_MAXSMP; i++) {
     if(i < sample_count) {
       sample_len = s3m_pcm_lens[i];
+
+      if (!sample_len) continue;
+
       padding_len = (u16)calculate_sample_padding(sample_len);
 
       stm_sample_data = calloc(sample_len, sizeof(u8));
@@ -113,6 +118,8 @@ int convert_s3m_to_stm(FILE *S3Mfile, FILE *STMfile) {
         eprintf("Could not allocate memory for sample data!\n");
         return 1;
       }
+
+      printf("Converting sample %u...\n", (u8)i);
 
       dump_sample_data(S3Mfile, s3m_pcm_pointers[i], stm_sample_data, sample_len);
       convert_unsigned_to_signed(stm_sample_data, sample_len);
@@ -128,6 +135,8 @@ int convert_s3m_to_stm(FILE *S3Mfile, FILE *STMfile) {
       }
 
       fwrite(stm_sample_data, sizeof(u8), sample_len, STMfile);
+
+      printf("Sample %u written.\n", (u8)i);
 
       free(stm_sample_data);
     }

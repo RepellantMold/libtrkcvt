@@ -44,12 +44,25 @@ void show_s3m_inst_header(void) {
 
 void grab_s3m_parapointers(FILE* file) {
   usize i = 0;
+  usize count = 0;
 
   if (!file) return;
 
   fseek(file, S3M_ORDERPOS, SEEK_SET);
 
   fread(s3m_order_array, sizeof(u8), order_count, file);
+
+  /* see section "2.6 Load Order Data" from "FireLight S3M Player Tutorial.txt" */
+  for(count = 0; count < order_count; count++) {
+    printf("Order %u -> %u\n", (int)count, (int)i);
+    if (s3m_order_array[count] < S3M_ORDER_MARKER) {
+      s3m_order_array[i] = s3m_order_array[count];
+      i++;
+      if(s3m_order_array[count] > pattern_count) 
+        pattern_count = s3m_order_array[count];
+    }
+  }
+  order_count = i;
 
   fread(s3m_inst_pointers, sizeof(u16), sample_count, file);
 
@@ -130,6 +143,7 @@ void grab_sample_data(FILE* file, usize position) {
 void convert_s3m_intstrument(void) {
   usize i = 0;
   const usize type = s3m_inst_header[0], flags = s3m_inst_header[31];
+  u32 crc = crc32(s3m_inst_header, 80);
 
   switch(type) {
     case S3MSMPTYPE_MSG:
@@ -165,7 +179,7 @@ void convert_s3m_intstrument(void) {
     if (s3m_inst_header[1] != 0)
       memcpy((char *)stm_sample_header, (char *)&s3m_inst_header[1], 12);
     else if (s3m_inst_header[48] != 0) {
-      strncpy((char *)stm_sample_header, (char *)&s3m_inst_header[48], 7);
+      memcpy((char *)stm_sample_header, (char *)&s3m_inst_header[48], 8);
       for(i = 0; i < 7; i++) {
         /* sanitization for 8.3 filenames */
         if((stm_sample_header[i] <= ' ') || (stm_sample_header[i] >= 0x7F)) {
@@ -173,17 +187,17 @@ void convert_s3m_intstrument(void) {
         }
       }
       stm_sample_header[8] = '.',
-      stm_sample_header[9] = (crc32(s3m_inst_header, 80) | '0') & '9',
-      stm_sample_header[10] = (crc32(s3m_inst_header, 80) | '0') & '9',
-      stm_sample_header[11] = (crc32(s3m_inst_header, 80) | '0') & '9';
+      stm_sample_header[9] = ((crc >> 16) | '0') & '9',
+      stm_sample_header[10] = ((crc >> 8) | '0') & '9',
+      stm_sample_header[11] = ((crc) | '0') & '9';
     } else {
       for(i = 0; i < 7; i++) {
-        stm_sample_header[i] = (crc32(s3m_inst_header, 80) | '0') & '9';
+        stm_sample_header[i] = ((crc >> i) | '0') & '9';
       }
       stm_sample_header[8] = '.',
-      stm_sample_header[9] = (crc32(s3m_inst_header, 80) | '0') & '9',
-      stm_sample_header[10] = (crc32(s3m_inst_header, 80) | '0') & '9',
-      stm_sample_header[11] = (crc32(s3m_inst_header, 80) | '0') & '9';
+      stm_sample_header[9] = ((crc >> 16) | '0') & '9',
+      stm_sample_header[10] = ((crc >> 8) | '0') & '9',
+      stm_sample_header[11] = ((crc) | '0') & '9';
     }
 
     /* instrument disk */
@@ -218,7 +232,7 @@ void convert_s3m_intstrument(void) {
 u32 grab_s3m_pcm_pointer(void) {
   u32 parapointer = s3m_inst_header[13] << 16 | s3m_inst_header[15] << 8 | s3m_inst_header[14];
   parapointer <<= 4;
-  printf("PCM Parapointer: %lx\n", parapointer);
+  printf("PCM Parapointer: %lX\n", parapointer);
   return parapointer;
 }
 

@@ -164,8 +164,8 @@ void convert_s3m_pattern_to_stm(void) {
       check_effect(effect, parameter);
 
       stm_pattern[r][c][0] = note,
-      stm_pattern[r][c][1] = (ins << 4) | (volume & 15),
-      stm_pattern[r][c][2] = ((volume & 15) << 4) | (effect & 15),
+      stm_pattern[r][c][1] = ((ins & 31) << 3) | (volume & 15),
+      stm_pattern[r][c][2] = ((volume & 7) << 4) | (effect & 15),
       stm_pattern[r][c][3] = parameter;
     }
   }

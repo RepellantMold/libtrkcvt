@@ -5,9 +5,8 @@
 
 ### todo
 
-- [ ] add a remap system if there's muted channels, it would prevent someone from muting the first 4 channel and breaking the conversion
+- [ ] add a channel remap system if there's muted channels, it would prevent someone from muting the first 4 channels and breaking the conversion
 - [ ] work on stx conversion (and switch based on file extension of the output file)
-- [ ] have the order conversion discard markers
 
 ### in progress
 
@@ -18,3 +17,4 @@
 
 - [x] song header conversion
 - [x] work on sign conversion with the samples
+- [x] have the order conversion discard markers
