@@ -2,6 +2,8 @@
 #define __PATTERN_H
 #include "ext.h"
 
+#define MAXROWS 64
+
 void parse_s3m_pattern(FILE* file, usize position);
 void check_effect(u8 effect, u8 parameter);
 void parse_s3m_pattern(FILE* file, usize position);

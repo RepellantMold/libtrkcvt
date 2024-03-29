@@ -105,7 +105,7 @@ void parse_s3m_pattern(FILE* file, usize position) {
 
   fseek(file, 2, SEEK_CUR);
 
-  do {
+  while (r++ < MAXROWS) {
     fread(&cv, sizeof(u8), 1, file);
 
     if(!cv) {break;}
@@ -145,16 +145,16 @@ void parse_s3m_pattern(FILE* file, usize position) {
     s3m_unpacked_pattern[r][c][2] = volume;
     s3m_unpacked_pattern[r][c][3] = effect;
     s3m_unpacked_pattern[r][c][4] = parameter;
-  } while (r++ < 64);
+  };
 
 }
 
 void convert_s3m_pattern_to_stm(void) {
   usize r = 0, c = 0;
   u8 note = 0xFF, ins = 0, volume = 0xFF, effect = 0, parameter = 0;
-  
-  for(c = 0; c < 4; c++) {
-    for(r = 0; r < 64; r++) {
+
+  for(c = 0; c < STM_MAXCHN; c++) {
+    for(r = 0; r < MAXROWS; r++) {
       note = s3m_unpacked_pattern[r][c][0],
       ins = s3m_unpacked_pattern[r][c][1],
       volume = s3m_unpacked_pattern[r][c][2],
@@ -165,7 +165,7 @@ void convert_s3m_pattern_to_stm(void) {
 
       stm_pattern[r][c][0] = note,
       stm_pattern[r][c][1] = (ins << 4) | (volume & 15),
-      stm_pattern[r][c][2] = ((volume & 7) << 3) | (effect & 15),
+      stm_pattern[r][c][2] = ((volume & 15) << 4) | (effect & 15),
       stm_pattern[r][c][3] = parameter;
     }
   }
@@ -173,8 +173,8 @@ void convert_s3m_pattern_to_stm(void) {
 
 void generate_blank_stm_pattern(void) {
   usize r = 0, c = 0;
-  for(c = 0; c < 4; c++) {
-    for(r = 0; r < 64; r++) {
+  for(c = 0; c < STM_MAXCHN; c++) {
+    for(r = 0; r < MAXROWS; r++) {
       stm_pattern[r][c][0] = 0xFF,
       stm_pattern[r][c][1] = 0x01,
       stm_pattern[r][c][2] = 0x80,
