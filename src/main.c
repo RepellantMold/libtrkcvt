@@ -81,7 +81,7 @@ int convert_s3m_to_stm(FILE *S3Mfile, FILE *STMfile) {
   sample_count = s3m_song_header[34];
   if (sample_count > STM_MAXSMP) eprintf("WARNING: Sample count exceeds 31 (%u > %u), only using %u.\n", sample_count, STM_MAXSMP, STM_MAXSMP);
   pattern_count = s3m_song_header[36];
-  if (pattern_count > STM_MAXPAT) eprintf("WARNING: Pattern count exceeds 98 (%u > %u), only converting %u.\n", pattern_count, STM_MAXPAT, STM_MAXPAT);
+  if (pattern_count > STM_MAXPAT) eprintf("WARNING: Pattern count exceeds 63 (%u > %u), only converting %u.\n", pattern_count, STM_MAXPAT, STM_MAXPAT);
   show_s3m_song_header();
 
   check_s3m_channels();

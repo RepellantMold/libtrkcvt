@@ -180,24 +180,19 @@ void convert_s3m_intstrument(void) {
       memcpy((char *)stm_sample_header, (char *)&s3m_inst_header[1], 12);
     else if (s3m_inst_header[48] != 0) {
       memcpy((char *)stm_sample_header, (char *)&s3m_inst_header[48], 8);
-      for(i = 0; i < 7; i++) {
+      for(i = 0; i < 8; i++) {
         /* sanitization for 8.3 filenames */
         if((stm_sample_header[i] <= ' ') || (stm_sample_header[i] >= 0x7F)) {
           stm_sample_header[i] = '_';
         }
       }
       stm_sample_header[8] = '.',
-      stm_sample_header[9] = ((crc >> 16) | '0') & '9',
-      stm_sample_header[10] = ((crc >> 8) | '0') & '9',
-      stm_sample_header[11] = ((crc) | '0') & '9';
+      snprintf((char*)&stm_sample_header[9], 4, "%lu", (u32)crc % 512);
     } else {
-      for(i = 0; i < 7; i++) {
-        stm_sample_header[i] = ((crc >> i) | '0') & '9';
-      }
+      snprintf((char*)&stm_sample_header[0], 8, "%lu", (u32)crc * rand());
+      stm_sample_header[7] = '_',
       stm_sample_header[8] = '.',
-      stm_sample_header[9] = ((crc >> 16) | '0') & '9',
-      stm_sample_header[10] = ((crc >> 8) | '0') & '9',
-      stm_sample_header[11] = ((crc) | '0') & '9';
+      snprintf((char*)&stm_sample_header[9], 4, "%lu", (u32)crc % 512);
     }
 
     /* instrument disk */
