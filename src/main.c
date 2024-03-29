@@ -22,6 +22,21 @@
 #include "sample.c"
 #include "pattern.c"
 
+/* RM: stealing cs127's NTCheck's return values! */
+enum FOC_ReturnCode
+{
+    FOC_SUCCESS        = 0x00,
+
+    FOC_OPEN_FAILURE   = 0x01,
+    FOC_NOT_S3M_FILE   = 0x02,
+    FOC_MALFORMED_FILE = 0x04,
+    FOC_CONV_FAILURE   = 0x08,
+    FOC_ALLOC_FAIL     = 0x10,
+
+    FOC_NO_FILENAMES   = 0x40
+};
+
+
 void eprintf(const char* format, ...) {
   va_list ap;
 
@@ -58,8 +73,8 @@ int convert_s3m_to_stm(FILE *S3Mfile, FILE *STMfile) {
   u16 sample_len = 0;
   u16 padding_len = 0;
 
-  if(!S3Mfile ||!STMfile) return 2;
-  if(!check_valid_s3m(S3Mfile)) return 1;
+  if(!S3Mfile ||!STMfile) return FOC_OPEN_FAILURE;
+  if(!check_valid_s3m(S3Mfile)) return FOC_NOT_S3M_FILE;
 
   (void)!fread(s3m_song_header, sizeof(u8), sizeof(s3m_song_header), S3Mfile);
   order_count = s3m_song_header[32];
@@ -117,7 +132,7 @@ int convert_s3m_to_stm(FILE *S3Mfile, FILE *STMfile) {
       stm_sample_data = calloc(sample_len, sizeof(u8));
       if (!stm_sample_data) {
         eprintf("Could not allocate memory for sample data!\n");
-        return 1;
+        return FOC_ALLOC_FAIL;
       }
 
       printf("Converting sample %u...\n", (u8)i);
@@ -132,7 +147,7 @@ int convert_s3m_to_stm(FILE *S3Mfile, FILE *STMfile) {
         if (!temp) {
           free(stm_sample_data);
           eprintf("Could not reallocate memory for sample data!\n");
-          return 1;
+          return FOC_ALLOC_FAIL;
         }
         stm_sample_data = temp;
       }
@@ -145,23 +160,23 @@ int convert_s3m_to_stm(FILE *S3Mfile, FILE *STMfile) {
     }
   }
 
-  return 0;
+  return FOC_SUCCESS;
 }
 
 int convert_s3m_to_stx(FILE *S3Mfile, FILE *STXfile) {
   (void)S3Mfile; (void)STXfile;
   /* TODO */
-  return 0;
+  return FOC_SUCCESS;
 }
 
 int main(int argc, char *argv[]) {
-  int return_value = EXIT_SUCCESS;
+  int return_value = FOC_SUCCESS;
   FILE *outfile;
   FILE *infile;
 
   if (argc != 3) {
     printf("usage: %s <input.s3m> <output.stm>\n", argv[0]);
-    return_value = EXIT_FAILURE;
+    return_value = FOC_NO_FILENAMES;
     goto returndasvalue;
   }
 
@@ -169,7 +184,7 @@ int main(int argc, char *argv[]) {
   outfile = fopen(argv[2], "wb");
 
   if (!infile || !outfile) {
-      return_value = EXIT_FAILURE;
+      return_value |= FOC_OPEN_FAILURE;
       perror("Failed to open file");
       goto closefiledescriptors;
   }
@@ -179,7 +194,7 @@ int main(int argc, char *argv[]) {
    * switch operation to STX conversion if they did */
   if(convert_s3m_to_stm(infile, outfile)) {
     eprintf("Failed to convert S3M to STM\n");
-    return_value = EXIT_FAILURE;
+    return_value = FOC_CONV_FAILURE;
   };
 
   closefiledescriptors:

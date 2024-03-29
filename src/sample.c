@@ -11,6 +11,8 @@
 #include "sample.h"
 
 void dump_sample_data(FILE* file, usize position, u8* pcm, usize length) {
+  if (!file || !pcm) return;
+
   fseek(file, position, SEEK_SET);
 
   (void)!fread(pcm, sizeof(u8), length, file);
@@ -35,7 +37,7 @@ usize calculate_sample_padding(size_t sample_size) {
 u32 crc32_for_byte(u32 byte) {
   const u32 polynomial = 0xEDB88320L;
   u32 result = byte;
-  size_t i = 0;
+  usize i = 0;
 
   for (; i < 8; i++) {
     /* IMPLEMENTATION: the code below always shifts result right by
