@@ -1,6 +1,7 @@
-### potential todo's
+### potential ideas
 
 - give either an optional verbose option or a quiet option to reduce the amount of output
+- output both version 1.0 and 1.1 STX files based on command line option (default to 1.1?)
 
 
 ### todo
