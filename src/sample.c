@@ -28,7 +28,7 @@ void convert_unsigned_to_signed(u8* pcm, usize length) {
 }
 
 usize calculate_sample_padding(size_t sample_size) {
-  return sample_size & 0xF;
+  return 16 - (sample_size % 16);
 }
 
 /* the following code is from https://github.com/aeldidi/crc32/,

@@ -18,11 +18,11 @@ u16 calculate_stm_sample_parapointer(usize id, usize sample_size) {
 }
 
 usize convert_to_parapointer(usize pointer) {
-  printf("%04X -> %04X\n", (unsigned int)pointer, (unsigned int)pointer >> 4);
+  optional_printf("%04X -> %04X\n", (unsigned int)pointer, (unsigned int)pointer >> 4);
   return pointer >> 4;
 }
 
 usize convert_from_parapointer(usize parapointer) {
-  printf("%04X -> %04X\n", (unsigned int)parapointer, (unsigned int)parapointer << 4);
+  optional_printf("%04X -> %04X\n", (unsigned int)parapointer, (unsigned int)parapointer << 4);
   return parapointer << 4;
 }

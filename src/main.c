@@ -33,9 +33,17 @@ enum FOC_ReturnCode
   FOC_CONV_FAILURE    = 0x08,
 
   FOC_ALLOC_FAIL      = 0x10,
+
+  FOC_NO_INPUT        = 0x20,
   
 
   FOC_NO_FILENAMES    = 0x40
+};
+
+enum FOC_ConversionMode
+{
+  FOC_S3MTOSTM        = 0x00,
+  FOC_S3MTOSTX        = 0x01
 };
 
 
@@ -50,6 +58,37 @@ void eprintf(const char* format, ...) {
 void eputs(const char* msg) {
   fputs(msg, stderr);
   fputc('\n', stderr);
+}
+
+void optional_printf(const char* format, ...) {
+  if (verbose_mode) {
+    va_list ap;
+
+    va_start(ap, format);
+    vprintf(format, ap);
+    va_end(ap);
+  }
+}
+
+void optional_puts(const char* msg) {
+  if (verbose_mode) {
+    puts(msg);
+  }
+}
+
+void warning_puts(const char* msg) {
+  printf("WARNING: ");
+  puts(msg);
+}
+
+void warning_printf(const char* format, ...) {
+  va_list ap;
+
+  printf("WARNING: ");
+
+  va_start(ap, format);
+  vprintf(format, ap);
+  va_end(ap);
 }
 
 bool check_valid_s3m(FILE *S3Mfile) {
@@ -68,7 +107,7 @@ bool check_valid_s3m(FILE *S3Mfile) {
   return true;
 }
 
-int convert_s3m_to_stm(FILE *S3Mfile, FILE *STMfile) {
+int convert_s3m_to_stm(FILE *S3Mfile, FILE *STMfile, bool verbose) {
   usize i = 0;
   u8* stm_sample_data = NULL;
   u8* temp = NULL;
@@ -82,10 +121,10 @@ int convert_s3m_to_stm(FILE *S3Mfile, FILE *STMfile) {
   (void)!fread(s3m_song_header, sizeof(u8), sizeof(s3m_song_header), S3Mfile);
   order_count = s3m_song_header[32];
   sample_count = s3m_song_header[34];
-  if (sample_count > STM_MAXSMP) eprintf("WARNING: Sample count exceeds 31 (%u > %u), only using %u.\n", sample_count, STM_MAXSMP, STM_MAXSMP);
+  if (sample_count > STM_MAXSMP) warning_printf("WARNING: Sample count exceeds 31 (%u > %u), only using %u.\n", sample_count, STM_MAXSMP, STM_MAXSMP);
   pattern_count = s3m_song_header[36];
-  if (pattern_count > STM_MAXPAT) eprintf("WARNING: Pattern count exceeds 63 (%u > %u), only converting %u.\n", pattern_count, STM_MAXPAT, STM_MAXPAT);
-  show_s3m_song_header();
+  if (pattern_count > STM_MAXPAT) warning_printf("WARNING: Pattern count exceeds 63 (%u > %u), only converting %u.\n", pattern_count, STM_MAXPAT, STM_MAXPAT);
+  if (verbose) show_s3m_song_header();
 
   check_s3m_channels();
 
@@ -96,11 +135,11 @@ int convert_s3m_to_stm(FILE *S3Mfile, FILE *STMfile) {
 
   for(i = 0; i < STM_MAXSMP; i++) {
     if(i < sample_count) {
-      printf("Sample %u:\n", (u8)i);
+      if (verbose) printf("Sample %u:\n", (u8)i);
       grab_sample_data(S3Mfile, s3m_inst_pointers[i]);
       s3m_pcm_pointers[i] = grab_s3m_pcm_pointer();
       s3m_pcm_lens[i] = grab_s3m_pcm_len();
-      show_s3m_inst_header();
+      if (verbose) show_s3m_inst_header();
       convert_s3m_intstrument();
     } else {
       generate_blank_stm_instrument();
@@ -114,7 +153,7 @@ int convert_s3m_to_stm(FILE *S3Mfile, FILE *STMfile) {
 
   for(i = 0; i < STM_MAXPAT; i++) {
     if (i < pattern_count) {
-      printf("Pattern %u:\n", (u8)i);
+      printf("Converting pattern %u...\n", (u8)i);
       parse_s3m_pattern(S3Mfile, s3m_pat_pointers[i]);
       convert_s3m_pattern_to_stm();
       fwrite(stm_pattern, sizeof(u8), sizeof(stm_pattern), STMfile);
@@ -163,28 +202,59 @@ int convert_s3m_to_stm(FILE *S3Mfile, FILE *STMfile) {
     }
   }
 
+  puts("Done!");
+
   return FOC_SUCCESS;
 }
 
-int convert_s3m_to_stx(FILE *S3Mfile, FILE *STXfile) {
-  (void)S3Mfile; (void)STXfile;
+int convert_s3m_to_stx(FILE *S3Mfile, FILE *STXfile, bool verbose_mode) {
+  (void)S3Mfile; (void)STXfile; (void)verbose_mode;
   /* TODO */
   return FOC_SUCCESS;
 }
 
-int main(int argc, char *argv[]) {
-  int return_value = FOC_SUCCESS;
-  FILE *outfile;
-  FILE *infile;
+void print_help(void) {
+  puts("Usage: s3m2stm [options] <inputfile> <outputfile>");
+  puts("(C) RepellantMold/cs127, 2024");
+  puts("Licensed under ISC");
+  puts("");
+  puts("Options:");
+  puts("  -h, --help       Print this help and exit");
+  puts("  -v, --verbose    Enable extremely verbose output");
+  puts("  -stm             Convert the S3M to STM (default)");
+  puts("  -stx             Convert the S3M to STX");
+}
 
-  if (argc != 3) {
-    printf("usage: %s <input.s3m> <output.stm>\n", argv[0]);
-    return_value = FOC_NO_FILENAMES;
-    goto returndasvalue;
+int main(int argc, char *argv[]) {
+  int i = 0, return_value = FOC_SUCCESS;
+  size_t conversion_type = FOC_S3MTOSTM;
+  FILE *outfile = NULL;
+  FILE *infile = NULL; 
+
+  if (argc < 2) {
+    print_da_help:
+    print_help();
+    return FOC_NO_INPUT;
   }
 
-  infile = fopen(argv[1], "rb");
-  outfile = fopen(argv[2], "wb");
+  for(i = 1; i < argc; i++) {
+    if (!(strcmp(argv[i], "-v")) || !(strcmp(argv[i], "--verbose")))
+      verbose_mode = true;
+
+    else if (!(strcmp(argv[i], "-h")) || !(strcmp(argv[i], "--help")))
+      goto print_da_help;
+
+    else if (!(strcmp(argv[i], "-stm")))
+      conversion_type = FOC_S3MTOSTM;
+
+    else if (!(strcmp(argv[i], "-stx")))
+      conversion_type = FOC_S3MTOSTX;
+
+    else if (!infile)
+      infile = fopen(argv[i], "rb");
+    else if (!outfile)
+      outfile = fopen(argv[i], "wb");
+  }
 
   if (!infile || !outfile) {
       return_value |= FOC_OPEN_FAILURE;
@@ -192,18 +262,18 @@ int main(int argc, char *argv[]) {
       goto closefiledescriptors;
   }
 
-  /* TODO: check if the user used an
-   * STM or STX extension on the output name and
-   * switch operation to STX conversion if they did */
-  if(convert_s3m_to_stm(infile, outfile)) {
-    eprintf("Failed to convert S3M to STM\n");
-    return_value = FOC_CONV_FAILURE;
-  };
+  switch (conversion_type) {
+    case FOC_S3MTOSTM:
+      return_value |= convert_s3m_to_stm(infile, outfile, verbose_mode);
+      break;
+    case FOC_S3MTOSTX:
+      return_value |= convert_s3m_to_stx(infile, outfile, verbose_mode);
+      break;
+  }
 
   closefiledescriptors:
   fclose(infile);
   fclose(outfile);
 
-  returndasvalue:
   return return_value;
 }

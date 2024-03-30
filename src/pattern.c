@@ -11,7 +11,22 @@
 #define EFFBASE ('A' - 1)
 #define EFF(e) (e - EFFBASE)
 
-void check_effect(u8 effect, u8 parameter) {
+void warning_pattern_puts(u8 row, u8 effect, const char* msg) {
+  printf("WARNING at row %u (effect %c): ", row, EFFBASE + effect);
+  puts(msg);
+}
+
+void warning_pattern_printf(u8 row, u8 effect, const char* format, ...) {
+  va_list ap;
+
+  printf("WARNING at row %u (effect %c): ", row, EFFBASE + effect);
+
+  va_start(ap, format);
+  vprintf(format, ap);
+  va_end(ap);
+}
+
+void check_effect(u8 effect, u8 parameter, u8 row) {
   u8 hinib = parameter >> 4;
   u8 lownib = parameter & 0x0F;
   switch (effect) {
@@ -27,13 +42,13 @@ void check_effect(u8 effect, u8 parameter) {
 
     /* set position */
     case EFF('B'):
-      eputs("WARNING: set position does not do a pattern break, please use a pattern break alongside this if it's intended!");
+      warning_pattern_puts(row, effect, "set position does not do a pattern break, please use a pattern break alongside this if it's intended!");
       break;
 
     /* pattern break */
     case EFF('C'):
       if (parameter) {
-        eputs("WARNING: pattern break ignores parameter!");
+        warning_pattern_puts(row, effect, "pattern break ignores parameter!");
         parameter = 0;
       }
       break;
@@ -41,9 +56,9 @@ void check_effect(u8 effect, u8 parameter) {
     /* volume slide */
     case EFF('D'):
       if (hinib == 0xF || lownib == 0xF)
-        eputs("WARNING: there's no fine volume slides!");
+        warning_pattern_puts(row, effect, "there's no fine volume slides!");
       else if (hinib && lownib)
-        eprintf("WARNING: both x (%hhu) and y (%hhu) specified, y will take priority!\n", hinib, lownib);
+        warning_pattern_printf(row, effect, "both x (%hhu) and y (%hhu) specified, y will take priority!\n", hinib, lownib);
       goto noeffectmemory;
       break;
 
@@ -51,7 +66,7 @@ void check_effect(u8 effect, u8 parameter) {
     case EFF('E'):
     case EFF('F'):
       if (hinib >= 0xE)
-        eputs("WARNING: there's no fine/extra-fine porta up/down!");
+        warning_pattern_puts(row, effect, "there's no fine/extra-fine porta up/down!");
       goto noeffectmemory;
       break;
 
@@ -62,7 +77,7 @@ void check_effect(u8 effect, u8 parameter) {
 
     /* vibrato */
     case EFF('H'):
-      eputs("WARNING: vibrato depth is doubled compared to other trackers, attempting to make adjustment.");
+      warning_pattern_puts(row, effect, "vibrato depth is doubled compared to other trackers, attempting to make adjustment.");
       if((lownib >> 1) != 0)
         if(!(s3m_song_header[38] & S3M_ST2VIB))
           lownib >>= 1;
@@ -81,7 +96,7 @@ void check_effect(u8 effect, u8 parameter) {
       break;
 
     default:
-      eprintf("WARNING: unsupported effect %c!\n", EFFBASE + effect);
+      warning_pattern_puts(row, effect, "unsupported effect!");
       effect = 0;
       break;
   }
@@ -90,7 +105,7 @@ void check_effect(u8 effect, u8 parameter) {
 
   noeffectmemory:
   if (!parameter)
-    eputs("WARNING: there's no effect memory, this will be treated as a no-op.");
+    warning_pattern_puts(row, effect, "there's no effect memory with this effect, this will be treated as a no-op.");
   return;
 }
 
@@ -138,24 +153,24 @@ void parse_s3m_pattern(FILE* file, usize position) {
       parameter = 0x00;
     }
 
-    printf("r:%02u c:%02u ", r, c);
+    optional_printf("r:%02u c:%02u ", r, c);
 
     if (note < 0xFE)
-    printf("%.2s%01u", notetable[note % 12], note/12);
-    else if (note == 0xFE) printf("^^^");
-    else printf("...");
+    optional_printf("%.2s%01u", notetable[note % 12], note/12);
+    else if (note == 0xFE) optional_printf("^^^");
+    else optional_printf("...");
 
-    if (ins) printf(" %02u ", ins);
-    else printf(" .. ");
+    if (ins) optional_printf(" %02u ", ins);
+    else optional_printf(" .. ");
 
     if (volume <= 64) 
-    printf("%02u ", volume);
-    else printf(".. ");
+    optional_printf("%02u ", volume);
+    else optional_printf(".. ");
 
     if (effect)
-    printf("%c%02X\n", EFFBASE + effect, parameter);
+    optional_printf("%c%02X\n", EFFBASE + effect, parameter);
     else
-    printf("...\n");
+    optional_printf("...\n");
 
     s3m_unpacked_pattern[r][c][0] = note;
     s3m_unpacked_pattern[r][c][1] = ins;
@@ -178,7 +193,7 @@ void convert_s3m_pattern_to_stm(void) {
       effect = s3m_unpacked_pattern[r][c][3],
       parameter = s3m_unpacked_pattern[r][c][4];
 
-      check_effect(effect, parameter);
+      check_effect(effect, parameter, r);
 
       stm_pattern[r][c][0] = note,
       stm_pattern[r][c][1] = ((ins & 31) << 3) | (volume & 15),

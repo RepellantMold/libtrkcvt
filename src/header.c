@@ -54,7 +54,7 @@ void grab_s3m_parapointers(FILE* file) {
 
   /* see section "2.6 Load Order Data" from "FireLight S3M Player Tutorial.txt" */
   for(count = 0; count < order_count; count++) {
-    printf("Order %u -> %u\n", (int)count, (int)i);
+    optional_printf("Order %u -> %u\n", (int)count, (int)i);
     if (s3m_order_array[count] < S3M_ORDER_MARKER) {
       s3m_order_array[i] = s3m_order_array[count];
       i++;
@@ -67,12 +67,14 @@ void grab_s3m_parapointers(FILE* file) {
   (void)!fread(s3m_inst_pointers, sizeof(u16), sample_count, file);
 
   for(i = 0; i < sample_count; i++) {
+    optional_printf("Sample %u:\n", (u8)i);
     s3m_inst_pointers[i] = (u16)convert_from_parapointer(s3m_inst_pointers[i]);
   }
 
   (void)!fread(s3m_pat_pointers, sizeof(u16), pattern_count, file);
 
   for(i = 0; i < pattern_count; i++) {
+    optional_printf("Pattern %u:\n", (u8)i);
     s3m_pat_pointers[i] = (u16)convert_from_parapointer(s3m_pat_pointers[i]);
   }
 }
@@ -87,15 +89,15 @@ void check_s3m_channels(void) {
     if (channel == S3MCHN_DISABLED) break;
 
     if (i > STM_MAXCHN) {
-      eputs("WARNING: There's more than 4 channels, they'll be truncated.");
+      warning_puts("There's more than 4 channels, they'll be truncated.");
       break;
     }
 
     if (channel & S3MCHN_MUTE)
-      eprintf("WARNING: Channel %u is muted which is unsupported, the notes will be converted anyway.", i);
+      warning_printf("Channel %u is muted which is unsupported, the notes will be converted anyway.", i);
 
     if (channel >= S3MCHN_ADLIBMEL1 && channel <= S3MCHN_ADLIBHATDRUM)
-      eprintf("WARNING: Adlib channel detected (channel %u), the notes will be converted as is without the instrument data.\n", i);
+      warning_printf("Adlib channel detected (channel %u), the notes will be converted as is without the instrument data.\n", i);
   }
 }
 
@@ -104,10 +106,10 @@ void convert_song_header(void) {
   strncpy((char*)stm_song_header, (char*)s3m_song_header, 19);
 
   if (s3m_song_header[38] & S3M_AMIGAFREQLIMITS)
-    eputs("WARNING: Ignoring Amiga frequency limit");
+    warning_puts("Ignoring Amiga frequency limit");
 
   if (s3m_song_header[51] & 128)
-    eputs("WARNING: Do not expect the song to play in stereo.");
+    warning_puts("Do not expect the song to play in stereo.");
 
   if (s3m_song_header[38] & S3M_ST2TEMPO)
     stm_song_header[32] = s3m_song_header[49];
@@ -218,7 +220,7 @@ void convert_s3m_intstrument(void) {
     break;
 
     default:
-    eputs("WARNING: Adlib instrument is not supported, only converting sample name.");
+    warning_puts("Adlib instrument is not supported, only converting sample name.");
     goto generateblanksample;
     break;
   }
@@ -227,7 +229,7 @@ void convert_s3m_intstrument(void) {
 u32 grab_s3m_pcm_pointer(void) {
   u32 parapointer = s3m_inst_header[13] << 16 | s3m_inst_header[15] << 8 | s3m_inst_header[14];
   parapointer <<= 4;
-  printf("PCM Parapointer: %lX\n", parapointer);
+  optional_printf("PCM Parapointer: %lX\n", parapointer);
   return parapointer;
 }
 
@@ -235,7 +237,7 @@ u16 grab_s3m_pcm_len(void) {
   u16 length = s3m_inst_header[17] << 8 | s3m_inst_header[16];
 
   if((s3m_inst_header[19] << 8 | s3m_inst_header[18]) != 0)
-    eprintf("WARNING: the sample is too long, only converting the first 64kb of it.\n");
+    warning_puts("the sample is too long, only converting the first 64kb of it.\n");
 
   return length;
 }
