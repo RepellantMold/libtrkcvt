@@ -25,15 +25,17 @@
 /* RM: stealing cs127's NTCheck's return values! */
 enum FOC_ReturnCode
 {
-    FOC_SUCCESS        = 0x00,
+  FOC_SUCCESS         = 0x00,
 
-    FOC_OPEN_FAILURE   = 0x01,
-    FOC_NOT_S3M_FILE   = 0x02,
-    FOC_MALFORMED_FILE = 0x04,
-    FOC_CONV_FAILURE   = 0x08,
-    FOC_ALLOC_FAIL     = 0x10,
+  FOC_OPEN_FAILURE    = 0x01,
+  FOC_NOT_S3M_FILE    = 0x02,
+  FOC_MALFORMED_FILE  = 0x04,
+  FOC_CONV_FAILURE    = 0x08,
 
-    FOC_NO_FILENAMES   = 0x40
+  FOC_ALLOC_FAIL      = 0x10,
+  
+
+  FOC_NO_FILENAMES    = 0x40
 };
 
 
@@ -69,7 +71,7 @@ bool check_valid_s3m(FILE *S3Mfile) {
 int convert_s3m_to_stm(FILE *S3Mfile, FILE *STMfile) {
   usize i = 0;
   u8* stm_sample_data = NULL;
-  u8* temp;
+  u8* temp = NULL;
   u16 sample_len = 0;
   u16 padding_len = 0;
 
