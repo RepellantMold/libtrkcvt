@@ -12,15 +12,15 @@
 #define EFFBASE ('A' - 1)
 #define EFF(e) (e - EFFBASE)
 
-void warning_pattern_puts(u8 row, u8 channel, u8 effect, const char* msg) {
-  printf("WARNING (row %02u/channel %02u, effect %c): ", row, channel, EFFBASE + effect);
+void warning_pattern_puts(Pattern_Display_Context* context, const char* msg) {
+  printf("WARNING (row %02u/channel %02u, effect %c): ", context->row, context->channel, EFFBASE + context->effect);
   puts(msg);
 }
 
-void warning_pattern_printf(u8 row, u8 channel, u8 effect, const char* format, ...) {
+void warning_pattern_printf(Pattern_Display_Context* context, const char* format, ...) {
   va_list ap;
 
-  printf("WARNING (row %02u/channel %02u, effect %c): ", row, channel, EFFBASE + effect);
+  printf("WARNING (row %02u/channel %02u, effect %c): ", context->row, context->channel, EFFBASE + context->effect);
 
   va_start(ap, format);
   vprintf(format, ap);
@@ -64,7 +64,10 @@ void print_s3m_pattern() {
   fputs("\n", stdout);
 }
 
-void check_effect(u8 effect, u8 parameter, u8 row, u8 channel) {
+void check_effect(Pattern_Display_Context* context) {
+  u8 effect = context->effect;
+  u8 parameter = context->parameter;
+
   u8 hinib = parameter >> 4;
   u8 lownib = parameter & 0x0F;
   switch (effect) {
@@ -80,13 +83,13 @@ void check_effect(u8 effect, u8 parameter, u8 row, u8 channel) {
 
     /* set position */
     case EFF('B'):
-      warning_pattern_puts(row, channel, effect, "set position does not do a pattern break, please use a pattern break alongside this if it's intended!");
+      warning_pattern_puts(context, "set position does not do a pattern break, please use a pattern break alongside this if it's intended!");
       break;
 
     /* pattern break */
     case EFF('C'):
       if (parameter) {
-        warning_pattern_puts(row, channel, effect, "pattern break ignores parameter!");
+        warning_pattern_puts(context, "pattern break ignores parameter!");
         parameter = 0;
       }
       break;
@@ -94,9 +97,9 @@ void check_effect(u8 effect, u8 parameter, u8 row, u8 channel) {
     /* volume slide */
     case EFF('D'):
       if (hinib == 0xF || lownib == 0xF)
-        warning_pattern_puts(row, channel, effect, "there's no fine volume slides!");
+        warning_pattern_puts(context, "there's no fine volume slides!");
       else if (hinib && lownib)
-        warning_pattern_printf(row, channel, effect, "both x (%hhu) and y (%hhu) specified, y will take priority!\n", hinib, lownib);
+        warning_pattern_printf(context, "both x (%hhu) and y (%hhu) specified, y will take priority!\n", hinib, lownib);
       goto noeffectmemory;
       break;
 
@@ -104,7 +107,7 @@ void check_effect(u8 effect, u8 parameter, u8 row, u8 channel) {
     case EFF('E'):
     case EFF('F'):
       if (hinib >= 0xE)
-        warning_pattern_puts(row, channel, effect, "there's no fine/extra-fine porta up/down!");
+        warning_pattern_puts(context, "there's no fine/extra-fine porta up/down!");
       goto noeffectmemory;
       break;
 
@@ -115,7 +118,7 @@ void check_effect(u8 effect, u8 parameter, u8 row, u8 channel) {
 
     /* vibrato */
     case EFF('H'):
-      warning_pattern_puts(row, channel, effect, "vibrato depth is doubled compared to other trackers, attempting to make adjustment.");
+      warning_pattern_puts(context, "vibrato depth is doubled compared to other trackers, attempting to make adjustment.");
       if((lownib >> 1) != 0)
         if(!(s3m_song_header[38] & S3M_ST2VIB))
           lownib >>= 1;
@@ -134,7 +137,7 @@ void check_effect(u8 effect, u8 parameter, u8 row, u8 channel) {
       break;
 
     default:
-      warning_pattern_puts(row, channel, effect, "unsupported effect!");
+      warning_pattern_puts(context, "unsupported effect!");
       effect = 0;
       break;
   }
@@ -143,7 +146,7 @@ void check_effect(u8 effect, u8 parameter, u8 row, u8 channel) {
 
   noeffectmemory:
   if (!parameter)
-    warning_pattern_puts(row, channel, effect, "there's no effect memory with this effect, this will be treated as a no-op.");
+    warning_pattern_puts(context, "there's no effect memory with this effect, this will be treated as a no-op.");
   return;
 }
 
@@ -191,13 +194,13 @@ void parse_s3m_pattern(FILE* file, usize position) {
       parameter = 0x00;
     }
 
-    if (verbose_mode) print_s3m_pattern();
-
     s3m_unpacked_pattern[r][c][0] = note;
     s3m_unpacked_pattern[r][c][1] = ins;
     s3m_unpacked_pattern[r][c][2] = volume;
     s3m_unpacked_pattern[r][c][3] = effect;
     s3m_unpacked_pattern[r][c][4] = parameter;
+
+    if (main_context.verbose_mode) print_s3m_pattern();
   };
 
 }
@@ -214,7 +217,9 @@ void convert_s3m_pattern_to_stm(void) {
       effect = s3m_unpacked_pattern[r][c][3],
       parameter = s3m_unpacked_pattern[r][c][4];
 
-      check_effect(effect, parameter, r, c);
+      Pattern_Display_Context pd = {r, c, effect, parameter};
+
+      check_effect(&pd);
 
       stm_pattern[r][c][0] = note,
       stm_pattern[r][c][1] = ((ins & 31) << 3) | (volume & 15),

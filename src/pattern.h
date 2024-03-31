@@ -7,16 +7,24 @@
 typedef struct {
   u8 s3m_unpacked_pattern[64][32][5];
   u8 stm_pattern[64][4][4];
+  u8 *stx_pattern;
 } Pattern_Context;
 
+typedef struct {
+  u8 row;
+  u8 channel;
+  u8 effect;
+  u8 parameter;
+} Pattern_Display_Context;
+
 void parse_s3m_pattern(FILE* file, usize position);
-void check_effect(u8 effect, u8 parameter, u8 row, u8 channel);
+void check_effect(Pattern_Display_Context* context);
 void convert_s3m_pattern_to_stm(void);
 
 void print_s3m_pattern(void);
 
-void warning_pattern_puts(u8 row, u8 channel, u8 effect, const char* msg);
-void warning_pattern_printf(u8 row, u8 channel, u8 effect, const char* format, ...);
+void warning_pattern_puts(Pattern_Display_Context* context, const char* msg);
+void warning_pattern_printf(Pattern_Display_Context* context, const char* format, ...);
 
 /* for display purposes */
 u8 notetable[12][2] = {

@@ -37,7 +37,9 @@ enum FOC_ReturnCode
   FOC_NO_INPUT        = 0x20,
 
 
-  FOC_NO_FILENAMES    = 0x40
+  FOC_NO_FILENAMES    = 0x40,
+
+  FOC_CONVERSION_FAIL = 0x80,
 };
 
 enum FOC_ConversionMode
@@ -61,7 +63,7 @@ void eputs(const char* msg) {
 }
 
 void optional_printf(const char* format, ...) {
-  if (verbose_mode) {
+  if (main_context.verbose_mode) {
     va_list ap;
 
     va_start(ap, format);
@@ -71,7 +73,7 @@ void optional_printf(const char* format, ...) {
 }
 
 void optional_puts(const char* msg) {
-  if (verbose_mode) {
+  if (main_context.verbose_mode) {
     puts(msg);
   }
 }
@@ -91,29 +93,86 @@ void warning_printf(const char* format, ...) {
   va_end(ap);
 }
 
-bool check_valid_s3m(FILE *S3Mfile) {
-  char scrm[4] = {0};
+void print_help(void) {
+  puts("Usage: s3m2stm [options] <inputfile> <outputfile>");
+  puts("(C) RepellantMold/cs127, 2024");
+  puts("Licensed under ISC");
+  puts("");
+  puts("Options:");
+  puts("  -h, --help       Print this help and exit");
+  puts("  -v, --verbose    Enable extremely verbose output");
+  puts("  -stm             Convert the S3M to STM (default)");
+  puts("  -stx             Convert the S3M to STX");
+}
 
-  fseek(S3Mfile, 44, SEEK_SET);
+void handle_sample_headers_s3mtostm(FOC_Context* context, usize sample_count);
+int handle_pcm_s3mtostm(FOC_Context* context, usize sample_count);
+void handle_patterns_s3mtostm(FOC_Context* context, usize pattern_count);
 
-  (void)!fread(scrm, sizeof(char), 4, S3Mfile);
+bool check_valid_s3m(FILE *S3Mfile);
 
-  if (memcmp(scrm, "SCRM", 4)) {
-    eprintf("This is not an S3M file!");
-    return false;
+
+int convert_s3m_to_stm(FOC_Context* context);
+int convert_s3m_to_stx(FOC_Context* context);
+
+int main(int argc, char *argv[]) {
+  int i = 0, return_value = FOC_SUCCESS;
+  usize conversion_type = FOC_S3MTOSTM;
+  FILE *outfile = NULL;
+  FILE *infile = NULL;
+
+  if (argc < 2) {
+    print_da_help:
+    print_help();
+    return FOC_NO_INPUT;
   }
 
-  rewind(S3Mfile);
-  return true;
+  for(i = 1; i < argc; i++) {
+    if (!(strcmp(argv[i], "-v")) || !(strcmp(argv[i], "--verbose")))
+      main_context.verbose_mode = true;
+
+    else if (!(strcmp(argv[i], "-h")) || !(strcmp(argv[i], "--help")))
+      goto print_da_help;
+
+    else if (!(strcmp(argv[i], "-stm")))
+      conversion_type = FOC_S3MTOSTM;
+
+    else if (!(strcmp(argv[i], "-stx")))
+      conversion_type = FOC_S3MTOSTX;
+
+    else if (!infile)
+      infile = fopen(argv[i], "rb");
+    else if (!outfile)
+      outfile = fopen(argv[i], "wb");
+  }
+
+  if (!infile || !outfile) {
+      return_value |= FOC_OPEN_FAILURE;
+      perror("Failed to open file");
+      goto closefiledescriptors;
+  }
+
+  main_context.infile = infile;
+  main_context.outfile = outfile;
+  main_context.conversion_type = conversion_type;
+
+  switch (conversion_type) {
+    case FOC_S3MTOSTM:
+      return_value |= convert_s3m_to_stm(&main_context);
+      break;
+    case FOC_S3MTOSTX:
+      return_value |= convert_s3m_to_stx(&main_context);
+      break;
+  }
+
+  closefiledescriptors:
+  fclose(infile);
+  fclose(outfile);
+
+  return return_value;
 }
 
 int convert_s3m_to_stm(FOC_Context* context) {
-  usize i = 0;
-  u8* stm_sample_data = NULL;
-  u8* temp = NULL;
-  u16 sample_len = 0;
-  u16 padding_len = 0;
-
   FILE* S3Mfile = context->infile;
   FILE* STMfile = context->outfile;
   bool verbose = context->verbose_mode;
@@ -137,7 +196,28 @@ int convert_s3m_to_stm(FOC_Context* context) {
 
   grab_s3m_parapointers(S3Mfile);
 
-  for(i = 0; i < STM_MAXSMP; i++) {
+  handle_sample_headers_s3mtostm(context, sample_count);
+
+  convert_song_orders(order_count);
+  fwrite(stm_order_list, sizeof(u8), sizeof(stm_order_list), STMfile);
+
+  handle_patterns_s3mtostm(context, pattern_count);
+
+  if(handle_pcm_s3mtostm(context, sample_count) == 0) {
+    puts("Conversion done successfully!");
+    return FOC_SUCCESS;
+  } else {
+    return FOC_CONVERSION_FAIL;
+  };
+}
+
+void handle_sample_headers_s3mtostm(FOC_Context* context, usize sample_count) {
+  FILE* S3Mfile = context->infile;
+  FILE* STMfile = context->outfile;
+  bool verbose = context->verbose_mode;
+  usize i = 0;
+
+  for(; i < STM_MAXSMP; i++) {
     if(i < sample_count) {
       if (verbose) printf("Sample %u:\n", (u8)i);
       grab_sample_data(S3Mfile, s3m_inst_pointers[i]);
@@ -151,11 +231,14 @@ int convert_s3m_to_stm(FOC_Context* context) {
 
     fwrite(stm_sample_header, sizeof(u8), sizeof(stm_sample_header), STMfile);
   }
+}
 
-  convert_song_orders(order_count);
-  fwrite(stm_order_list, sizeof(u8), sizeof(stm_order_list), STMfile);
+void handle_patterns_s3mtostm(FOC_Context* context, usize pattern_count) {
+  FILE* S3Mfile = context->infile;
+  FILE* STMfile = context->outfile;
+  usize i = 0;
 
-  for(i = 0; i < STM_MAXPAT; i++) {
+  for(; i < STM_MAXPAT; i++) {
     if (i < pattern_count) {
       printf("Converting pattern %u...\n", (u8)i);
       parse_s3m_pattern(S3Mfile, s3m_pat_pointers[i]);
@@ -166,8 +249,17 @@ int convert_s3m_to_stm(FOC_Context* context) {
       break;
     }
   }
+}
 
-  for(i = 0; i < STM_MAXSMP; i++) {
+int handle_pcm_s3mtostm(FOC_Context* context, usize sample_count) {
+  FILE* S3Mfile = context->infile;
+  FILE* STMfile = context->outfile;
+  usize i = 0;
+  u8 *stm_sample_data = NULL, *temp = NULL;
+  Sample_Context sc;
+  usize sample_len = 0, padding_len = 0;
+
+  for(; i < STM_MAXSMP; i++) {
     if(i < sample_count) {
       sample_len = s3m_pcm_lens[i];
 
@@ -183,8 +275,8 @@ int convert_s3m_to_stm(FOC_Context* context) {
 
       printf("Converting sample %u...\n", (u8)i);
 
-      dump_sample_data(S3Mfile, s3m_pcm_pointers[i], stm_sample_data, sample_len);
-      convert_unsigned_to_signed(stm_sample_data, sample_len);
+      dump_sample_data(S3Mfile, s3m_pcm_pointers[i], &sc);
+      convert_unsigned_to_signed(&sc);
 
       if (padding_len) {
         sample_len += padding_len;
@@ -206,84 +298,27 @@ int convert_s3m_to_stm(FOC_Context* context) {
     }
   }
 
-  puts("Done!");
-
   return FOC_SUCCESS;
+}
+
+bool check_valid_s3m(FILE *S3Mfile) {
+  char scrm[4] = {0};
+
+  fseek(S3Mfile, 44, SEEK_SET);
+
+  (void)!fread(scrm, sizeof(char), 4, S3Mfile);
+
+  if (memcmp(scrm, "SCRM", 4)) {
+    eprintf("This is not an S3M file!");
+    return false;
+  }
+
+  rewind(S3Mfile);
+  return true;
 }
 
 int convert_s3m_to_stx(FOC_Context* context) {
   (void)context;
   /* TODO */
   return FOC_SUCCESS;
-}
-
-void print_help(void) {
-  puts("Usage: s3m2stm [options] <inputfile> <outputfile>");
-  puts("(C) RepellantMold/cs127, 2024");
-  puts("Licensed under ISC");
-  puts("");
-  puts("Options:");
-  puts("  -h, --help       Print this help and exit");
-  puts("  -v, --verbose    Enable extremely verbose output");
-  puts("  -stm             Convert the S3M to STM (default)");
-  puts("  -stx             Convert the S3M to STX");
-}
-
-int main(int argc, char *argv[]) {
-  int i = 0, return_value = FOC_SUCCESS;
-  usize conversion_type = FOC_S3MTOSTM;
-  FILE *outfile = NULL;
-  FILE *infile = NULL;
-  FOC_Context context;
-
-  if (argc < 2) {
-    print_da_help:
-    print_help();
-    return FOC_NO_INPUT;
-  }
-
-  for(i = 1; i < argc; i++) {
-    if (!(strcmp(argv[i], "-v")) || !(strcmp(argv[i], "--verbose")))
-      verbose_mode = true;
-
-    else if (!(strcmp(argv[i], "-h")) || !(strcmp(argv[i], "--help")))
-      goto print_da_help;
-
-    else if (!(strcmp(argv[i], "-stm")))
-      conversion_type = FOC_S3MTOSTM;
-
-    else if (!(strcmp(argv[i], "-stx")))
-      conversion_type = FOC_S3MTOSTX;
-
-    else if (!infile)
-      infile = fopen(argv[i], "rb");
-    else if (!outfile)
-      outfile = fopen(argv[i], "wb");
-  }
-
-  if (!infile || !outfile) {
-      return_value |= FOC_OPEN_FAILURE;
-      perror("Failed to open file");
-      goto closefiledescriptors;
-  }
-
-  context.infile = infile;
-  context.outfile = outfile;
-  context.conversion_type = conversion_type;
-  context.verbose_mode = verbose_mode;
-
-  switch (conversion_type) {
-    case FOC_S3MTOSTM:
-      return_value |= convert_s3m_to_stm(&context);
-      break;
-    case FOC_S3MTOSTX:
-      return_value |= convert_s3m_to_stx(&context);
-      break;
-  }
-
-  closefiledescriptors:
-  fclose(infile);
-  fclose(outfile);
-
-  return return_value;
 }

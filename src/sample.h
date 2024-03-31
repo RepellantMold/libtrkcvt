@@ -7,7 +7,8 @@ typedef struct {
   usize length;
 } Sample_Context;
 
-void convert_unsigned_to_signed(u8* pcm, usize length);
+void dump_sample_data(FILE* file, usize position, Sample_Context* context);
+void convert_unsigned_to_signed(Sample_Context* context);
 usize calculate_sample_padding(size_t sample_size);
 
 #endif
