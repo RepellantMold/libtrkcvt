@@ -1,6 +1,5 @@
 ### potential ideas
 
-- give either an optional verbose option or a quiet option to reduce the amount of output
 - output both version 1.0 and 1.1 STX files based on command line option (default to 1.1?)
 
 
@@ -16,6 +15,7 @@
 
 ### complete
 
+- [x] give verbose option
 - [x] song header conversion
 - [x] work on sign conversion with the samples
 - [x] have the order conversion discard markers
