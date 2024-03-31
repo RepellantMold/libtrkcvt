@@ -4,6 +4,11 @@
 
 #define MAXROWS 64
 
+typedef struct {
+  u8 s3m_unpacked_pattern[64][32][5];
+  u8 stm_pattern[64][4][4];
+} Pattern_Context;
+
 void parse_s3m_pattern(FILE* file, usize position);
 void check_effect(u8 effect, u8 parameter, u8 row, u8 channel);
 void convert_s3m_pattern_to_stm(void);
