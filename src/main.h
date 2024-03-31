@@ -12,6 +12,13 @@ u8 sample_count;
 u8 pattern_count;
 bool verbose_mode = false;
 
+typedef struct {
+  FILE* infile;
+  FILE* outfile;
+  usize conversion_type;
+  bool verbose_mode;
+} FOC_Context;
+
 void eprintf(const char* format, ...);
 void eputs(const char* msg);
 
@@ -21,7 +28,7 @@ void optional_puts(const char* msg);
 void warning_puts(const char* msg);
 void warning_printf(const char* format, ...);
 
-int convert_s3m_to_stm(FILE *S3Mfile, FILE *STMfile, bool verbose_mode);
-int convert_s3m_to_stx(FILE *S3Mfile, FILE *STXfile, bool verbose_mode);
+int convert_s3m_to_stm(FOC_Context* context);
+int convert_s3m_to_stx(FOC_Context* context);
 
 #endif

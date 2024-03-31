@@ -35,7 +35,7 @@ enum FOC_ReturnCode
   FOC_ALLOC_FAIL      = 0x10,
 
   FOC_NO_INPUT        = 0x20,
-  
+
 
   FOC_NO_FILENAMES    = 0x40
 };
@@ -107,12 +107,16 @@ bool check_valid_s3m(FILE *S3Mfile) {
   return true;
 }
 
-int convert_s3m_to_stm(FILE *S3Mfile, FILE *STMfile, bool verbose) {
+int convert_s3m_to_stm(FOC_Context* context) {
   usize i = 0;
   u8* stm_sample_data = NULL;
   u8* temp = NULL;
   u16 sample_len = 0;
   u16 padding_len = 0;
+
+  FILE* S3Mfile = context->infile;
+  FILE* STMfile = context->outfile;
+  bool verbose = context->verbose_mode;
 
   if(!S3Mfile || !STMfile) return FOC_OPEN_FAILURE;
   if(ferror(S3Mfile) || ferror(STMfile)) return FOC_MALFORMED_FILE;
@@ -207,8 +211,8 @@ int convert_s3m_to_stm(FILE *S3Mfile, FILE *STMfile, bool verbose) {
   return FOC_SUCCESS;
 }
 
-int convert_s3m_to_stx(FILE *S3Mfile, FILE *STXfile, bool verbose_mode) {
-  (void)S3Mfile; (void)STXfile; (void)verbose_mode;
+int convert_s3m_to_stx(FOC_Context* context) {
+  (void)context;
   /* TODO */
   return FOC_SUCCESS;
 }
@@ -227,9 +231,10 @@ void print_help(void) {
 
 int main(int argc, char *argv[]) {
   int i = 0, return_value = FOC_SUCCESS;
-  size_t conversion_type = FOC_S3MTOSTM;
+  usize conversion_type = FOC_S3MTOSTM;
   FILE *outfile = NULL;
-  FILE *infile = NULL; 
+  FILE *infile = NULL;
+  FOC_Context context;
 
   if (argc < 2) {
     print_da_help:
@@ -262,12 +267,17 @@ int main(int argc, char *argv[]) {
       goto closefiledescriptors;
   }
 
+  context.infile = infile;
+  context.outfile = outfile;
+  context.conversion_type = conversion_type;
+  context.verbose_mode = verbose_mode;
+
   switch (conversion_type) {
     case FOC_S3MTOSTM:
-      return_value |= convert_s3m_to_stm(infile, outfile, verbose_mode);
+      return_value |= convert_s3m_to_stm(&context);
       break;
     case FOC_S3MTOSTX:
-      return_value |= convert_s3m_to_stx(infile, outfile, verbose_mode);
+      return_value |= convert_s3m_to_stx(&context);
       break;
   }
 
