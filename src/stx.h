@@ -16,7 +16,7 @@
  * identical to S3M's (minus 'SRCS'), so it's not included here.
  * I'm also mentioning format differences for completeness.
  */
-u8 stx_song_header[] = {
+u8 stx_song_header[64] = {
   /* song title (ASCIIZ) */
   '\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0', 
   '\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0', 
