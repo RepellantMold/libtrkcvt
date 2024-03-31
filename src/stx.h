@@ -1,5 +1,8 @@
 #ifndef __STX_H
 #define __STX_H
+#include <stdlib.h>
+#include <stdio.h>
+#include "ext.h"
 
 #define STX_ORDERPOS 1024
 #define STX_MAXPAT 63

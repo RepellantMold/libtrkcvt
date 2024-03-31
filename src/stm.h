@@ -1,5 +1,8 @@
 #ifndef __STM_H
 #define __STM_H
+#include <stdlib.h>
+#include <stdio.h>
+#include "ext.h"
 
 #define STM_MAXCHN 4
 #define STM_MAXSMP 31

@@ -1,5 +1,7 @@
 #ifndef __MAIN_H
 #define __MAIN_H
+#include <stdlib.h>
+#include <stdio.h>
 #include "envcheck.h"
 #include "ext.h"
 #include "s3m.h"

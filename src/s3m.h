@@ -1,5 +1,8 @@
 #ifndef __S3M_H
 #define __S3M_H
+#include <stdlib.h>
+#include <stdio.h>
+#include "ext.h"
 
 #define S3M_ORDERPOS 96
 #define S3M_MAXPAT 253
