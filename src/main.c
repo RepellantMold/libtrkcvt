@@ -2,7 +2,7 @@
  * s3m2stm
  * Made by RepellantMold/cs127 under ISC license
  *
- * Written in C89, with 16-bit DOS compilers in mind
+ * Written in C99
  */
 
 

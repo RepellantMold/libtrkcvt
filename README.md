@@ -2,7 +2,7 @@
 
 [![standard-readme compliant](https://img.shields.io/badge/standard--readme-OK-green.svg?style=plastic)](https://github.com/RichardLitt/standard-readme)
 
-A command line tool to downgrade Scream Tracker 3 modules to Scream Tracker 2 (and Scream Tracker Music Interface Kit) modules, written in pure ANSI C/C89 (with 16-bit DOS compilers in mind).
+A command line tool to downgrade Scream Tracker 3 modules to Scream Tracker 2 (and Scream Tracker Music Interface Kit) modules, written in C99.
 
 ## Table of Contents
 
