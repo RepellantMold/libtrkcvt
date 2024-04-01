@@ -63,7 +63,7 @@ void grab_s3m_parapointers(FILE* file) {
         pattern_count = s3m_order_array[count];
     }
   }
-  order_count = i;
+  order_count = (u8)i;
 
   for(i = 0; i < sample_count; i++) {
     s3m_inst_pointers[i] = fgetw(file);
@@ -137,7 +137,7 @@ void convert_song_orders(usize length) {
 
 void grab_sample_data(FILE* file, usize position) {
   if (!file || feof(file) || ferror(file)) return;
-  fseek(file, position, SEEK_SET);
+  fseek(file, (long)position, SEEK_SET);
   (void)!fread(s3m_inst_header, sizeof(u8), 80, file);
 }
 

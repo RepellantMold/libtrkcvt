@@ -158,7 +158,7 @@ void parse_s3m_pattern(FILE* file, usize position) {
   if(!file || !position) return;
   if(feof(file) || ferror(file)) return;
 
-  fseek(file, position, SEEK_SET);
+  fseek(file, (long)position, SEEK_SET);
 
   fseek(file, 2, SEEK_CUR);
 
@@ -232,7 +232,7 @@ void convert_s3m_pattern_to_stm(void) {
       effect = s3m_unpacked_pattern[r][c][3],
       parameter = s3m_unpacked_pattern[r][c][4];
 
-      Pattern_Display_Context pd = {r, c, effect, parameter};
+      Pattern_Display_Context pd = {(u8)r, (u8)c, effect, parameter};
 
       check_effect(&pd);
 

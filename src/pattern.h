@@ -29,7 +29,7 @@ void warning_pattern_printf(Pattern_Display_Context* context, const char* format
 
 /* for display purposes */
 u8 notetable[12][2] = {
-  "C-", "C#","D-","D#","E-","F-","F#","G-","G#","A-","A#","B-"
+  "C-","C#","D-","D#","E-","F-","F#","G-","G#","A-","A#","B-"
 };
 
 #endif

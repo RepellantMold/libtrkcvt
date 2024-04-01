@@ -5,7 +5,7 @@
  * Written in C99
  */
 
-
+#define _CRT_SECURE_NO_WARNINGS
 #include <stdarg.h>
 #include <stdlib.h>
 #include <stdio.h>
@@ -53,8 +53,8 @@ u16 fgetw(FILE *fp)
 {
     u8 data[2];
 
-    data[0] = fgetc(fp);
-    data[1] = fgetc(fp);
+    data[0] = (u8)fgetc(fp);
+    data[1] = (u8)fgetc(fp);
 
     return (data[1] << 8) | data[0];
 }
@@ -64,10 +64,10 @@ u32 fgetl(FILE *fp)
 {
     u8 data[4];
 
-    data[0] = fgetc(fp);
-    data[1] = fgetc(fp);
-    data[2] = fgetc(fp);
-    data[3] = fgetc(fp);
+    data[0] = (u8)fgetc(fp);
+    data[1] = (u8)fgetc(fp);
+    data[2] = (u8)fgetc(fp);
+    data[3] = (u8)fgetc(fp);
 
     return (data[3] << 24) | (data[2] << 16) | (data[1] << 8) | data[0];
 }
