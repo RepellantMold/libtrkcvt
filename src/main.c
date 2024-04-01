@@ -281,45 +281,45 @@ int handle_pcm_s3mtostm(FOC_Context* context, usize sample_count) {
   usize sample_len = 0, padding_len = 0;
 
   for(; i < STM_MAXSMP; i++) {
-    if(i < sample_count) {
-      sample_len = s3m_pcm_lens[i];
+    if(i >= sample_count) break;
 
-      if (!sample_len) continue;
+    sample_len = s3m_pcm_lens[i];
 
-      padding_len = (u16)calculate_sample_padding(sample_len);
+    if (!sample_len) continue;
 
-      stm_sample_data = calloc(sample_len, sizeof(u8));
-      if (!stm_sample_data) {
-        eprintf("Could not allocate memory for sample data!\n");
+    padding_len = (u16)calculate_sample_padding(sample_len);
+
+    stm_sample_data = calloc(sample_len, sizeof(u8));
+    if (!stm_sample_data) {
+      eprintf("Could not allocate memory for sample data!\n");
+      return FOC_ALLOC_FAIL;
+    }
+
+    sc.length = sample_len;
+    sc.pcm = stm_sample_data;
+
+    printf("Converting sample %zu...\n", i);
+
+    dump_sample_data(S3Mfile, s3m_pcm_pointers[i], &sc);
+    convert_unsigned_to_signed(&sc);
+
+    if (padding_len) {
+      sample_len += padding_len;
+
+      temp = realloc(stm_sample_data, sample_len);
+      if (!temp) {
+        free(stm_sample_data);
+        eprintf("Could not reallocate memory for sample data!\n");
         return FOC_ALLOC_FAIL;
       }
-
-      sc.length = sample_len;
-      sc.pcm = stm_sample_data;
-
-      printf("Converting sample %zu...\n", i);
-
-      dump_sample_data(S3Mfile, s3m_pcm_pointers[i], &sc);
-      convert_unsigned_to_signed(&sc);
-
-      if (padding_len) {
-        sample_len += padding_len;
-
-        temp = realloc(stm_sample_data, sample_len);
-        if (!temp) {
-          free(stm_sample_data);
-          eprintf("Could not reallocate memory for sample data!\n");
-          return FOC_ALLOC_FAIL;
-        }
-        stm_sample_data = temp;
-      }
-
-      fwrite(stm_sample_data, sizeof(u8), sample_len, STMfile);
-
-      printf("Sample %zu written.\n", i);
-
-      free(stm_sample_data);
+      stm_sample_data = temp;
     }
+
+    fwrite(stm_sample_data, sizeof(u8), sample_len, STMfile);
+
+    printf("Sample %zu written.\n", i);
+
+    free(stm_sample_data);
   }
 
   return FOC_SUCCESS;
