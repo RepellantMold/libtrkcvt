@@ -48,6 +48,30 @@ enum FOC_ConversionMode
   FOC_S3MTOSTX        = 0x01
 };
 
+/* a helper from https://github.com/viiri/st2play! */
+u16 fgetw(FILE *fp)
+{
+    u8 data[2];
+
+    data[0] = fgetc(fp);
+    data[1] = fgetc(fp);
+
+    return (data[1] << 8) | data[0];
+}
+
+/*
+u32 fgetl(FILE *fp)
+{
+    u8 data[4];
+
+    data[0] = fgetc(fp);
+    data[1] = fgetc(fp);
+    data[2] = fgetc(fp);
+    data[3] = fgetc(fp);
+
+    return (data[3] << 24) | (data[2] << 16) | (data[1] << 8) | data[0];
+}
+*/
 
 void eprintf(const char* format, ...) {
   va_list ap;
@@ -238,16 +262,13 @@ void handle_patterns_s3mtostm(FOC_Context* context, usize pattern_count) {
   FILE* STMfile = context->outfile;
   usize i = 0;
 
-  for(; i < STM_MAXPAT; i++) {
-    if (i < pattern_count) {
-      printf("Converting pattern %zu...\n", i);
-      parse_s3m_pattern(S3Mfile, s3m_pat_pointers[i]);
-      convert_s3m_pattern_to_stm();
-      fwrite(stm_pattern, sizeof(u8), sizeof(stm_pattern), STMfile);
-      printf("Pattern %zu written.\n", i);
-    } else {
-      break;
-    }
+  for(i = 0; i < STM_MAXPAT; i++) {
+    if (i >= pattern_count) break;
+    printf("Converting pattern %zu...\n", i);
+    parse_s3m_pattern(S3Mfile, s3m_pat_pointers[i]);
+    convert_s3m_pattern_to_stm();
+    fwrite(stm_pattern, sizeof(u8), sizeof(stm_pattern), STMfile);
+    printf("Pattern %zu written.\n", i);
   }
 }
 

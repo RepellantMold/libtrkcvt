@@ -29,4 +29,7 @@ void optional_puts(const char* msg);
 void warning_puts(const char* msg);
 void warning_printf(const char* format, ...);
 
+static u16 fgetw(FILE *fp);
+//static u32 fgetl(FILE *fp);
+
 #endif

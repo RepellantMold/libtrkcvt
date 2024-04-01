@@ -27,14 +27,14 @@ void warning_pattern_printf(Pattern_Display_Context* context, const char* format
   va_end(ap);
 }
 
-void print_s3m_pattern() {
+void print_s3m_pattern(void) {
   usize c = 0, r = 0;
   u8 note = 0xFF, ins = 0x00, volume = 0xFF, effect = 0x00, parameter = 0x00;
 
-  for (r = 0; r < MAXROWS; r++) {
+  do {
     optional_printf("r:%02u = ", r);
 
-    for(c = 0; c < S3M_MAXCHN >> 3; c++) {
+    for(c = 0; c < 4; c++) {
       note = s3m_unpacked_pattern[r][c][0];
       ins = s3m_unpacked_pattern[r][c][1];
       volume = s3m_unpacked_pattern[r][c][2];
@@ -44,7 +44,7 @@ void print_s3m_pattern() {
       if (note < 0xFE)
       optional_printf("%.2s%01u", notetable[note % 12], note/12);
       else if (note == 0xFE) optional_printf("^^^");
-      else optional_printf("...");
+      else if (note == 0xFF) optional_printf("...");
 
       if (ins) optional_printf(" %02u ", ins);
       else optional_printf(" .. ");
@@ -59,7 +59,7 @@ void print_s3m_pattern() {
       optional_printf("... ");
     }
     fputs("\n", stdout);
-  }
+  } while (r++ < MAXROWS-1);
 
   fputs("\n", stdout);
 }
@@ -162,8 +162,10 @@ void parse_s3m_pattern(FILE* file, usize position) {
 
   fseek(file, 2, SEEK_CUR);
 
+  flush_s3m_pattern_array();
+
   while (r < MAXROWS) {
-    (void)!fread(&cv, sizeof(u8), 1, file);
+    cv = (u8)fgetc(file);
 
     if(!cv) {r++; continue;}
 
@@ -171,8 +173,8 @@ void parse_s3m_pattern(FILE* file, usize position) {
 
     if (cv & 0x20)
     {
-      (void)!fread(&note, sizeof(u8), 1, file);
-      (void)!fread(&ins, sizeof(u8), 1, file);
+      note = (u8)fgetc(file);
+      ins = (u8)fgetc(file);
     } else {
       note = 0xFF;
       ins = 0x00;
@@ -180,15 +182,15 @@ void parse_s3m_pattern(FILE* file, usize position) {
 
     if (cv & 0x40)
     {
-      (void)!fread(&volume, sizeof(u8), 1, file);
+      volume = (u8)fgetc(file);
     } else {
       volume = 0xFF;
     }
 
     if (cv & 0x80)
     {
-      (void)!fread(&effect, sizeof(u8), 1, file);
-      (void)!fread(&parameter, sizeof(u8), 1, file);
+      effect = (u8)fgetc(file);
+      parameter = (u8)fgetc(file);
     } else {
       effect = 0x00;
       parameter = 0x00;
@@ -199,10 +201,23 @@ void parse_s3m_pattern(FILE* file, usize position) {
     s3m_unpacked_pattern[r][c][2] = volume;
     s3m_unpacked_pattern[r][c][3] = effect;
     s3m_unpacked_pattern[r][c][4] = parameter;
-
-    if (main_context.verbose_mode) print_s3m_pattern();
   };
 
+  if (main_context.verbose_mode) print_s3m_pattern();
+
+}
+
+void flush_s3m_pattern_array(void) {
+  usize r = 0, c = 0;
+  do {
+    for (c = 0; c < STM_MAXCHN; c++) {
+      s3m_unpacked_pattern[r][c][0] = 0xFF;
+      s3m_unpacked_pattern[r][c][1] = 0x00;
+      s3m_unpacked_pattern[r][c][2] = 0xFF;
+      s3m_unpacked_pattern[r][c][3] = 0x00;
+      s3m_unpacked_pattern[r][c][4] = 0x00;
+    }
+  } while (r++ < MAXROWS - 1);
 }
 
 void convert_s3m_pattern_to_stm(void) {

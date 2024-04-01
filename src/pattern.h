@@ -21,6 +21,7 @@ void parse_s3m_pattern(FILE* file, usize position);
 void check_effect(Pattern_Display_Context* context);
 void convert_s3m_pattern_to_stm(void);
 
+void flush_s3m_pattern_array(void);
 void print_s3m_pattern(void);
 
 void warning_pattern_puts(Pattern_Display_Context* context, const char* msg);

@@ -65,16 +65,14 @@ void grab_s3m_parapointers(FILE* file) {
   }
   order_count = i;
 
-  (void)!fread(s3m_inst_pointers, sizeof(u16), sample_count, file);
-
   for(i = 0; i < sample_count; i++) {
+    s3m_inst_pointers[i] = fgetw(file);
     optional_printf("Sample %zu:\n", i);
     s3m_inst_pointers[i] = (u16)convert_from_parapointer(s3m_inst_pointers[i]);
   }
 
-  (void)!fread(s3m_pat_pointers, sizeof(u16), pattern_count, file);
-
   for(i = 0; i < pattern_count; i++) {
+    s3m_pat_pointers[i] = fgetw(file);
     optional_printf("Pattern %zu:\n", i);
     s3m_pat_pointers[i] = (u16)convert_from_parapointer(s3m_pat_pointers[i]);
   }
