@@ -83,7 +83,8 @@ void check_effect(Pattern_Display_Context* context) {
 
     /* set position */
     case EFF('B'):
-      warning_pattern_puts(context, "set position does not do a pattern break, please use a pattern break alongside this if it's intended!");
+      if (context->row < 63)
+        warning_pattern_puts(context, "set position does not do a pattern break, please use a pattern break alongside this if it's intended!");
       break;
 
     /* pattern break */
@@ -96,10 +97,10 @@ void check_effect(Pattern_Display_Context* context) {
 
     /* volume slide */
     case EFF('D'):
-      if (hinib == 0xF || lownib == 0xF)
+      if ((hinib == 0xF && lownib > 0) || (lownib == 0xF && hinib > 0))
         warning_pattern_puts(context, "there's no fine volume slides!");
       else if (hinib && lownib)
-        warning_pattern_printf(context, "both x (%hhu) and y (%hhu) specified, y will take priority!\n", hinib, lownib);
+        warning_pattern_printf(context, "both x (%1X) and y (%1X) specified, y will take priority!\n", hinib, lownib);
       goto noeffectmemory;
       break;
 
@@ -119,16 +120,21 @@ void check_effect(Pattern_Display_Context* context) {
     /* vibrato */
     case EFF('H'):
       warning_pattern_puts(context, "vibrato depth is doubled compared to other trackers, attempting to make adjustment.");
-      if((lownib >> 1) != 0)
-        if(!(s3m_song_header[38] & S3M_ST2VIB))
+      if((lownib >> 1) != 0) {
+        if(!(s3m_song_header[38] & S3M_ST2VIB)) {
           lownib >>= 1;
+          optional_puts("adjustment successful!\n");
+        }
+          
+      } else optional_puts("adjustment failed..\n");
 
       goto noeffectmemory;
       break;
 
     /* tremor */
     case EFF('I'):
-      goto noeffectmemory;
+      if (!parameter)
+        warning_pattern_puts(context, "there's no effect memory with this effect, this will be treated as a really fast tremor.");
       break;
 
     /* arpeggio */
