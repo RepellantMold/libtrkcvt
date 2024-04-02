@@ -580,3 +580,7 @@ s3m2stm
 build
 st
 core.*
+
+# dosbox things
+run_st2.sh
+st2.conf
