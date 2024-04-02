@@ -56,11 +56,11 @@ void grab_s3m_parapointers(FILE* file) {
 
   /* see section "2.6 Load Order Data" from "FireLight S3M Player Tutorial.txt" */
   for(count = 0; count < order_count; count++) {
-    optional_printf("Order %zu -> %zu\n", count, i);
     if (s3m_order_array[count] < S3M_ORDER_MARKER) {
-      s3m_order_array[i++] = s3m_order_array[count];
+      s3m_order_array[i] = s3m_order_array[count];
       if(s3m_order_array[count] > pattern_count)
         pattern_count = s3m_order_array[count];
+      optional_printf("Order %zu -> %zu\n", count, i++);
     }
   }
   order_count = (u8)i;
