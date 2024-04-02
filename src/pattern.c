@@ -119,16 +119,19 @@ void check_effect(Pattern_Display_Context* context) {
 
     /* vibrato */
     case EFF('H'):
+      if (!parameter) {
+        warning_pattern_puts(context, "there's no effect memory with this effect, this will be treated as a no-op.");
+        break;
+      }
+
       warning_pattern_puts(context, "vibrato depth is doubled compared to other trackers, attempting to make adjustment.");
       if((lownib >> 1) != 0) {
         if(!(s3m_song_header[38] & S3M_ST2VIB)) {
+          optional_printf("adjusting vibrato depth from %u to %u.\n", lownib, lownib >> 1);
           lownib >>= 1;
           optional_puts("adjustment successful!\n");
         }
-          
-      } else optional_puts("adjustment failed..\n");
-
-      goto noeffectmemory;
+      } else optional_printf("adjustment failed... depth %u turned into %u. this will not be adjusted!\n", lownib, lownib >> 1);
       break;
 
     /* tremor */
