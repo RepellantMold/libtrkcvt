@@ -1,12 +1,14 @@
 ### potential ideas
 
-- output both version 1.0 and 1.1 STX files based on command line option (default to 1.1?)
+- output version 1.0 or 1.1 STX files based on command line option (default to 1.1?)
 
 
 ### todo
 
+- [ ] warn when a file is too large
 - [ ] add a channel remap system if there's muted channels, it would prevent someone from muting the first 4 channels and breaking the conversion
 - [ ] work on stx conversion (and switch based on file extension of the output file)
+- [ ] work on converting the S3M tempo to be scaling factor in STM
 
 ### in progress
 
