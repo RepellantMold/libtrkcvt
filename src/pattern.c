@@ -223,8 +223,8 @@ void convert_s3m_pattern_to_stm(void) {
   usize r = 0, c = 0;
   u8 note = 0xFF, ins = 0, volume = 0xFF, effect = 0, parameter = 0;
   u8 proper_octave = 0;
-  u8 hinib = parameter >> 4;
-  u8 lownib = parameter & 0x0F;
+  /* used for correcting effects */
+  u8 lownib = 0;
 
   blank_stm_pattern();
 
@@ -238,7 +238,6 @@ void convert_s3m_pattern_to_stm(void) {
 
       Pattern_Display_Context pd = {(u8)r, (u8)c, effect, parameter};
 
-      hinib = parameter >> 4;
       lownib = parameter & 0x0F;
 
       switch(check_effect(&pd)) {
