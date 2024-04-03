@@ -101,7 +101,7 @@ void check_s3m_channels(void) {
 }
 
 /* s3m_song_header is expected to be filled beforehand */
-void convert_song_header(void) {
+void convert_song_header_s3mtostm(void) {
   strncpy((char*)stm_song_header, (char*)s3m_song_header, 19);
 
   if (s3m_song_header[38] & S3M_AMIGAFREQLIMITS)
@@ -122,7 +122,7 @@ void convert_song_header(void) {
   stm_song_header[33] = pattern_count;
 }
 
-void convert_song_orders(usize length) {
+void convert_song_orders_s3mtostm(usize length) {
   usize i = 0;
 
   memset(stm_order_list, STM_ORDER_END, STM_ORDER_LIST_SIZE);
@@ -141,7 +141,7 @@ void grab_sample_data(FILE* file, usize position) {
   (void)!fread(s3m_inst_header, sizeof(u8), 80, file);
 }
 
-void convert_s3m_intstrument(void) {
+void convert_s3m_intstrument_header_s3mtostm(void) {
   usize i = 0;
   const usize type = s3m_inst_header[0], flags = s3m_inst_header[31];
   u32 crc = crc32(s3m_inst_header, 80);

@@ -215,14 +215,14 @@ int convert_s3m_to_stm(FOC_Context* context) {
 
   check_s3m_channels();
 
-  convert_song_header();
+  convert_song_header_s3mtostm();
   fwrite(stm_song_header, sizeof(u8), sizeof(stm_song_header), STMfile);
 
   grab_s3m_parapointers(S3Mfile);
 
   handle_sample_headers_s3mtostm(context, sample_count);
 
-  convert_song_orders(order_count);
+  convert_song_orders_s3mtostm(order_count);
   fwrite(stm_order_list, sizeof(u8), sizeof(stm_order_list), STMfile);
 
   handle_patterns_s3mtostm(context, pattern_count);
@@ -248,7 +248,7 @@ void handle_sample_headers_s3mtostm(FOC_Context* context, usize sample_count) {
       s3m_pcm_pointers[i] = grab_s3m_pcm_pointer();
       s3m_pcm_lens[i] = grab_s3m_pcm_len();
       if (verbose) show_s3m_inst_header();
-      convert_s3m_intstrument();
+      convert_s3m_intstrument_header_s3mtostm();
     } else {
       generate_blank_stm_instrument();
     }
