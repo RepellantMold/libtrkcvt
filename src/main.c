@@ -131,6 +131,7 @@ void print_help(void) {
 
 void handle_sample_headers_s3mtostm(FOC_Context* context, usize sample_count);
 int handle_pcm_s3mtostm(FOC_Context* context, usize sample_count);
+void handle_pcm_parapointer_s3mtostm(FOC_Context* context, usize i);
 void handle_patterns_s3mtostm(FOC_Context* context, usize pattern_count);
 
 bool check_valid_s3m(FILE *S3Mfile);
@@ -315,6 +316,8 @@ int handle_pcm_s3mtostm(FOC_Context* context, usize sample_count) {
       stm_sample_data = temp;
     }
 
+    handle_pcm_parapointer_s3mtostm(context, i);
+
     fwrite(stm_sample_data, sizeof(u8), sample_len, STMfile);
 
     printf("Sample %zu written.\n", i);
@@ -323,6 +326,19 @@ int handle_pcm_s3mtostm(FOC_Context* context, usize sample_count) {
   }
 
   return FOC_SUCCESS;
+}
+
+void handle_pcm_parapointer_s3mtostm(FOC_Context* context, usize i) {
+  usize saved_pos = (usize)ftell(context->outfile);
+  usize header_pos = sizeof(stm_song_header) + ((sizeof(stm_sample_header) * (i + 1)) - 18);
+
+  stm_pcm_pointers[i] = calculate_stm_sample_parapointer();
+
+  fseek(context->outfile, (long)header_pos, SEEK_SET);
+
+  (void)!fwrite(&stm_pcm_pointers[i], sizeof(u8), 2, context->outfile);
+
+  fseek(context->outfile, (long)saved_pos, SEEK_SET);
 }
 
 bool check_valid_s3m(FILE *S3Mfile) {

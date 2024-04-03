@@ -8,7 +8,7 @@ set(CMAKE_C_EXTENSIONS OFF)
 add_executable(s3m2stm src/main.c)
 # https://stackoverflow.com/a/50882216
 if(MSVC)
-  target_compile_options(s3m2stm PRIVATE /W4 /WX)
+  target_compile_options(s3m2stm PRIVATE /W4)
 else()
   target_compile_options(s3m2stm PRIVATE -Wall -Wextra -Wpedantic -Werror -march=native)
 endif()

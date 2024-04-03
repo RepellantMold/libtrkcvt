@@ -7,9 +7,9 @@
 #include "s3m.h"
 #include "stm.h"
 
-u8 order_count;
-u8 sample_count;
-u8 pattern_count;
+u8 order_count = 0;
+u8 sample_count = 0;
+u8 pattern_count = 0;
 
 typedef struct {
   FILE* infile;

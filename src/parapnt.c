@@ -9,11 +9,8 @@
 #include "sample.h"
 #include "parapnt.h"
 
-/* TODO: if a sample is blank then it should be discarded
- * from the calculation & the next non-blank one should be next up */
-u16 calculate_stm_sample_parapointer(usize id, usize sample_size) {
-  usize pos = 1168 + (STM_PATSIZE * pattern_count) * id;
-  pos += sample_size + calculate_sample_padding(sample_size);
+u16 calculate_stm_sample_parapointer(void) {
+  usize pos = (usize)ftell(main_context.outfile);
   return (u16)convert_to_parapointer(pos);
 }
 

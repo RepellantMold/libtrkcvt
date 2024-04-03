@@ -144,7 +144,12 @@ void grab_sample_data(FILE* file, usize position) {
 void convert_s3m_intstrument_header_s3mtostm(void) {
   usize i = 0;
   const usize type = s3m_inst_header[0], flags = s3m_inst_header[31];
+  usize random = 0;
   u32 crc = crc32(s3m_inst_header, 80);
+
+  srand(crc);
+
+  random = (usize)rand();
 
   switch(type) {
     case S3MSMPTYPE_MSG:
@@ -183,17 +188,18 @@ void convert_s3m_intstrument_header_s3mtostm(void) {
       memcpy((char *)stm_sample_header, (char *)&s3m_inst_header[48], 8);
       for(i = 0; i < 8; i++) {
         /* sanitization for 8.3 filenames */
-        if((stm_sample_header[i] <= ' ') || (stm_sample_header[i] >= 0x7F)) {
-          stm_sample_header[i] = '_';
+        if(stm_sample_header[i] == 0x20) {
+          stm_sample_header[i] = 0xFF;
+        } else if(stm_sample_header[i] < 0x20 || stm_sample_header[i] >= 0x7E) {
+          stm_sample_header[i] = 0x00;
         }
       }
       stm_sample_header[8] = '.',
-      snprintf((char*)&stm_sample_header[9], 4, "%lu", (u32)crc % 512);
+      snprintf((char*)&stm_sample_header[9], 4, "%zu", (usize)crc % 999);
     } else {
-      snprintf((char*)&stm_sample_header[0], 8, "%lu", (u32)crc * rand());
-      stm_sample_header[7] = '_',
+      snprintf((char*)&stm_sample_header[0], 12, "%zu", (usize)crc * random);
       stm_sample_header[8] = '.',
-      snprintf((char*)&stm_sample_header[9], 4, "%lu", (u32)crc % 512);
+      snprintf((char*)&stm_sample_header[9], 4, "%zu", (usize)crc % 999);
     }
 
     /* instrument disk */
@@ -216,6 +222,8 @@ void convert_s3m_intstrument_header_s3mtostm(void) {
 
     /* c2spd */
     stm_sample_header[25] = s3m_inst_header[33], stm_sample_header[24] = s3m_inst_header[32];
+
+    stm_sample_header[30] = 'R', stm_sample_header[31] = 'M';
     break;
 
     default:
