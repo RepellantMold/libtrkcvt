@@ -290,9 +290,8 @@ void convert_s3m_pattern_to_stm(void) {
         break;
       };
 
-      // TODO: somehow shift the octave down by one since the notes end up being too high otherwise.
       if (note < 0xFE) {
-        proper_octave = (note >> 4) / 2;
+        proper_octave = (note >> 4) - 2;
         note = (proper_octave << 4) | (note & 0x0F);
       }
 
