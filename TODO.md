@@ -10,12 +10,11 @@
 
 ### in progress
 
-- [ ] work on pattern conversion
-- [ ] sample header conversion (the parapointers at the end of the header; how do we handle them?)
-
 ### complete
 
 - [x] give verbose option
 - [x] song header conversion
 - [x] work on sign conversion with the samples
 - [x] have the order conversion discard markers
+- [x] work on pattern conversion
+- [x] sample header conversion (the parapointers at the end of the header; how do we handle them?)
