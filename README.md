@@ -1,8 +1,8 @@
-# s3m2stm
+# Screamverter
 
 [![standard-readme compliant](https://img.shields.io/badge/standard--readme-OK-green.svg?style=plastic)](https://github.com/RichardLitt/standard-readme)
 
-A command line tool to downgrade Scream Tracker 3 modules to Scream Tracker 2 (and Scream Tracker Music Interface Kit) modules, written in C99.
+A command line tool to downgrade (that being a **very heavy keyword**) Scream Tracker 3 modules to Scream Tracker 2 modules, written in C99.
 
 ## Table of Contents
 
@@ -14,7 +14,7 @@ A command line tool to downgrade Scream Tracker 3 modules to Scream Tracker 2 (a
 ## Usage
 
 ```sh
-./s3m2stm input.s3m output.stm
+./screamverter [-s] input.s3m output.stm
 ```
 
 > [!IMPORTANT]
@@ -23,7 +23,7 @@ A command line tool to downgrade Scream Tracker 3 modules to Scream Tracker 2 (a
 > - 4 channels preferably (it only converts the first four channels.)
 > - Sample sizes cannot exceed 65535 (and no 16-bit samples.)
 > - No panning or Adlib, Scream Tracker 2/Scream Tracker Music Interface Kit is mono.
-> - Sample names are gonna be truncated heavily to 8.3 filenames, mainly for the purposes of being able to save it to disk.
+> - Sample names are gonna truncated heavily to 12 characters if its file name field is blank.
 > - You can only use effects A - J, with some caveats with the table shown below.
 > 
 > | Effect | Function in ST2/STMIK - in ST3/others | Notes/Quirks (Effect memory **does not exist** in Scream Tracker 2, so a parameter of 0 will act like a no-op for any effect that normally has it. (e.g. volume slide, portamento slides, vibrato, etc.)) |

@@ -1,5 +1,5 @@
 /*
- * s3m2stm
+ * Screamverter
  * Made by RepellantMold/cs127 under ISC license
  *
  * Written in C99
@@ -27,19 +27,13 @@
 enum FOC_ReturnCode
 {
   FOC_SUCCESS         = 0x00,
-
   FOC_OPEN_FAILURE    = 0x01,
   FOC_NOT_S3M_FILE    = 0x02,
   FOC_MALFORMED_FILE  = 0x04,
   FOC_CONV_FAILURE    = 0x08,
-
   FOC_ALLOC_FAIL      = 0x10,
-
   FOC_NO_INPUT        = 0x20,
-
-
   FOC_NO_FILENAMES    = 0x40,
-
   FOC_CONVERSION_FAIL = 0x80,
 };
 
@@ -59,20 +53,6 @@ u16 fgetw(FILE *fp)
 
     return (data[1] << 8) | data[0];
 }
-
-/*
-u32 fgetl(FILE *fp)
-{
-    u8 data[4];
-
-    data[0] = (u8)fgetc(fp);
-    data[1] = (u8)fgetc(fp);
-    data[2] = (u8)fgetc(fp);
-    data[3] = (u8)fgetc(fp);
-
-    return (data[3] << 24) | (data[2] << 16) | (data[1] << 8) | data[0];
-}
-*/
 
 void eprintf(const char* format, ...) {
   va_list ap;
@@ -119,7 +99,7 @@ void warning_printf(const char* format, ...) {
 }
 
 void print_help(void) {
-  puts("Usage: s3m2stm [options] <inputfile> <outputfile>");
+  puts("Usage: screamverter [options] <inputfile> <outputfile>");
   puts("(C) RepellantMold/cs127, 2024");
   puts("Licensed under ISC");
   puts("");
@@ -128,7 +108,7 @@ void print_help(void) {
   puts("  -v, --verbose    Enable extremely verbose output");
   puts("  -s, --sanitize   Sanitize sample names during conversion, useful for saving them on DOS");
   puts("  -stm             Convert the S3M to STM (default)");
-  puts("  -stx             Convert the S3M to STX");
+  puts("  -stx             Convert the S3M to STX (not implemented yet)");
 }
 
 void handle_sample_headers_s3mtostm(FOC_Context* context, usize sample_count);
@@ -364,6 +344,6 @@ bool check_valid_s3m(FILE *S3Mfile) {
 
 int convert_s3m_to_stx(FOC_Context* context) {
   (void)context;
-  printf("TODO!\n");
+  printf("This is not implemented yet.\n");
   return FOC_SUCCESS;
 }
