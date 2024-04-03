@@ -576,8 +576,7 @@ FodyWeavers.xsd
 
 *.s3m
 *.stm
-s3m2stm
-build
+build*
 st
 core.*
 
