@@ -64,7 +64,7 @@ void print_s3m_pattern(void) {
   fputs("\n", stdout);
 }
 
-void check_effect(Pattern_Display_Context* context) {
+int check_effect(Pattern_Display_Context* context) {
   u8 effect = context->effect;
   u8 parameter = context->parameter;
 
@@ -89,10 +89,8 @@ void check_effect(Pattern_Display_Context* context) {
 
     /* pattern break */
     case EFF('C'):
-      if (parameter) {
+      if (parameter)
         warning_pattern_puts(context, "pattern break ignores parameter!");
-        parameter = 0;
-      }
       break;
 
     /* volume slide */
@@ -123,15 +121,7 @@ void check_effect(Pattern_Display_Context* context) {
         warning_pattern_puts(context, "there's no effect memory with this effect, this will be treated as a no-op.");
         break;
       }
-
-      warning_pattern_puts(context, "vibrato depth is doubled compared to other trackers, attempting to make adjustment.");
-      if((lownib >> 1) != 0) {
-        if(!(s3m_song_header[38] & S3M_ST2VIB)) {
-          optional_printf("adjusting vibrato depth from %u to %u.\n", lownib, lownib >> 1);
-          lownib >>= 1;
-          optional_puts("adjustment successful!\n");
-        }
-      } else optional_printf("adjustment failed... depth %u turned into %u. this will not be adjusted!\n", lownib, lownib >> 1);
+      warning_pattern_puts(context, "vibrato depth is doubled compared to other trackers!");
       break;
 
     /* tremor */
@@ -151,12 +141,12 @@ void check_effect(Pattern_Display_Context* context) {
       break;
   }
 
-  return;
+  return effect;
 
   noeffectmemory:
   if (!parameter)
     warning_pattern_puts(context, "there's no effect memory with this effect, this will be treated as a no-op.");
-  return;
+  return effect;
 }
 
 /* prototype function (NOT TESTED) */
@@ -226,12 +216,17 @@ void flush_s3m_pattern_array(void) {
       s3m_unpacked_pattern[r][c][3] = 0x00;
       s3m_unpacked_pattern[r][c][4] = 0x00;
     }
-  } while (r++ < MAXROWS - 1);
+  } while (r++ <= MAXROWS);
 }
 
 void convert_s3m_pattern_to_stm(void) {
   usize r = 0, c = 0;
   u8 note = 0xFF, ins = 0, volume = 0xFF, effect = 0, parameter = 0;
+  u8 proper_octave = 0;
+  u8 hinib = parameter >> 4;
+  u8 lownib = parameter & 0x0F;
+
+  blank_stm_pattern();
 
   for(c = 0; c < STM_MAXCHN; c++) {
     for(r = 0; r < MAXROWS; r++) {
@@ -243,17 +238,76 @@ void convert_s3m_pattern_to_stm(void) {
 
       Pattern_Display_Context pd = {(u8)r, (u8)c, effect, parameter};
 
-      check_effect(&pd);
+      hinib = parameter >> 4;
+      lownib = parameter & 0x0F;
+
+      switch(check_effect(&pd)) {
+
+        /* set speed */
+        case EFF('A'):
+          /* TODO: implement speed factor? */
+          parameter <<= 4;
+          break;
+
+        case EFF('B'):
+          break;
+
+        /* pattern break */
+        case EFF('C'):
+          parameter = 0;
+          break;
+
+        /* volume slide */
+        case EFF('D'):
+
+        /* porta up/down */
+        case EFF('E'):
+        case EFF('F'):
+
+        /* tone porta */
+        case EFF('G'):
+
+        /* tremor */
+        case EFF('I'):
+
+        /* arpeggio */
+        case EFF('J'):
+          break;
+
+        /* vibrato */
+        case EFF('H'):
+        if((lownib >> 1) != 0) {
+          if(!(s3m_song_header[38] & S3M_ST2VIB)) {
+            optional_printf("adjusting vibrato depth from %u to %u.\n", lownib, lownib >> 1);
+            lownib >>= 1;
+            optional_puts("adjustment successful!\n");
+          }
+        } else optional_printf("adjustment failed... depth %u turned into %u. this will not be adjusted!\n", lownib, lownib >> 1);
+        break;
+
+        default:
+        effect = 0;
+        break;
+      };
+
+      // TODO: somehow shift the octave down by one since the notes end up being too high otherwise.
+      if (note < 0xFE) {
+        proper_octave = (note >> 4) / 2;
+        note = (proper_octave << 4) | (note & 0x0F);
+      }
 
       stm_pattern[r][c][0] = note,
-      stm_pattern[r][c][1] = ((ins & 31) << 3) | (volume & 15),
-      stm_pattern[r][c][2] = ((volume & 7) << 3) | (effect & 15),
+      stm_pattern[r][c][1] = ((ins & 31) << 3) | ((volume <= 64) ? volume & 7 : 1),
+
+      // TODO: get volume and effect to not collide with each other!
+      stm_pattern[r][c][2] = ((volume <= 64) ? ((volume & 7) << 3) : 0x80) | (effect & 15),
+
       stm_pattern[r][c][3] = parameter;
     }
   }
 }
 
-void generate_blank_stm_pattern(void) {
+void blank_stm_pattern(void) {
   usize r = 0, c = 0;
   for(c = 0; c < STM_MAXCHN; c++) {
     for(r = 0; r < MAXROWS; r++) {
