@@ -295,12 +295,11 @@ void convert_s3m_pattern_to_stm(void) {
         note = (proper_octave << 4) | (note & 0x0F);
       }
 
+      if (volume == 0xFF) volume = 65;
+
       stm_pattern[r][c][0] = note,
-      stm_pattern[r][c][1] = ((ins & 31) << 3) | ((volume <= 64) ? volume & 7 : 1),
-
-      // TODO: get volume and effect to not collide with each other!
-      stm_pattern[r][c][2] = ((volume <= 64) ? ((volume & 7) << 3) : 0x80) | (effect & 15),
-
+      stm_pattern[r][c][1] = ((ins & 31) << 3) | (volume & 7),
+      stm_pattern[r][c][2] = ((volume & 0x78) << 1) | (effect & 15),
       stm_pattern[r][c][3] = parameter;
     }
   }
