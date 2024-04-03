@@ -16,6 +16,7 @@ typedef struct {
   FILE* outfile;
   usize conversion_type;
   bool verbose_mode;
+  bool sanitize_sample_names;
 } FOC_Context;
 
 FOC_Context main_context;

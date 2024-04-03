@@ -14,10 +14,6 @@ typedef signed short int i16;
 typedef unsigned long int u32;
 typedef signed long int i32;
 typedef size_t usize;
-typedef size_t bool;
-
-#define false 0
-#define true 1
 
 /* do {} forever / forever {} */
 #define forever while (1)

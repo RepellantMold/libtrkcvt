@@ -185,8 +185,9 @@ void convert_s3m_intstrument_header_s3mtostm(void) {
     if (s3m_inst_header[1] != 0)
       memcpy((char *)stm_sample_header, (char *)&s3m_inst_header[1], 12);
     else if (s3m_inst_header[48] != 0) {
-      memcpy((char *)stm_sample_header, (char *)&s3m_inst_header[48], 8);
+      memcpy((char *)stm_sample_header, (char *)&s3m_inst_header[48], 12);
       for(i = 0; i < 8; i++) {
+        if(!main_context.sanitize_sample_names) goto skip_sanitization;
         /* sanitization for 8.3 filenames */
         if(stm_sample_header[i] == 0x20) {
           stm_sample_header[i] = 0xFF;
@@ -195,13 +196,18 @@ void convert_s3m_intstrument_header_s3mtostm(void) {
         }
       }
       stm_sample_header[8] = '.',
-      snprintf((char*)&stm_sample_header[9], 4, "%zu", (usize)crc % 999);
+      snprintf((char*)&stm_sample_header[9], 4, "%03zu", (usize)crc % 999);
     } else {
-      snprintf((char*)&stm_sample_header[0], 12, "%zu", (usize)crc * random);
+      if(!main_context.sanitize_sample_names) {
+        memset(stm_sample_header, 0, 12);
+        goto skip_sanitization;
+      };
+      snprintf((char*)&stm_sample_header[0], 12, "X%06zuX", (usize)random);
       stm_sample_header[8] = '.',
-      snprintf((char*)&stm_sample_header[9], 4, "%zu", (usize)crc % 999);
+      snprintf((char*)&stm_sample_header[9], 4, "%03zu", (usize)crc % 999);
     }
 
+    skip_sanitization:
     /* instrument disk */
     stm_sample_header[13] = 0;
 

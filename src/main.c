@@ -10,6 +10,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include <stdbool.h>
 
 #include "envcheck.h"
 #include "ext.h"
@@ -125,6 +126,7 @@ void print_help(void) {
   puts("Options:");
   puts("  -h, --help       Print this help and exit");
   puts("  -v, --verbose    Enable extremely verbose output");
+  puts("  -s, --sanitize   Sanitize sample names during conversion, useful for saving them on DOS");
   puts("  -stm             Convert the S3M to STM (default)");
   puts("  -stx             Convert the S3M to STX");
 }
@@ -155,6 +157,9 @@ int main(int argc, char *argv[]) {
   for(i = 1; i < argc; i++) {
     if (!(strcmp(argv[i], "-v")) || !(strcmp(argv[i], "--verbose")))
       main_context.verbose_mode = true;
+
+    else if (!(strcmp(argv[i], "-s")) || !(strcmp(argv[i], "--sanitize")))
+      main_context.sanitize_sample_names = true;
 
     else if (!(strcmp(argv[i], "-h")) || !(strcmp(argv[i], "--help")))
       goto print_da_help;
