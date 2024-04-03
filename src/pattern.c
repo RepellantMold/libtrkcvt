@@ -225,6 +225,7 @@ void convert_s3m_pattern_to_stm(void) {
   u8 proper_octave = 0;
   /* used for correcting effects */
   u8 lownib = 0;
+  Pattern_Display_Context pd;
 
   blank_stm_pattern();
 
@@ -236,7 +237,10 @@ void convert_s3m_pattern_to_stm(void) {
       effect = s3m_unpacked_pattern[r][c][3],
       parameter = s3m_unpacked_pattern[r][c][4];
 
-      Pattern_Display_Context pd = {(u8)r, (u8)c, effect, parameter};
+      pd.row = r;
+      pd.channel = c;
+      pd.effect = effect;
+      pd.parameter = parameter;
 
       lownib = parameter & 0x0F;
 
