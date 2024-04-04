@@ -124,6 +124,31 @@ void convert_song_header_s3mtostm(void) {
   stm_song_header[33] = pattern_count;
 }
 
+void convert_song_header_s3mtostx(void) {
+  strncpy((char*)stx_song_header, (char*)s3m_song_header, 19);
+
+  if (s3m_song_header[38] & S3M_AMIGAFREQLIMITS)
+    warning_puts("Ignoring Amiga frequency limit");
+
+  if (s3m_song_header[51] & 128)
+    warning_puts("Do not expect the song to play in stereo.");
+
+  if (s3m_song_header[38] & S3M_ST2TEMPO)
+    stm_song_header[43] = s3m_song_header[49];
+  else
+    /* TODO: deal with speed factor */
+    stm_song_header[43] = s3m_song_header[49] << 4;
+
+  /* global volume */
+  stm_song_header[42] = s3m_song_header[48];
+
+  stm_song_header[48] = pattern_count;
+
+  stm_song_header[50] = sample_count;
+
+  stm_song_header[52] = order_count;
+}
+
 void convert_song_orders_s3mtostm(usize length) {
   usize i = 0;
 
@@ -135,6 +160,16 @@ void convert_song_orders_s3mtostm(usize length) {
                         ? STM_ORDER_END
                         : s3m_order_array[i];
   } while (i++ < STM_ORDER_LIST_SIZE);
+}
+
+void convert_song_orders_s3mtostx(usize length, u8* order_list) {
+  usize i = 0;
+
+  if(!order_list) return;
+
+  do {
+    order_list[i] = s3m_order_array[i];
+  } while (i++ < length);
 }
 
 void grab_sample_data(FILE* file, usize position) {

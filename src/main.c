@@ -95,7 +95,7 @@ void print_help(void) {
   puts("  -s, --sanitize   Sanitize sample names during conversion, useful for saving them on DOS");
   puts("  -m, --memory     Handle effects calling effect memory (experimental)");
   puts("  -stm             Convert the S3M to STM (default)");
-  puts("  -stx             Convert the S3M to STX (not implemented yet)");
+  puts("  -stx             Convert the S3M to STX (unfinished)");
 }
 
 void handle_sample_headers_s3mtostm(FOC_Context* context, usize sample_count);
@@ -338,7 +338,28 @@ int check_valid_s3m(FILE *S3Mfile) {
 }
 
 int convert_s3m_to_stx(FOC_Context* context) {
-  (void)context;
-  printf("This is not implemented yet.\n");
+  FILE* S3Mfile = context->infile;
+  FILE* STXfile = context->outfile;
+  bool verbose = context->verbose_mode;
+
+  warning_puts("This feature is not finished!\n");
+
+  if(!S3Mfile || !STXfile) return FOC_OPEN_FAILURE;
+  if(ferror(S3Mfile) || ferror(STXfile)) return FOC_MALFORMED_FILE;
+  if(check_valid_s3m(S3Mfile)) return FOC_NOT_S3M_FILE;
+
+  (void)!fread(s3m_song_header, sizeof(u8), sizeof(s3m_song_header), S3Mfile);
+  order_count = s3m_song_header[32];
+  sample_count = s3m_song_header[34];
+  if (sample_count > STM_MAXSMP) warning_printf("Sample count exceeds %u (%u > %u), only using %u.\n", STM_MAXSMP, sample_count, STM_MAXSMP, STM_MAXSMP);
+  pattern_count = s3m_song_header[36];
+  if (pattern_count > STM_MAXPAT) warning_printf("Pattern count exceeds %u (%u > %u), only converting %u.\n", STM_MAXPAT, pattern_count, STM_MAXPAT, STM_MAXPAT);
+  if (verbose) show_s3m_song_header();
+
+  check_s3m_channels();
+
+  convert_song_header_s3mtostx();
+  fwrite(stx_song_header, sizeof(u8), sizeof(stx_song_header), STXfile);
+
   return FOC_SUCCESS;
 }

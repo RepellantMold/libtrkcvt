@@ -8,7 +8,9 @@
 void show_s3m_song_header(void);
 void grab_s3m_parapointers(FILE* file);
 void convert_song_header_s3mtostm(void);
+void convert_song_header_s3mtostx(void);
 void convert_song_orders_s3mtostm(usize length);
+void convert_song_orders_s3mtostx(usize length, u8* order_list);
 void grab_sample_data(FILE* file, usize position);
 
 void convert_s3m_intstrument_header_s3mtostm(void);
