@@ -314,9 +314,8 @@ void convert_s3m_pattern_to_stm(void) {
 
         case EFF('B'):
           freechn = check_for_free_channel(r);
-          if(freechn < STM_MAXCHN) {
-            s3m_unpacked_pattern[r][freechn][3] = EFF('C');
-          }
+          if(freechn >= STM_MAXCHN) break;
+          s3m_unpacked_pattern[r][freechn][3] = EFF('C');
           break;
 
         /* pattern break */
@@ -376,6 +375,7 @@ void convert_s3m_pattern_to_stm(void) {
 
         default:
           effect = 0;
+          parameter = 0;
           break;
       };
 
