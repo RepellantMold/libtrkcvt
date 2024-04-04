@@ -88,6 +88,8 @@ u8 s3m_order_array[S3M_ORDER_LIST_SIZE] = {S3M_ORDER_END};
 u8 s3m_song_header[96] = {0};
 u8 s3m_inst_header[80] = {0};
 
+u16 s3m_cwtv = 0;
+
 u16 s3m_inst_pointers[S3M_MAXSMP] = {0};
 u16 s3m_pat_pointers[S3M_MAXPAT] = {0};
 u32 s3m_pcm_pointers[S3M_MAXSMP] = {0};

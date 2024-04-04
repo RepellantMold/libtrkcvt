@@ -17,6 +17,7 @@ typedef struct {
   usize conversion_type;
   bool verbose_mode;
   bool sanitize_sample_names;
+  bool handle_effect_memory;
 } FOC_Context;
 
 /* RM: stealing cs127's NTCheck's return values! */

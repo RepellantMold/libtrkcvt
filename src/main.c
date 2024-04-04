@@ -93,6 +93,7 @@ void print_help(void) {
   puts("  -h, --help       Print this help and exit");
   puts("  -v, --verbose    Enable extremely verbose output");
   puts("  -s, --sanitize   Sanitize sample names during conversion, useful for saving them on DOS");
+  puts("  -m, --memory     Handle effects calling effect memory (experimental)");
   puts("  -stm             Convert the S3M to STM (default)");
   puts("  -stx             Convert the S3M to STX (not implemented yet)");
 }
@@ -128,6 +129,9 @@ int main(int argc, char *argv[]) {
 
     else if (!(strcmp(argv[i], "-h")) || !(strcmp(argv[i], "--help")))
       goto print_da_help;
+
+    else if (!(strcmp(argv[i], "-m")) || !(strcmp(argv[i], "--memory")))
+      main_context.handle_effect_memory = true;
 
     else if (!(strcmp(argv[i], "-stm")))
       conversion_type = FOC_S3MTOSTM;
@@ -177,11 +181,12 @@ int convert_s3m_to_stm(FOC_Context* context) {
   if(check_valid_s3m(S3Mfile)) return FOC_NOT_S3M_FILE;
 
   (void)!fread(s3m_song_header, sizeof(u8), sizeof(s3m_song_header), S3Mfile);
+  s3m_cwtv = s3m_song_header[41] << 8 | s3m_song_header[40];
   order_count = s3m_song_header[32];
   sample_count = s3m_song_header[34];
-  if (sample_count > STM_MAXSMP) warning_printf("WARNING: Sample count exceeds 31 (%u > %u), only using %u.\n", sample_count, STM_MAXSMP, STM_MAXSMP);
+  if (sample_count > STM_MAXSMP) warning_printf("Sample count exceeds 31 (%u > %u), only using %u.\n", sample_count, STM_MAXSMP, STM_MAXSMP);
   pattern_count = s3m_song_header[36];
-  if (pattern_count > STM_MAXPAT) warning_printf("WARNING: Pattern count exceeds 63 (%u > %u), only converting %u.\n", pattern_count, STM_MAXPAT, STM_MAXPAT);
+  if (pattern_count > STM_MAXPAT) warning_printf("Pattern count exceeds 63 (%u > %u), only converting %u.\n", pattern_count, STM_MAXPAT, STM_MAXPAT);
   if (verbose) show_s3m_song_header();
 
   check_s3m_channels();
