@@ -23,20 +23,6 @@
 #include "sample.c"
 #include "pattern.c"
 
-/* RM: stealing cs127's NTCheck's return values! */
-enum FOC_ReturnCode
-{
-  FOC_SUCCESS         = 0x00,
-  FOC_OPEN_FAILURE    = 0x01,
-  FOC_NOT_S3M_FILE    = 0x02,
-  FOC_MALFORMED_FILE  = 0x04,
-  FOC_CONV_FAILURE    = 0x08,
-  FOC_ALLOC_FAIL      = 0x10,
-  FOC_NO_INPUT        = 0x20,
-  FOC_NO_FILENAMES    = 0x40,
-  FOC_CONVERSION_FAIL = 0x80,
-};
-
 enum FOC_ConversionMode
 {
   FOC_S3MTOSTM        = 0x00,
@@ -116,7 +102,7 @@ int handle_pcm_s3mtostm(FOC_Context* context, usize sample_count);
 void handle_pcm_parapointer_s3mtostm(FOC_Context* context, usize i);
 void handle_patterns_s3mtostm(FOC_Context* context, usize pattern_count);
 
-bool check_valid_s3m(FILE *S3Mfile);
+int check_valid_s3m(FILE *S3Mfile);
 
 
 int convert_s3m_to_stm(FOC_Context* context);
@@ -125,8 +111,7 @@ int convert_s3m_to_stx(FOC_Context* context);
 int main(int argc, char *argv[]) {
   int i = 0, return_value = FOC_SUCCESS;
   usize conversion_type = FOC_S3MTOSTM;
-  FILE *outfile = NULL;
-  FILE *infile = NULL;
+  FILE *outfile = NULL, *infile = NULL;
 
   if (argc < 2) {
     print_da_help:
@@ -189,7 +174,7 @@ int convert_s3m_to_stm(FOC_Context* context) {
 
   if(!S3Mfile || !STMfile) return FOC_OPEN_FAILURE;
   if(ferror(S3Mfile) || ferror(STMfile)) return FOC_MALFORMED_FILE;
-  if(!check_valid_s3m(S3Mfile)) return FOC_NOT_S3M_FILE;
+  if(check_valid_s3m(S3Mfile)) return FOC_NOT_S3M_FILE;
 
   (void)!fread(s3m_song_header, sizeof(u8), sizeof(s3m_song_header), S3Mfile);
   order_count = s3m_song_header[32];
@@ -213,12 +198,12 @@ int convert_s3m_to_stm(FOC_Context* context) {
 
   handle_patterns_s3mtostm(context, pattern_count);
 
-  if(handle_pcm_s3mtostm(context, sample_count) == 0) {
+  if(handle_pcm_s3mtostm(context, sample_count)) {
+    return FOC_SAMPLE_FAIL;
+  };
+
     puts("Conversion done successfully!");
     return FOC_SUCCESS;
-  } else {
-    return FOC_CONVERSION_FAIL;
-  };
 }
 
 void handle_sample_headers_s3mtostm(FOC_Context* context, usize sample_count) {
@@ -228,17 +213,19 @@ void handle_sample_headers_s3mtostm(FOC_Context* context, usize sample_count) {
   usize i = 0;
 
   for(; i < STM_MAXSMP; i++) {
-    if(i < sample_count) {
-      if (verbose) printf("Sample %zu:\n", i);
-      grab_sample_data(S3Mfile, s3m_inst_pointers[i]);
-      s3m_pcm_pointers[i] = grab_s3m_pcm_pointer();
-      s3m_pcm_lens[i] = grab_s3m_pcm_len();
-      if (verbose) show_s3m_inst_header();
-      convert_s3m_intstrument_header_s3mtostm();
-    } else {
+    if(i >= sample_count) {
       generate_blank_stm_instrument();
+      goto skiptowritingsampleheader;
     }
 
+    if (verbose) printf("Sample %zu:\n", i);
+    grab_sample_data(S3Mfile, s3m_inst_pointers[i]);
+    s3m_pcm_pointers[i] = grab_s3m_pcm_pointer();
+    s3m_pcm_lens[i] = grab_s3m_pcm_len();
+    if (verbose) show_s3m_inst_header();
+    convert_s3m_intstrument_header_s3mtostm();    
+
+    skiptowritingsampleheader:
     fwrite(stm_sample_header, sizeof(u8), sizeof(stm_sample_header), STMfile);
   }
 }
@@ -286,26 +273,27 @@ int handle_pcm_s3mtostm(FOC_Context* context, usize sample_count) {
 
     printf("Converting sample %zu...\n", i);
 
-    dump_sample_data(S3Mfile, s3m_pcm_pointers[i], &sc);
+    if(dump_sample_data(S3Mfile, s3m_pcm_pointers[i], &sc)) return FOC_SAMPLE_FAIL;
     convert_unsigned_to_signed(&sc);
 
-    if (padding_len) {
-      sample_len += padding_len;
+    if (!padding_len) goto dontaddpadding;
 
-      temp = realloc(stm_sample_data, sample_len);
-      if (!temp) {
-        free(stm_sample_data);
-        eprintf("Could not reallocate memory for sample data!\n");
-        return FOC_ALLOC_FAIL;
-      }
-      stm_sample_data = temp;
+    sample_len += padding_len;
+
+    temp = realloc(stm_sample_data, sample_len);
+    if (!temp) {
+      free(stm_sample_data);
+      eprintf("Could not reallocate memory for sample data!\n");
+      return FOC_ALLOC_FAIL;
     }
+    stm_sample_data = temp;
 
+    dontaddpadding:
     handle_pcm_parapointer_s3mtostm(context, i);
 
-    fwrite(stm_sample_data, sizeof(u8), sample_len, STMfile);
+    (void)!fwrite(stm_sample_data, sizeof(u8), sample_len, STMfile);
 
-    printf("Sample %zu written.\n", i);
+    (void)!printf("Sample %zu written.\n", i);
 
     free(stm_sample_data);
   }
@@ -319,27 +307,29 @@ void handle_pcm_parapointer_s3mtostm(FOC_Context* context, usize i) {
 
   stm_pcm_pointers[i] = calculate_stm_sample_parapointer();
 
-  fseek(context->outfile, (long)header_pos, SEEK_SET);
+  (void)!fseek(context->outfile, (long)header_pos, SEEK_SET);
 
   (void)!fwrite(&stm_pcm_pointers[i], sizeof(u8), 2, context->outfile);
 
-  fseek(context->outfile, (long)saved_pos, SEEK_SET);
+  (void)!fseek(context->outfile, (long)saved_pos, SEEK_SET);
 }
 
-bool check_valid_s3m(FILE *S3Mfile) {
+int check_valid_s3m(FILE *S3Mfile) {
   char scrm[4] = {0};
 
-  fseek(S3Mfile, 44, SEEK_SET);
+  if(!S3Mfile) return FOC_MALFORMED_FILE;
+
+  (void)!fseek(S3Mfile, 44, SEEK_SET);
 
   (void)!fread(scrm, sizeof(char), 4, S3Mfile);
 
   if (memcmp(scrm, "SCRM", 4)) {
     eprintf("This is not an S3M file!");
-    return false;
+    return FOC_NOT_S3M_FILE;
   }
 
   rewind(S3Mfile);
-  return true;
+  return FOC_SUCCESS;
 }
 
 int convert_s3m_to_stx(FOC_Context* context) {

@@ -77,8 +77,6 @@ int check_effect(Pattern_Display_Context* context) {
 
     /* set speed */
     case EFF('A'):
-      /* TODO: implement speed factor? */
-      parameter <<= 4;
       break;
 
     /* set position */
@@ -137,7 +135,6 @@ int check_effect(Pattern_Display_Context* context) {
 
     default:
       warning_pattern_puts(context, "unsupported effect!");
-      effect = 0;
       break;
   }
 
@@ -279,18 +276,18 @@ void convert_s3m_pattern_to_stm(void) {
 
         /* vibrato */
         case EFF('H'):
-        if((lownib >> 1) != 0) {
-          if(!(s3m_song_header[38] & S3M_ST2VIB)) {
-            optional_printf("adjusting vibrato depth from %u to %u.\n", lownib, lownib >> 1);
-            lownib >>= 1;
-            optional_puts("adjustment successful!\n");
-          }
-        } else optional_printf("adjustment failed... depth %u turned into %u. this will not be adjusted!\n", lownib, lownib >> 1);
-        break;
+          if((lownib >> 1) != 0) {
+            if(!(s3m_song_header[38] & S3M_ST2VIB)) {
+              optional_printf("adjusting vibrato depth from %u to %u.\n", lownib, lownib >> 1);
+              lownib >>= 1;
+              optional_puts("adjustment successful!\n");
+            }
+          } else optional_printf("adjustment failed... depth %u turned into %u. this will not be adjusted!\n", lownib, lownib >> 1);
+          break;
 
         default:
-        effect = 0;
-        break;
+          effect = 0;
+          break;
       };
 
       if (note < 0xFE) {
@@ -298,7 +295,7 @@ void convert_s3m_pattern_to_stm(void) {
         note = (proper_octave << 4) | (note & 0x0F);
       }
 
-      if (volume == 0xFF) volume = 65;
+      if (volume > 64) volume = 65;
 
       stm_pattern[r][c][0] = note,
       stm_pattern[r][c][1] = ((ins & 31) << 3) | (volume & 7),

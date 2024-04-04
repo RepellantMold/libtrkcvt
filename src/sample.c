@@ -10,18 +10,22 @@
 
 #include "sample.h"
 
-void dump_sample_data(FILE* file, usize position, Sample_Context* context) {
-  if (!file || !context) return;
+int dump_sample_data(FILE* file, usize position, Sample_Context* context) {
+  if (!file || !context) return FOC_NO_INPUT;
 
-  fseek(file, (long)position, SEEK_SET);
+  (void)!fseek(file, (long)position, SEEK_SET);
 
-  (void)!fread(context->pcm, sizeof(u8), context->length, file);
+  if (fread(context->pcm, sizeof(u8), context->length, file) != context->length) return FOC_SAMPLE_FAIL;
+
+  return FOC_SUCCESS;
 }
 
 void convert_unsigned_to_signed(Sample_Context* context) {
   usize i = 0;
 
   if (!context) return;
+
+  if (!context->pcm || !context->length) return;
 
   do {
     context->pcm[i] ^= 128;
