@@ -134,19 +134,19 @@ void convert_song_header_s3mtostx(void) {
     warning_puts("Do not expect the song to play in stereo.");
 
   if (s3m_song_header[38] & S3M_ST2TEMPO)
-    stm_song_header[43] = s3m_song_header[49];
+    stx_song_header[43] = s3m_song_header[49];
   else
     /* TODO: deal with speed factor */
-    stm_song_header[43] = s3m_song_header[49] << 4;
+    stx_song_header[43] = s3m_song_header[49] << 4;
 
   /* global volume */
-  stm_song_header[42] = s3m_song_header[48];
+  stx_song_header[42] = s3m_song_header[48];
 
-  stm_song_header[48] = pattern_count;
+  stx_song_header[48] = pattern_count;
 
-  stm_song_header[50] = sample_count;
+  stx_song_header[50] = sample_count;
 
-  stm_song_header[52] = order_count;
+  stx_song_header[52] = order_count;
 }
 
 void convert_song_orders_s3mtostm(usize length) {
