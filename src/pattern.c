@@ -208,7 +208,7 @@ int check_for_free_channel(usize r) {
   usize i = 0;
 
   for (; i < STM_MAXCHN; i++) {
-    if (!s3m_unpacked_pattern[r][i][3]) return i;
+    if (!s3m_unpacked_pattern[r][i][3]) return (int)i;
   }
 
   return -1;
@@ -297,8 +297,8 @@ void convert_s3m_pattern_to_stm(void) {
       effect = s3m_unpacked_pattern[r][c][3],
       parameter = s3m_unpacked_pattern[r][c][4];
 
-      pd.row = r;
-      pd.channel = c;
+      pd.row = (u8)r;
+      pd.channel = (u8)c;
       pd.effect = effect;
       pd.parameter = parameter;
 
