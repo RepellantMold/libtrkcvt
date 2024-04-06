@@ -574,9 +574,9 @@ FodyWeavers.xsd
 
 # End of https://www.toptal.com/developers/gitignore/api/cmake,windows,linux,macos,visualstudio,visualstudiocode,codeblocks,c++,c
 
-*.s3m
-*.stm
-*.stx
+*.[sS]3[mM]
+*.[sS][tT][mM]
+*.[sS][tT][xX]
 build*
 st
 core.*
