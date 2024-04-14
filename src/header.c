@@ -253,8 +253,8 @@ void convert_s3m_intstrument_header_s3mtostm(void) {
 
     /* loop points */
     if(flags & S3MSMP_LOOP) {
-      stm_sample_header[19] = s3m_inst_header[21], stm_sample_header[18] = s3m_inst_header[20];
-      stm_sample_header[21] = s3m_inst_header[25], stm_sample_header[20] = s3m_inst_header[24];
+      stm_sample_header[19] = s3m_inst_header[21], stm_sample_header[18] = s3m_inst_header[20] - 1;
+      stm_sample_header[21] = s3m_inst_header[25], stm_sample_header[20] = s3m_inst_header[24] - 1;
     } else {
       stm_sample_header[19] = 0, stm_sample_header[18] = 0;
       stm_sample_header[21] = 0xFF, stm_sample_header[20] = 0xFF;
@@ -265,8 +265,6 @@ void convert_s3m_intstrument_header_s3mtostm(void) {
 
     /* c2spd */
     stm_sample_header[25] = s3m_inst_header[33], stm_sample_header[24] = s3m_inst_header[32];
-
-    stm_sample_header[30] = 'R', stm_sample_header[31] = 'M';
     break;
 
     default:

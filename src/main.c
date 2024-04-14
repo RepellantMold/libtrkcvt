@@ -254,7 +254,7 @@ int handle_pcm_s3mtostm(FOC_Context* context, usize sample_count) {
   FILE* S3Mfile = context->infile;
   FILE* STMfile = context->outfile;
   usize i = 0;
-  u8 *stm_sample_data = NULL, *temp = NULL;
+  u8 stm_sample_data[USHRT_MAX] = {0};
   Sample_Context sc;
   usize sample_len = 0, padding_len = 0;
 
@@ -266,12 +266,6 @@ int handle_pcm_s3mtostm(FOC_Context* context, usize sample_count) {
     if (!sample_len) continue;
 
     padding_len = (u16)calculate_sample_padding(sample_len);
-
-    stm_sample_data = calloc(sample_len, sizeof(u8));
-    if (!stm_sample_data) {
-      eprintf("Could not allocate memory for sample data!\n");
-      return FOC_ALLOC_FAIL;
-    }
 
     sc.length = sample_len;
     sc.pcm = stm_sample_data;
@@ -285,22 +279,12 @@ int handle_pcm_s3mtostm(FOC_Context* context, usize sample_count) {
 
     sample_len += padding_len;
 
-    temp = realloc(stm_sample_data, sample_len);
-    if (!temp) {
-      free(stm_sample_data);
-      eprintf("Could not reallocate memory for sample data!\n");
-      return FOC_ALLOC_FAIL;
-    }
-    stm_sample_data = temp;
-
     dontaddpadding:
     handle_pcm_parapointer_s3mtostm(context, i);
 
     (void)!fwrite(stm_sample_data, sizeof(u8), sample_len, STMfile);
 
     (void)!printf("Sample %zu written.\n", i);
-
-    free(stm_sample_data);
   }
 
   return FOC_SUCCESS;
