@@ -25,7 +25,7 @@
 #include "s3m.h"
 #include "stm.h"
 
-/* a helper from https://github.com/viiri/st2play! */
+// a helper from https://github.com/viiri/st2play!
 u16 fgetw(FILE* fp) {
   u8 data[2];
 

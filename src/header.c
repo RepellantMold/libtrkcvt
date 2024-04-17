@@ -49,7 +49,7 @@ void grab_s3m_parapointers(FILE* file) {
 
   (void)!fread(s3m_order_array, sizeof(u8), order_count, file);
 
-  /* see section "2.6 Load Order Data" from "FireLight S3M Player Tutorial.txt" */
+  // see section "2.6 Load Order Data" from "FireLight S3M Player Tutorial.txt"
   for (count = 0; count < order_count; count++) {
     if (s3m_order_array[count] < S3M_ORDER_MARKER) {
       s3m_order_array[i] = s3m_order_array[count];
@@ -98,7 +98,7 @@ void check_s3m_channels(void) {
   }
 }
 
-/* s3m_song_header is expected to be filled beforehand */
+// s3m_song_header is expected to be filled beforehand
 void convert_song_header_s3mtostm(void) {
   strncpy((char*)stm_song_header, (char*)s3m_song_header, 19);
 
@@ -111,11 +111,11 @@ void convert_song_header_s3mtostm(void) {
   if (s3m_song_header[38] & S3M_ST2TEMPO) {
     stm_song_header[32] = s3m_song_header[49];
   } else {
-    /* TODO: deal with speed factor */
+    // TODO: deal with speed factor
     stm_song_header[32] = s3m_song_header[49] << 4;
   }
 
-  /* global volume */
+  // global volume
   stm_song_header[34] = s3m_song_header[48];
 
   stm_song_header[33] = pattern_count;
@@ -133,11 +133,11 @@ void convert_song_header_s3mtostx(void) {
   if (s3m_song_header[38] & S3M_ST2TEMPO) {
     stx_song_header[43] = s3m_song_header[49];
   } else {
-    /* TODO: deal with speed factor */
+    // TODO: deal with speed factor
     stx_song_header[43] = s3m_song_header[49] << 4;
   }
 
-  /* global volume */
+  // global volume
   stx_song_header[42] = s3m_song_header[48];
 
   stx_song_header[48] = pattern_count;
@@ -190,7 +190,7 @@ void convert_s3m_intstrument_header_s3mtostm(void) {
   switch (type) {
     case S3MSMPTYPE_MSG:
     generateblanksample:
-      /* instrument name */
+      // instrument name
       if (s3m_inst_header[1] != 0)
         memcpy((char*)stm_sample_header, (char*)&s3m_inst_header[1], 12);
       else if (s3m_inst_header[48] != 0)
@@ -198,25 +198,25 @@ void convert_s3m_intstrument_header_s3mtostm(void) {
       else
         memset(stm_sample_header, 0, 12);
 
-      /* instrument disk */
+      // instrument disk
       stm_sample_header[13] = 0;
 
-      /* lengths */
+      // lengths
       stm_sample_header[17] = 0, stm_sample_header[16] = 0;
 
-      /* loop points */
+      // loop points
       stm_sample_header[19] = 0, stm_sample_header[18] = 0;
       stm_sample_header[21] = 0xFF, stm_sample_header[20] = 0xFF;
 
-      /* volume */
+      // volume
       stm_sample_header[22] = 0;
 
-      /* c2spd */
+      // c2spd
       stm_sample_header[25] = 0x21, stm_sample_header[24] = 0;
       break;
 
     case S3MSMPTYPE_SMP:
-      /* instrument name */
+      // instrument name
       if (s3m_inst_header[1] != 0) {
         memcpy((char*)stm_sample_header, (char*)&s3m_inst_header[1], 12);
       } else if (s3m_inst_header[48] != 0) {
@@ -224,7 +224,7 @@ void convert_s3m_intstrument_header_s3mtostm(void) {
         for (i = 0; i < 8; i++) {
           if (!main_context.sanitize_sample_names)
             goto skip_sanitization;
-          /* sanitization for 8.3 filenames */
+          // sanitization for 8.3 filenames
           if (stm_sample_header[i] == 0x20)
             stm_sample_header[i] = 0xFF;
           else if (stm_sample_header[i] < 0x20 || stm_sample_header[i] >= 0x7E)
@@ -241,13 +241,13 @@ void convert_s3m_intstrument_header_s3mtostm(void) {
       }
 
     skip_sanitization:
-      /* instrument disk */
+      // instrument disk
       stm_sample_header[13] = 0;
 
-      /* lengths */
+      // lengths
       stm_sample_header[17] = s3m_inst_header[17], stm_sample_header[16] = s3m_inst_header[16];
 
-      /* loop points */
+      // loop points
       if (flags & S3MSMP_LOOP) {
         stm_sample_header[19] = s3m_inst_header[21], stm_sample_header[18] = s3m_inst_header[20] - 1;
         stm_sample_header[21] = s3m_inst_header[25], stm_sample_header[20] = s3m_inst_header[24] - 1;
@@ -256,10 +256,10 @@ void convert_s3m_intstrument_header_s3mtostm(void) {
         stm_sample_header[21] = 0xFF, stm_sample_header[20] = 0xFF;
       }
 
-      /* volume */
+      // volume
       stm_sample_header[22] = s3m_inst_header[28];
 
-      /* c2spd */
+      // c2spd
       stm_sample_header[25] = s3m_inst_header[33], stm_sample_header[24] = s3m_inst_header[32];
       break;
 
@@ -289,19 +289,19 @@ u16 grab_s3m_pcm_len(void) {
 void generate_blank_stm_instrument(void) {
   memset(stm_sample_header, 0, 12);
 
-  /* instrument disk */
+  // instrument disk
   stm_sample_header[13] = 0;
 
-  /* lengths */
+  // lengths
   stm_sample_header[17] = 0, stm_sample_header[16] = 0;
 
-  /* loop points */
+  // loop points
   stm_sample_header[19] = 0, stm_sample_header[18] = 0;
   stm_sample_header[21] = 0xFF, stm_sample_header[20] = 0xFF;
 
-  /* volume */
+  // volume
   stm_sample_header[22] = 0;
 
-  /* c2spd */
+  // c2spd
   stm_sample_header[25] = 0x21, stm_sample_header[24] = 0;
 }

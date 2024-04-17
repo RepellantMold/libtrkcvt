@@ -8,80 +8,86 @@
 
 #define STM_MAXCHN          4
 #define STM_MAXSMP          31
-/*
- * Strangely, in ST2, you can actually add orders above 63
- * (it even writes the bytes to the file),
- * but the pattern editor does not go above 63 so...
- */
+
+/* Strangely, in ST2, you can actually add orders above 63 (it even writes the bytes to the file),
+but the pattern editor does not go above 63 and no players will accept this so... */
 #define STM_MAXPAT          63
+
 #define STM_ORDER_END       99
 #define STM_ORDER_LIST_SIZE 128
 
 #define STM_PATSIZE         ((4 * 4) * 64)
 
 u8 stm_song_header[48] = {
-    /* song title (ASCIIZ) */
+    // song title (ASCIIZ)
     '\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0',
     '\0',
 
-    /* tracker name */
+    /* tracker name
+    Schism Tracker is really picky on this field,
+    libXMP/OpenMPT generally accept anything with
+    displayable ASCII. I left it alone anyway. */
     '!', 'S', 'c', 'r', 'e', 'a', 'm', '!',
 
+    // DOS EOF
     0x1A,
 
-    /* file type */
+    // file type (in this case, a module.)
     2,
 
-    /* version */
-    0x02, 0x15,
+    // major version, minor version
+    2, 21,
 
-    /* tempo */
+    // tempo (default)
     0x60,
 
-    /* number of patterns */
+    // number of patterns
     0,
 
-    /* global volume */
-    0x40,
-
-    /* reserved (???) */
-    0x58, 0x58, 0x58, 0x58, 0x58, 0x58, 0x58, 0x58, 0x58, 0x58, 0x58, 0x58, 0x58};
-
-u8 stm_sample_header[32] = {
-    /* filename (ASCIIZ) */
-    '\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0',
-
-    /* zero */
-    0,
-
-    /* instrument disk */
-    0,
-
-    /* reserved */
-    0, 0,
-
-    /* length in bytes */
-    0, 0,
-
-    /* loop start */
-    0, 0,
-
-    /* loop end */
-    0xFF, 0xFF,
-
-    /* volume */
+    // global volume
     64,
 
-    /* reserved */
+    // reserved (which I, RM, turned into a magic string, you're welcome!)
+    'S', 'c', 'r', 'e', 'a', 'm', 'v', 'e', 'r', 't', 'e', 'r', '\0'};
+
+u8 stm_sample_header[32] = {
+    // filename (ASCIIZ)
+    '\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0',
+
+    // reserved
     0,
 
-    /* speed for mid-C (in Hz) */
+    // instrument disk
+    0,
+
+    /* parapointer to the PCM data
+    the official documentation is extremely misleading here since it calls this area reserved!
+    "(used as internal segment while playing)" */
+    0, 0,
+
+    // length in bytes
+    0, 0,
+
+    // loop start
+    0, 0,
+
+    // loop end (0xFFFF means no loop)
+    0xFF, 0xFF,
+
+    // volume
+    64,
+
+    // reserved
+    0,
+
+    // speed for C2/Mid-C (calculated as Hz, with a default of 8448 or 8192 depending on version)
     0x00, 0x21,
 
-    /* reserved */
+    // reserved
     0, 0, 0, 0,
 
-    /* internal segment address/(in modules:)length in paragraphs */
+    /* reserved, contrary to what the official documentation says...
+       "internal segment address/(in modules:)length in paragraphs" */
     0, 0};
 
 u8 stm_sample_data[USHRT_MAX] = {0};
