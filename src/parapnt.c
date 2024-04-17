@@ -1,13 +1,15 @@
-#include <stdlib.h>
 #include <stdio.h>
+#include <stdlib.h>
 
 #include "envcheck.h"
 #include "ext.h"
+
 #include "main.h"
+#include "parapnt.h"
+#include "sample.h"
+
 #include "s3m.h"
 #include "stm.h"
-#include "sample.h"
-#include "parapnt.h"
 
 u16 calculate_stm_sample_parapointer(void) {
   usize pos = (usize)ftell(main_context.outfile);

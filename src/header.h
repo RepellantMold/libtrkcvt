@@ -1,8 +1,9 @@
 #ifndef __HEADER_H
 #define __HEADER_H
-#include <stdlib.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
+
 #include "ext.h"
 
 void show_s3m_song_header(void);

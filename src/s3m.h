@@ -1,16 +1,16 @@
 #ifndef __S3M_H
 #define __S3M_H
-#include <stdlib.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include "ext.h"
 
-#define S3M_ORDERPOS 96
-#define S3M_MAXPAT 253
-#define S3M_MAXCHN 32
-#define S3M_MAXSMP 99
+#define S3M_ORDERPOS        96
+#define S3M_MAXPAT          253
+#define S3M_MAXCHN          32
+#define S3M_MAXSMP          99
 #define S3M_ORDER_LIST_SIZE 256
-#define S3M_ORDER_MARKER 0xFE
-#define S3M_ORDER_END 0xFF
+#define S3M_ORDER_MARKER    0xFE
+#define S3M_ORDER_END       0xFF
 #define S3M_CHANNELARRAYPOS 64
 
 enum s3m_song_flags {
@@ -23,18 +23,9 @@ enum s3m_song_flags {
   S3M_CUSTOMDATA = 128
 };
 
-enum s3m_sample_type {
-  S3MSMPTYPE_MSG = 0,
-  S3MSMPTYPE_SMP = 1,
-  S3MSMPTYPE_ADLIBMEL = 2,
-  S3MSMPTYPE_ADLIBDRUM = 3
-};
+enum s3m_sample_type { S3MSMPTYPE_MSG = 0, S3MSMPTYPE_SMP = 1, S3MSMPTYPE_ADLIBMEL = 2, S3MSMPTYPE_ADLIBDRUM = 3 };
 
-enum s3m_sample_flags {
-  S3MSMP_LOOP = 1,
-  S3MSMP_STEREO = 2,
-  S3MSMP_16BIT = 4
-};
+enum s3m_sample_flags { S3MSMP_LOOP = 1, S3MSMP_STEREO = 2, S3MSMP_16BIT = 4 };
 
 enum s3m_channel_type {
   S3MCHN_LEFT1 = 0,
@@ -76,12 +67,11 @@ enum s3m_channel_type {
   S3MCHN_DISABLED = 255
 };
 
-
 /* 320 bytes per channel
  * 64 sequential rows per channel
  * 5 bytes per row
  */
-#define S3M_UNPACKED_PATTERN_SIZE ((5*32)*64)
+#define S3M_UNPACKED_PATTERN_SIZE ((5 * 32) * 64)
 
 u8 s3m_order_array[S3M_ORDER_LIST_SIZE] = {S3M_ORDER_END};
 
@@ -95,6 +85,6 @@ u16 s3m_pat_pointers[S3M_MAXPAT] = {0};
 u32 s3m_pcm_pointers[S3M_MAXSMP] = {0};
 u16 s3m_pcm_lens[S3M_MAXSMP] = {0};
 
-u8 s3m_unpacked_pattern[64][32][5] = {{{0xFF,0x00,0xFF,0x00,0x00}}};
+u8 s3m_unpacked_pattern[64][32][5] = {{{0xFF, 0x00, 0xFF, 0x00, 0x00}}};
 
 #endif

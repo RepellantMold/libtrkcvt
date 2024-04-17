@@ -7,7 +7,7 @@
 typedef struct {
   u8 s3m_unpacked_pattern[64][32][5];
   u8 stm_pattern[64][4][4];
-  u8 *stx_pattern;
+  u8* stx_pattern;
 } Pattern_Context;
 
 typedef struct {
@@ -30,8 +30,6 @@ void warning_pattern_puts(Pattern_Display_Context* context, const char* msg);
 void warning_pattern_printf(Pattern_Display_Context* context, const char* format, ...);
 
 /* for display purposes */
-u8 notetable[12][2] = {
-  "C-","C#","D-","D#","E-","F-","F#","G-","G#","A-","A#","B-"
-};
+u8 notetable[12][2] = {"C-", "C#", "D-", "D#", "E-", "F-", "F#", "G-", "G#", "A-", "A#", "B-"};
 
 #endif

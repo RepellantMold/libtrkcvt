@@ -19,6 +19,6 @@ typedef size_t usize;
 #define forever while (1)
 
 /* loop {} */
-#define loop for (;;)
+#define loop    for (;;)
 
 #endif
