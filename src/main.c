@@ -14,6 +14,7 @@
 
 #include "envcheck.h"
 #include "ext.h"
+
 #include "main.h"
 #include "s3m.h"
 #include "stm.h"
@@ -254,7 +255,6 @@ int handle_pcm_s3mtostm(FOC_Context* context, usize sample_count) {
   FILE* S3Mfile = context->infile;
   FILE* STMfile = context->outfile;
   usize i = 0;
-  u8 stm_sample_data[USHRT_MAX] = {0};
   Sample_Context sc;
   usize sample_len = 0, padding_len = 0;
 

@@ -2,6 +2,8 @@
 #define __STM_H
 #include <stdlib.h>
 #include <stdio.h>
+#include <limits.h>
+
 #include "ext.h"
 
 #define STM_MAXCHN 4
@@ -84,6 +86,8 @@ u8 stm_sample_header[32] = {
   /* internal segment address/(in modules:)length in paragraphs */
   0, 0
 };
+
+u8 stm_sample_data[USHRT_MAX] = {0};
 
 u8 stm_order_list[STM_ORDER_LIST_SIZE] = {STM_ORDER_END};
 
