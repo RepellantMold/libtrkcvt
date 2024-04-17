@@ -177,15 +177,47 @@ void grab_sample_data(FILE* file, usize position) {
   (void)!fread(s3m_inst_header, sizeof(u8), 80, file);
 }
 
-void convert_s3m_intstrument_header_s3mtostm(void) {
-  usize i = 0;
-  const usize type = s3m_inst_header[0], flags = s3m_inst_header[31];
-  usize random = 0;
+void handle_sample_name_s3m2stm(void) {
+  usize i = 0, random = 0;
   u32 crc = crc32(s3m_inst_header, 80);
 
   srand(crc);
 
   random = (usize)rand();
+
+  if (s3m_inst_header[1] != 0) {
+    memcpy((char*)stm_sample_header, (char*)&s3m_inst_header[1], 12);
+  } else if (s3m_inst_header[48] != 0) {
+    memcpy((char*)stm_sample_header, (char*)&s3m_inst_header[48], 12);
+
+    if (!main_context.sanitize_sample_names)
+      return;
+
+    // sanitization for 8.3 filenames
+    for (i = 0; i < 8; i++) {
+      if (stm_sample_header[i] == 0x20) {
+        // non-breaking space, it'll look strange in OpenMPT but oh well.
+        stm_sample_header[i] = 0xFF;
+      } else if (stm_sample_header[i] < 0x20 || stm_sample_header[i] >= 0x7E) {
+        // me exploiting the fact that Scream Tracker is coded in C, hehe!
+        stm_sample_header[i] = 0x00;
+      }
+    }
+    stm_sample_header[8] = '.';
+    snprintf((char*)&stm_sample_header[9], 4, "%03zu", (usize)crc % 999);
+  } else {
+    if (!main_context.sanitize_sample_names) {
+      memset(stm_sample_header, 0, 12);
+      return;
+    };
+    snprintf((char*)&stm_sample_header[0], 12, "X%06zuX", (usize)random);
+    stm_sample_header[8] = '.';
+    snprintf((char*)&stm_sample_header[9], 4, "%03zu", (usize)crc % 999);
+  }
+}
+
+void convert_s3m_intstrument_header_s3mtostm(void) {
+  const usize type = s3m_inst_header[0], flags = s3m_inst_header[31];
 
   switch (type) {
     case S3MSMPTYPE_MSG:
@@ -216,31 +248,8 @@ void convert_s3m_intstrument_header_s3mtostm(void) {
       break;
 
     case S3MSMPTYPE_SMP:
-      // instrument name
-      if (s3m_inst_header[1] != 0) {
-        memcpy((char*)stm_sample_header, (char*)&s3m_inst_header[1], 12);
-      } else if (s3m_inst_header[48] != 0) {
-        memcpy((char*)stm_sample_header, (char*)&s3m_inst_header[48], 12);
-        for (i = 0; i < 8; i++) {
-          if (!main_context.sanitize_sample_names)
-            goto skip_sanitization;
-          // sanitization for 8.3 filenames
-          if (stm_sample_header[i] == 0x20)
-            stm_sample_header[i] = 0xFF;
-          else if (stm_sample_header[i] < 0x20 || stm_sample_header[i] >= 0x7E)
-            stm_sample_header[i] = 0x00;
-        }
-        stm_sample_header[8] = '.', snprintf((char*)&stm_sample_header[9], 4, "%03zu", (usize)crc % 999);
-      } else {
-        if (!main_context.sanitize_sample_names) {
-          memset(stm_sample_header, 0, 12);
-          goto skip_sanitization;
-        };
-        snprintf((char*)&stm_sample_header[0], 12, "X%06zuX", (usize)random);
-        stm_sample_header[8] = '.', snprintf((char*)&stm_sample_header[9], 4, "%03zu", (usize)crc % 999);
-      }
+      handle_sample_name_s3m2stm();
 
-    skip_sanitization:
       // instrument disk
       stm_sample_header[13] = 0;
 
