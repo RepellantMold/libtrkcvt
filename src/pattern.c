@@ -38,26 +38,26 @@ void print_s3m_row(usize r) {
     effect = s3m_unpacked_pattern[r][c][3], parameter = s3m_unpacked_pattern[r][c][4];
 
     if (note < 0xFE)
-      optional_printf("%.2s%01u", notetable[note & 0x0F], (note >> 4) + 1);
+      printf("%.2s%01u", notetable[note & 0x0F], (note >> 4) + 1);
     else if (note == 0xFE)
-      optional_printf("^^^");
+      printf("^^^");
     else if (note == 0xFF)
-      optional_printf("...");
+      printf("...");
 
     if (ins)
-      optional_printf(" %02u ", ins);
+      printf(" %02u ", ins);
     else
-      optional_printf(" .. ");
+      printf(" .. ");
 
     if (volume <= 64)
-      optional_printf("%02u ", volume);
+      printf("%02u ", volume);
     else
-      optional_printf(".. ");
+      printf(".. ");
 
     if (effect)
-      optional_printf("%c%02X ", EFFBASE + effect, parameter);
+      printf("%c%02X ", EFFBASE + effect, parameter);
     else
-      optional_printf("... ");
+      printf("... ");
   }
 
   fputs("\n", stdout);
