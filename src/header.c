@@ -103,7 +103,7 @@ void convert_song_header_s3mtostm(void) {
   strncpy((char*)stm_song_header, (char*)s3m_song_header, 19);
 
   if (s3m_song_header[38] & S3M_AMIGAFREQLIMITS)
-    warning_puts("Ignoring Amiga frequency limit");
+    warning_puts("The Amiga frequency limit option is not supported in Scream Tracker 2.");
 
   if (s3m_song_header[51] & 128)
     warning_puts("Do not expect the song to play in stereo.");
