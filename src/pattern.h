@@ -8,12 +8,6 @@
 #define MAXROWS 64
 
 typedef struct {
-  u8 s3m_unpacked_pattern[64][32][5];
-  u8 stm_pattern[64][4][4];
-  u8* stx_pattern;
-} Pattern_Context;
-
-typedef struct {
   u8 row;
   u8 channel;
   u8 effect;

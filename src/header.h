@@ -17,19 +17,4 @@ void grab_sample_data(FILE* file, usize position);
 void handle_sample_name_s3m2stm(void);
 void convert_s3m_intstrument_header_s3mtostm(void);
 
-typedef struct {
-  u8 s3m_order_list[S3M_ORDER_LIST_SIZE];
-  u8 stm_order_list[STM_ORDER_LIST_SIZE];
-  u8 stx_order_list[S3M_ORDER_LIST_SIZE * STX_ORDERMULTIPLIER];
-  u8 order_count;
-} Order_Context;
-
-typedef struct {
-  u8 s3m_song_header[96];
-  u8 s3m_inst_header[80];
-  u8 stm_song_header[48];
-  u8 stm_inst_header[32];
-  u8 stx_song_header[64];
-} Header_Context;
-
 #endif
