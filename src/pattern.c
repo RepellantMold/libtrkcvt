@@ -76,13 +76,13 @@ int check_effect(Pattern_Display_Context* context) {
   u8 hinib = parameter >> 4, lownib = parameter & 0x0F;
 
   switch (effect) {
-    /* no effect */
+    // no effect
     case 0: break;
 
-    /* set speed */
+    // set speed
     case EFF('A'): break;
 
-    /* set position */
+    // set position
     case EFF('B'):
       if (context->row < 63) {
         warning_pattern_puts(
@@ -91,13 +91,13 @@ int check_effect(Pattern_Display_Context* context) {
       }
       break;
 
-    /* pattern break */
+    // pattern break
     case EFF('C'):
       if (parameter)
         warning_pattern_puts(context, "pattern break ignores parameter!");
       break;
 
-    /* volume slide */
+    // volume slide
     case EFF('D'):
       if ((hinib == 0xF && lownib > 0) || (lownib == 0xF && hinib > 0))
         warning_pattern_puts(context, "there's no fine volume slides!");
@@ -106,7 +106,7 @@ int check_effect(Pattern_Display_Context* context) {
       goto noeffectmemory;
       break;
 
-    /* porta up/down */
+    // porta up/down
     case EFF('E'):
     case EFF('F'):
       if (hinib >= 0xE)
@@ -114,10 +114,10 @@ int check_effect(Pattern_Display_Context* context) {
       goto noeffectmemory;
       break;
 
-    /* tone porta */
+    // tone porta
     case EFF('G'): goto noeffectmemory; break;
 
-    /* vibrato */
+    // vibrato
     case EFF('H'):
       if (!main_context.handle_effect_memory && !parameter) {
         warning_pattern_puts(context, "there's no effect memory with this effect, this will be treated as a no-op.");
@@ -126,17 +126,12 @@ int check_effect(Pattern_Display_Context* context) {
       warning_pattern_puts(context, "vibrato depth is doubled compared to other trackers!");
       break;
 
-    /* tremor */
+    // tremor
     case EFF('I'):
-      if (s3m_cwtv >= 0x1300 && s3m_cwtv < 0x1320) {
-        if (!parameter) {
-          warning_pattern_puts(
-              context, "there's no effect memory with this effect, this will be treated as a really fast tremor.");
-        }
-      }
-      break;
+      if (s3m_cwtv >= 0x1300 && s3m_cwtv < 0x1320)
+        break;
 
-    /* arpeggio */
+    // arpeggio
     case EFF('J'): goto noeffectmemory; break;
 
     default: warning_pattern_puts(context, "unsupported effect!"); break;
@@ -150,7 +145,7 @@ noeffectmemory:
   return effect;
 }
 
-/* prototype function (NOT TESTED) */
+// prototype function (NOT TESTED)
 void parse_s3m_pattern(FILE* file, usize position) {
   u8 c = 0, r = 0, cv = 0;
   u8 note = 0xFF, ins = 0x00, volume = 0xFF, effect = 0x00, parameter = 0x00;
@@ -176,26 +171,20 @@ void parse_s3m_pattern(FILE* file, usize position) {
 
     c = (cv & 31);
 
-    if (cv & 0x20) {
-      note = (u8)fgetc(file);
-      ins = (u8)fgetc(file);
-    } else {
-      note = 0xFF;
-      ins = 0x00;
-    }
+    if (cv & 0x20)
+      note = (u8)fgetc(file), ins = (u8)fgetc(file);
+    else
+      note = 0xFF, ins = 0x00;
 
     if (cv & 0x40)
       volume = (u8)fgetc(file);
     else
       volume = 0xFF;
 
-    if (cv & 0x80) {
-      effect = (u8)fgetc(file);
-      parameter = (u8)fgetc(file);
-    } else {
-      effect = 0x00;
-      parameter = 0x00;
-    }
+    if (cv & 0x80)
+      effect = (u8)fgetc(file), parameter = (u8)fgetc(file);
+    else
+      effect = 0x00, parameter = 0x00;
 
     s3m_unpacked_pattern[r][c][0] = note;
     s3m_unpacked_pattern[r][c][1] = ins;
@@ -211,7 +200,7 @@ void parse_s3m_pattern(FILE* file, usize position) {
 int check_for_free_channel(usize r) {
   usize i = 0;
 
-  for (; i < STM_MAXCHN; i++)
+  for (; i < S3M_MAXCHN; i++)
     if (!s3m_unpacked_pattern[r][i][3])
       return (int)i;
 
@@ -224,7 +213,7 @@ u8 search_for_last_nonzero_param(usize startingrow, usize c, usize effect) {
   optional_printf("searching for last nonzero param for %c starting at row %02u and channel %02u\n", effect + EFFBASE,
                   i, c);
 
-  while (i-- != 0) {
+  while (i--) {
     optional_printf("checking row %02u\n", i);
     if (!s3m_unpacked_pattern[i][c][4] || s3m_unpacked_pattern[i][c][3] != effect)
       continue;
@@ -244,7 +233,7 @@ u8 search_for_last_nonzero_param2(usize startingrow, usize c, usize effect) {
   optional_printf("searching for last nonzero param for %c starting at row %02u and channel %02u\n", effect + EFFBASE,
                   i, c);
 
-  for (i = startingrow; i != 0; i--) {
+  for (i = startingrow; i; i--) {
     optional_printf("checking row %02u for low nibble\n", i);
 
     if (!(s3m_unpacked_pattern[i][c][4] & 0x0F) || s3m_unpacked_pattern[i][c][3] != effect)
@@ -253,7 +242,7 @@ u8 search_for_last_nonzero_param2(usize startingrow, usize c, usize effect) {
     lownib = s3m_unpacked_pattern[i][c][4] & 0x0F;
   }
 
-  for (i = startingrow; i != 0; i--) {
+  for (i = startingrow; i; i--) {
     optional_printf("checking row %02u for high nibble\n", i);
 
     if (!(s3m_unpacked_pattern[i][c][4] >> 4) || s3m_unpacked_pattern[i][c][3] != effect)
@@ -291,8 +280,8 @@ void convert_s3m_pattern_to_stm(void) {
   usize r = 0, c = 0;
   u8 note = 0xFF, ins = 0, volume = 0xFF, effect = 0, parameter = 0;
   u8 proper_octave = 0;
-  /* used for correcting effects */
-  u8 lownib = 0, freechn = 0, lastprm = 0;
+  // used for correcting effects
+  u8 lownib = 0, adjusted_vibrato_depth = 0, freechn = 0, lastprm = 0;
   Pattern_Display_Context pd;
 
   blank_stm_pattern();
@@ -302,18 +291,15 @@ void convert_s3m_pattern_to_stm(void) {
       note = s3m_unpacked_pattern[r][c][0], ins = s3m_unpacked_pattern[r][c][1], volume = s3m_unpacked_pattern[r][c][2],
       effect = s3m_unpacked_pattern[r][c][3], parameter = s3m_unpacked_pattern[r][c][4];
 
-      pd.row = (u8)r;
-      pd.channel = (u8)c;
-      pd.effect = effect;
-      pd.parameter = parameter;
+      pd.row = (u8)r, pd.channel = (u8)c, pd.effect = effect, pd.parameter = parameter;
 
       lownib = parameter & 0x0F;
 
       switch (check_effect(&pd)) {
 
-        /* set speed */
+        // set speed
         case EFF('A'):
-          /* TODO: implement speed factor? */
+          // TODO: implement speed factor?
           parameter <<= 4;
           break;
 
@@ -324,37 +310,54 @@ void convert_s3m_pattern_to_stm(void) {
           s3m_unpacked_pattern[r][freechn][3] = EFF('C');
           break;
 
-        /* pattern break */
+        // pattern break
         case EFF('C'): parameter = 0; break;
 
-        /* volume slide */
-        case EFF('D'): goto handle_effmem; break;
+        // volume slide
+        case EFF('D'):
 
-        /* porta up/down */
+        // porta up/down
         case EFF('E'):
         case EFF('F'): goto handle_effmem; break;
 
-        /* tone porta */
+        // tone porta
         case EFF('G'):
         handle_effmem:
           if (!main_context.handle_effect_memory)
             break;
-          if (!r || parameter != 0)
+          if (!r || parameter)
             break;
           lastprm = search_for_last_nonzero_param(r, c, effect);
-          if (lastprm != 0)
+          if (lastprm)
             parameter = s3m_unpacked_pattern[r][c][4] = lastprm;
           break;
 
-        /* tremor */
+        // vibrato
+        case EFF('H'):
+          adjusted_vibrato_depth = lownib >> 1;
+
+          if (adjusted_vibrato_depth) {
+            if (!(s3m_song_header[38] & S3M_ST2VIB)) {
+              optional_printf("adjusting vibrato depth from %u to %u.\n", lownib, adjusted_vibrato_depth);
+              lownib = adjusted_vibrato_depth;
+              optional_puts("adjustment successful!\n");
+            }
+          } else if (lownib) {
+            optional_printf("adjustment failed... depth %u turned into %u. this will not be adjusted!\n", lownib,
+                            adjusted_vibrato_depth);
+          }
+          goto handle_effmem2;
+          break;
+
+        // tremor
         case EFF('I'):
-          /* newer scream tracker 3 versions actually have memory for this effect.. */
+          // newer scream tracker 3 versions actually have memory for this effect..
           if (s3m_cwtv >= 0x1300 && s3m_cwtv < 0x1320)
             break;
           goto handle_effmem2;
           break;
 
-        /* arpeggio */
+        // arpeggio
         case EFF('J'):
         handle_effmem2:
           if (!main_context.handle_effect_memory)
@@ -362,35 +365,15 @@ void convert_s3m_pattern_to_stm(void) {
           if (!r || ((parameter & 0x0F) || (parameter >> 4)))
             break;
           lastprm = search_for_last_nonzero_param2(r, c, effect);
-          if (lastprm != 0)
+          if (lastprm)
             parameter = s3m_unpacked_pattern[r][c][4] = lastprm;
           break;
 
-        /* vibrato */
-        case EFF('H'):
-          if ((lownib >> 1) != 0) {
-            if (!(s3m_song_header[38] & S3M_ST2VIB)) {
-              optional_printf("adjusting vibrato depth from %u to %u.\n", lownib, lownib >> 1);
-              lownib >>= 1;
-              optional_puts("adjustment successful!\n");
-            }
-          } else if (lownib != 0) {
-            optional_printf("adjustment failed... depth %u turned into %u. this will not be adjusted!\n", lownib,
-                            lownib >> 1);
-          }
-          goto handle_effmem2;
-          break;
-
-        default:
-          effect = 0;
-          parameter = 0;
-          break;
+        default: effect = 0, parameter = 0; break;
       };
 
-      if (note < 0xFE) {
-        proper_octave = (note >> 4) - 2;
-        note = (proper_octave << 4) | (note & 0x0F);
-      }
+      if (note < 0xFE)
+        proper_octave = (note >> 4) - 2, note = (proper_octave << 4) | (note & 0x0F);
 
       if (volume > 64)
         volume = 65;
