@@ -12,7 +12,7 @@
 #include "stm.h"
 
 u16 calculate_stm_sample_parapointer(void) {
-  usize pos = (usize)ftell(main_context.outfile);
+  const usize pos = (usize)ftell(main_context.outfile);
   return (u16)convert_to_parapointer(pos);
 }
 

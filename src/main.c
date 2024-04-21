@@ -168,9 +168,8 @@ closefiledescriptors:
 }
 
 int convert_s3m_to_stm(FOC_Context* context) {
-  FILE* S3Mfile = context->infile;
-  FILE* STMfile = context->outfile;
-  bool verbose = context->verbose_mode;
+  FILE *S3Mfile = context->infile, *STMfile = context->outfile;
+  const bool verbose = context->verbose_mode;
 
   if (!S3Mfile || !STMfile)
     return FOC_OPEN_FAILURE;
@@ -207,16 +206,14 @@ int convert_s3m_to_stm(FOC_Context* context) {
 
   if (handle_pcm_s3mtostm(context, sample_count))
     return FOC_SAMPLE_FAIL;
-  ;
 
   puts("Conversion done successfully!");
   return FOC_SUCCESS;
 }
 
 void handle_sample_headers_s3mtostm(FOC_Context* context, usize sample_count) {
-  FILE* S3Mfile = context->infile;
-  FILE* STMfile = context->outfile;
-  bool verbose = context->verbose_mode;
+  FILE *S3Mfile = context->infile, *STMfile = context->outfile;
+  const bool verbose = context->verbose_mode;
   usize i = 0;
 
   for (; i < STM_MAXSMP; i++) {
@@ -240,8 +237,7 @@ void handle_sample_headers_s3mtostm(FOC_Context* context, usize sample_count) {
 }
 
 void handle_patterns_s3mtostm(FOC_Context* context, usize pattern_count) {
-  FILE* S3Mfile = context->infile;
-  FILE* STMfile = context->outfile;
+  FILE *S3Mfile = context->infile, *STMfile = context->outfile;
   usize i = 0;
 
   for (i = 0; i < STM_MAXPAT; i++) {
@@ -256,8 +252,7 @@ void handle_patterns_s3mtostm(FOC_Context* context, usize pattern_count) {
 }
 
 int handle_pcm_s3mtostm(FOC_Context* context, usize sample_count) {
-  FILE* S3Mfile = context->infile;
-  FILE* STMfile = context->outfile;
+  FILE *S3Mfile = context->infile, *STMfile = context->outfile;
   usize i = 0;
   Sample_Context sc;
   usize sample_len = 0, padding_len = 0;
@@ -299,8 +294,8 @@ int handle_pcm_s3mtostm(FOC_Context* context, usize sample_count) {
 }
 
 void handle_pcm_parapointer_s3mtostm(FOC_Context* context, usize i) {
-  usize saved_pos = (usize)ftell(context->outfile);
-  usize header_pos = sizeof(stm_song_header) + ((sizeof(stm_sample_header) * (i + 1)) - 18);
+  const usize saved_pos = (usize)ftell(context->outfile),
+              header_pos = sizeof(stm_song_header) + ((sizeof(stm_sample_header) * (i + 1)) - 18);
 
   stm_pcm_pointers[i] = calculate_stm_sample_parapointer();
 
@@ -331,9 +326,8 @@ int check_valid_s3m(FILE* S3Mfile) {
 }
 
 int convert_s3m_to_stx(FOC_Context* context) {
-  FILE* S3Mfile = context->infile;
-  FILE* STXfile = context->outfile;
-  bool verbose = context->verbose_mode;
+  FILE *S3Mfile = context->infile, *STXfile = context->outfile;
+  const bool verbose = context->verbose_mode;
 
   warning_puts("This feature is not finished!\n");
 

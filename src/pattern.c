@@ -11,9 +11,6 @@
 #include "s3m.h"
 #include "stm.h"
 
-#define EFFBASE ('A' - 1)
-#define EFF(e)  (e - EFFBASE)
-
 void warning_pattern_puts(Pattern_Display_Context* context, const char* msg) {
   printf("WARNING (row %02u/channel %02u, effect %c): ", context->row, context->channel, EFFBASE + context->effect);
   puts(msg);
@@ -76,8 +73,8 @@ void print_s3m_pattern(void) {
 }
 
 int check_effect(Pattern_Display_Context* context) {
-  u8 effect = context->effect, parameter = context->parameter;
-  u8 hinib = parameter >> 4, lownib = parameter & 0x0F;
+  const u8 effect = context->effect, parameter = context->parameter;
+  const u8 hinib = parameter >> 4, lownib = parameter & 0x0F;
 
   switch (effect) {
     case EFF_NO_EFFECT: break;

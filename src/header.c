@@ -39,8 +39,7 @@ void show_s3m_inst_header(void) {
 }
 
 void grab_s3m_parapointers(FILE* file) {
-  usize i = 0;
-  usize count = 0;
+  usize i = 0, count = 0;
 
   if (!file || feof(file) || ferror(file))
     return;
@@ -74,8 +73,7 @@ void grab_s3m_parapointers(FILE* file) {
 }
 
 void check_s3m_channels(void) {
-  usize i = 0;
-  usize channel = 0;
+  usize i = 0, channel = 0;
 
   while (i++ < S3M_MAXCHN) {
     channel = s3m_song_header[S3M_CHANNELARRAYPOS + (i - 1)];
@@ -179,7 +177,7 @@ void grab_sample_data(FILE* file, usize position) {
 
 void handle_sample_name_s3m2stm(void) {
   usize i = 0, random = 0;
-  u32 crc = crc32(s3m_inst_header, 80);
+  const u32 crc = crc32(s3m_inst_header, 80);
 
   srand(crc);
 
@@ -281,14 +279,13 @@ void convert_s3m_intstrument_header_s3mtostm(void) {
 }
 
 u32 grab_s3m_pcm_pointer(void) {
-  u32 parapointer = s3m_inst_header[13] << 16 | s3m_inst_header[15] << 8 | s3m_inst_header[14];
-  parapointer <<= 4;
+  const u32 parapointer = (s3m_inst_header[13] << 16 | s3m_inst_header[15] << 8 | s3m_inst_header[14]) << 4;
   optional_printf("PCM Parapointer: %lX\n", parapointer);
   return parapointer;
 }
 
 u16 grab_s3m_pcm_len(void) {
-  u16 length = s3m_inst_header[17] << 8 | s3m_inst_header[16];
+  const u16 length = s3m_inst_header[17] << 8 | s3m_inst_header[16];
 
   if ((s3m_inst_header[19] << 8 | s3m_inst_header[18]) != 0)
     warning_puts("the sample is too long, only converting the first 64kb of it.\n");
