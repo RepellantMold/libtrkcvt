@@ -43,7 +43,7 @@ void show_s3m_inst_header(void) {
          loop_end);
 }
 
-void grab_s3m_parapointers(FILE* file) {
+void grab_s3m_orders(FILE* file) {
   usize i = 0, count = 0;
 
   if (!file || feof(file) || ferror(file))
@@ -51,10 +51,10 @@ void grab_s3m_parapointers(FILE* file) {
 
   fseek(file, S3M_ORDERPOS, SEEK_SET);
 
-  (void)!fread(s3m_order_array, sizeof(u8), order_count, file);
+  (void)!fread(s3m_order_array, sizeof(u8), original_order_count, file);
 
   // see section "2.6 Load Order Data" from "FireLight S3M Player Tutorial.txt"
-  for (count = 0; count < order_count; count++) {
+  for (count = 0; count < original_order_count; ++count) {
     if (s3m_order_array[count] < S3M_ORDER_MARKER) {
       s3m_order_array[i] = s3m_order_array[count];
       if (s3m_order_array[count] > pattern_count)
@@ -63,6 +63,15 @@ void grab_s3m_parapointers(FILE* file) {
     }
   }
   order_count = (u8)i;
+}
+
+void grab_s3m_parapointers(FILE* file) {
+  usize i = 0;
+
+  if (!file || feof(file) || ferror(file))
+    return;
+
+  fseek(file, S3M_ORDERPOS + original_order_count, SEEK_SET);
 
   for (i = 0; i < sample_count; i++) {
     s3m_inst_pointers[i] = fgetw(file);
@@ -92,7 +101,7 @@ void check_s3m_channels(void) {
     }
 
     if (channel & S3MCHN_MUTE)
-      warning_printf("Channel %u is muted which is unsupported, the notes will be converted anyway.", i);
+      warning_printf("Channel %u is muted which is unsupported, the notes will be converted anyway.\n", i);
 
     if (channel >= S3MCHN_ADLIBMEL1 && channel <= S3MCHN_ADLIBHATDRUM) {
       warning_printf(
@@ -160,8 +169,12 @@ void convert_song_orders_s3mtostm(usize length) {
   do {
     if (i >= length)
       break;
-    stm_order_list[i] = (s3m_order_array[i] >= STM_MAXPAT) ? STM_ORDER_END : s3m_order_array[i];
-  } while (i++ < STM_ORDER_LIST_SIZE);
+
+    // the original order list is already parsed out, so don't worry about it here.
+    //stm_order_list[i] = (s3m_order_array[i] >= STM_MAXPAT) ? STM_ORDER_END : s3m_order_array[i];
+
+    stm_order_list[i] = s3m_order_array[i];
+  } while (++i < STM_ORDER_LIST_SIZE);
 }
 
 void convert_song_orders_s3mtostx(usize length, u8* order_list) {
@@ -171,8 +184,9 @@ void convert_song_orders_s3mtostx(usize length, u8* order_list) {
     return;
 
   do {
-    order_list[i] = s3m_order_array[i];
-  } while (i++ < length);
+    // I have no idea why STX specifically has its order list like this...
+    order_list[i * STX_ORDERMULTIPLIER] = s3m_order_array[i];
+  } while (++i < length);
 }
 
 void grab_sample_data(FILE* file, usize position) {

@@ -180,7 +180,7 @@ int convert_s3m_to_stm(FOC_Context* context) {
 
   (void)!fread(s3m_song_header, sizeof(u8), sizeof(s3m_song_header), S3Mfile);
   s3m_cwtv = s3m_song_header[41] << 8 | s3m_song_header[40];
-  order_count = s3m_song_header[32];
+  original_order_count = s3m_song_header[32];
   sample_count = s3m_song_header[34];
   if (sample_count > STM_MAXSMP)
     warning_printf("Sample count exceeds 31 (%u > %u), only using %u.\n", sample_count, STM_MAXSMP, STM_MAXSMP);
@@ -195,6 +195,7 @@ int convert_s3m_to_stm(FOC_Context* context) {
   convert_song_header_s3mtostm();
   fwrite(stm_song_header, sizeof(u8), sizeof(stm_song_header), STMfile);
 
+  grab_s3m_orders(S3Mfile);
   grab_s3m_parapointers(S3Mfile);
 
   handle_sample_headers_s3mtostm(context, sample_count);
@@ -339,7 +340,7 @@ int convert_s3m_to_stx(FOC_Context* context) {
     return FOC_NOT_S3M_FILE;
 
   (void)!fread(s3m_song_header, sizeof(u8), sizeof(s3m_song_header), S3Mfile);
-  order_count = s3m_song_header[32];
+  original_order_count = s3m_song_header[32];
   sample_count = s3m_song_header[34];
   if (sample_count > STM_MAXSMP) {
     warning_printf("Sample count exceeds %u (%u > %u), only using %u.\n", STM_MAXSMP, sample_count, STM_MAXSMP,
