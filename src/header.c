@@ -117,9 +117,10 @@ void convert_song_header_s3mtostm(void) {
 
   strncpy((char*)stm_song_header, (char*)s3m_song_header, 19);
 
-  if (song_flags & S3M_AMIGAFREQLIMITS) {
+  if (song_flags & S3M_AMIGAFREQLIMITS)
     warning_puts("The Amiga frequency limit option is not supported in Scream Tracker 2.");
-  } else if (song_flags & S3M_ST2TEMPO) {
+
+  if (song_flags & S3M_ST2TEMPO) {
     stm_song_header[32] = initial_speed;
   } else {
     // TODO: deal with speed factor
@@ -140,9 +141,9 @@ void convert_song_header_s3mtostx(void) {
 
   strncpy((char*)stx_song_header, (char*)s3m_song_header, 19);
 
-  if (song_flags & S3M_AMIGAFREQLIMITS) {
+  if (song_flags & S3M_AMIGAFREQLIMITS)
     warning_puts("Ignoring Amiga frequency limit");
-  } else if (song_flags & S3M_ST2TEMPO) {
+  if (song_flags & S3M_ST2TEMPO) {
     stx_song_header[43] = initial_speed;
   } else {
     // TODO: deal with speed factor
