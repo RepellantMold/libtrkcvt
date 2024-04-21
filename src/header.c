@@ -112,8 +112,8 @@ void check_s3m_channels(void) {
 
 // s3m_song_header is expected to be filled beforehand
 void convert_song_header_s3mtostm(void) {
-  const usize song_flags = s3m_song_header[38], initial_speed = s3m_song_header[49],
-              master_volume = s3m_song_header[51], global_volume = s3m_song_header[48];
+  const u8 song_flags = s3m_song_header[38], initial_speed = s3m_song_header[49], master_volume = s3m_song_header[51],
+           global_volume = s3m_song_header[48];
 
   strncpy((char*)stm_song_header, (char*)s3m_song_header, 19);
 
@@ -136,8 +136,8 @@ void convert_song_header_s3mtostm(void) {
 }
 
 void convert_song_header_s3mtostx(void) {
-  const usize song_flags = s3m_song_header[38], initial_speed = s3m_song_header[49],
-              master_volume = s3m_song_header[51], global_volume = s3m_song_header[48];
+  const u8 song_flags = s3m_song_header[38], initial_speed = s3m_song_header[49], master_volume = s3m_song_header[51],
+           global_volume = s3m_song_header[48];
 
   strncpy((char*)stx_song_header, (char*)s3m_song_header, 19);
 

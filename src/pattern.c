@@ -31,9 +31,9 @@ void print_s3m_row(usize row) {
   u8 note, ins, volume, effect, parameter;
 
   for (; channel < STM_MAXCHN; ++channel) {
-    note = s3m_unpacked_pattern[row][channel][0], ins = s3m_unpacked_pattern[row][channel][1],
-    volume = s3m_unpacked_pattern[row][channel][2], effect = s3m_unpacked_pattern[row][channel][3],
-    parameter = s3m_unpacked_pattern[row][channel][4];
+    note = s3m_unpacked_pattern[row][channel].note, ins = s3m_unpacked_pattern[row][channel].ins,
+    volume = s3m_unpacked_pattern[row][channel].vol, effect = s3m_unpacked_pattern[row][channel].eff,
+    parameter = s3m_unpacked_pattern[row][channel].prm;
 
     if (note < 0xFE)
       printf("%.2s%01u", notetable[note & 0x0F], (note >> 4) + 1);
@@ -182,9 +182,9 @@ void parse_s3m_pattern(FILE* file, usize position) {
     else
       effect = 0x00, parameter = 0x00;
 
-    s3m_unpacked_pattern[row][channel][0] = note, s3m_unpacked_pattern[row][channel][1] = ins,
-    s3m_unpacked_pattern[row][channel][2] = volume, s3m_unpacked_pattern[row][channel][3] = effect,
-    s3m_unpacked_pattern[row][channel][4] = parameter;
+    s3m_unpacked_pattern[row][channel].note = note, s3m_unpacked_pattern[row][channel].ins = ins,
+    s3m_unpacked_pattern[row][channel].vol = volume, s3m_unpacked_pattern[row][channel].eff = effect,
+    s3m_unpacked_pattern[row][channel].prm = parameter;
   };
 
   if (main_context.verbose_mode)
@@ -195,7 +195,7 @@ int check_for_free_channel(usize row) {
   usize free_channel = 0;
 
   for (; free_channel < S3M_MAXCHN; ++free_channel)
-    if (!s3m_unpacked_pattern[row][free_channel][3])
+    if (!s3m_unpacked_pattern[row][free_channel].eff)
       return (int)free_channel;
 
   return -1;
@@ -209,10 +209,10 @@ u8 search_for_last_nonzero_param(usize startingrow, usize c, usize effect) {
 
   while (i--) {
     optional_printf("checking row %02u\n", i);
-    if (!s3m_unpacked_pattern[i][c][4] || s3m_unpacked_pattern[i][c][3] != effect)
+    if (!s3m_unpacked_pattern[i][c].prm || s3m_unpacked_pattern[i][c].eff != effect)
       continue;
-    optional_printf("param is %02X\n", s3m_unpacked_pattern[i][c][4]);
-    return s3m_unpacked_pattern[i][c][4];
+    optional_printf("param is %02X\n", s3m_unpacked_pattern[i][c].prm);
+    return s3m_unpacked_pattern[i][c].prm;
   }
 
   optional_printf("no matches found...\n");
@@ -230,19 +230,19 @@ u8 search_for_last_nonzero_param2(usize startingrow, usize c, usize effect) {
   for (i = startingrow; i; i--) {
     optional_printf("checking row %02u for low nibble\n", i);
 
-    if (!(s3m_unpacked_pattern[i][c][4] & 0x0F) || s3m_unpacked_pattern[i][c][3] != effect)
+    if (!(s3m_unpacked_pattern[i][c].prm & 0x0F) || s3m_unpacked_pattern[i][c].eff != effect)
       continue;
 
-    lownib = s3m_unpacked_pattern[i][c][4] & 0x0F;
+    lownib = s3m_unpacked_pattern[i][c].prm & 0x0F;
   }
 
   for (i = startingrow; i; i--) {
     optional_printf("checking row %02u for high nibble\n", i);
 
-    if (!(s3m_unpacked_pattern[i][c][4] >> 4) || s3m_unpacked_pattern[i][c][3] != effect)
+    if (!(s3m_unpacked_pattern[i][c].prm >> 4) || s3m_unpacked_pattern[i][c].eff != effect)
       continue;
 
-    hinib = s3m_unpacked_pattern[i][c][4] >> 4;
+    hinib = s3m_unpacked_pattern[i][c].prm >> 4;
   }
 
   if (!lownib || !hinib)
@@ -261,9 +261,9 @@ void flush_s3m_pattern_array(void) {
   usize row = 0, channel = 0;
   for (row = 0; row < MAXROWS; ++row) {
     for (channel = 0; channel < S3M_MAXCHN; ++channel) {
-      s3m_unpacked_pattern[row][channel][0] = 0xFF, s3m_unpacked_pattern[row][channel][1] = 0x00,
-      s3m_unpacked_pattern[row][channel][2] = 0xFF, s3m_unpacked_pattern[row][channel][3] = 0x00,
-      s3m_unpacked_pattern[row][channel][4] = 0x00;
+      s3m_unpacked_pattern[row][channel].note = 0xFF, s3m_unpacked_pattern[row][channel].ins = 0x00,
+      s3m_unpacked_pattern[row][channel].vol = 0xFF, s3m_unpacked_pattern[row][channel].eff = 0x00,
+      s3m_unpacked_pattern[row][channel].prm = 0x00;
     }
   }
 }
@@ -280,9 +280,9 @@ void convert_s3m_pattern_to_stm(void) {
 
   for (channel = 0; channel < STM_MAXCHN; ++channel) {
     for (row = 0; row < MAXROWS; ++row) {
-      note = s3m_unpacked_pattern[row][channel][0], ins = s3m_unpacked_pattern[row][channel][1],
-      volume = s3m_unpacked_pattern[row][channel][2], effect = s3m_unpacked_pattern[row][channel][3],
-      parameter = s3m_unpacked_pattern[row][channel][4];
+      note = s3m_unpacked_pattern[row][channel].note, ins = s3m_unpacked_pattern[row][channel].ins,
+      volume = s3m_unpacked_pattern[row][channel].vol, effect = s3m_unpacked_pattern[row][channel].eff,
+      parameter = s3m_unpacked_pattern[row][channel].prm;
 
       pd.row = (u8)row, pd.channel = (u8)channel, pd.effect = effect, pd.parameter = parameter;
 
@@ -299,7 +299,7 @@ void convert_s3m_pattern_to_stm(void) {
           freechn = check_for_free_channel(row);
           if (freechn >= STM_MAXCHN)
             break;
-          s3m_unpacked_pattern[row][freechn][3] = EFF_PATTERN_BREAK;
+          s3m_unpacked_pattern[row][freechn].eff = EFF_PATTERN_BREAK;
           break;
 
         case EFF_PATTERN_BREAK: parameter = 0; break;
@@ -317,7 +317,7 @@ void convert_s3m_pattern_to_stm(void) {
             break;
           lastprm = search_for_last_nonzero_param(row, channel, effect);
           if (lastprm)
-            parameter = s3m_unpacked_pattern[row][channel][4] = lastprm;
+            parameter = s3m_unpacked_pattern[row][channel].prm = lastprm;
           break;
 
         case EFF_VIBRATO:
@@ -351,7 +351,7 @@ void convert_s3m_pattern_to_stm(void) {
             break;
           lastprm = search_for_last_nonzero_param2(row, channel, effect);
           if (lastprm)
-            parameter = s3m_unpacked_pattern[row][channel][4] = lastprm;
+            parameter = s3m_unpacked_pattern[row][channel].prm = lastprm;
           break;
 
         default: effect = 0, parameter = 0; break;

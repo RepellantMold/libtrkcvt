@@ -87,6 +87,10 @@ u16 s3m_pat_pointers[S3M_MAXPAT] = {0};
 u32 s3m_pcm_pointers[S3M_MAXSMP] = {0};
 u16 s3m_pcm_lens[S3M_MAXSMP] = {0};
 
-u8 s3m_unpacked_pattern[64][32][5] = {{{0xFF, 0x00, 0xFF, 0x00, 0x00}}};
+struct S3MEvent {
+  u8 note, ins, vol, eff, prm;
+};
+
+struct S3MEvent s3m_unpacked_pattern[64][32] = {{{0xFF, 0x00, 0xFF, 0x00, 0x00}}};
 
 #endif
