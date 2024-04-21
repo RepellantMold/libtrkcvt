@@ -17,25 +17,30 @@
 #include "crc.c"
 
 void show_s3m_song_header(void) {
+  const u32 global_volume = s3m_song_header[48], initial_speed = s3m_song_header[49],
+            initial_tempo = s3m_song_header[50], song_flags = s3m_song_header[38];
+
   printf("Song title: %s\n"
          "Global volume: %u\n"
          "Initial speed/tempo: %02X/%02X\n"
          "Song flags: %02X\n",
-         s3m_song_header, (unsigned int)s3m_song_header[48], (unsigned int)s3m_song_header[49],
-         (unsigned int)s3m_song_header[50], (unsigned int)s3m_song_header[38]);
+         s3m_song_header, global_volume, initial_speed, initial_tempo, song_flags);
 }
 
 void show_s3m_inst_header(void) {
+  const u32 default_volume = s3m_inst_header[29], sample_flags = s3m_inst_header[31],
+            c_frequency = s3m_inst_header[33] << 8 | s3m_inst_header[32],
+            length = s3m_inst_header[17] << 8 | s3m_inst_header[16],
+            loop_start = s3m_inst_header[21] << 8 | s3m_inst_header[20],
+            loop_end = s3m_inst_header[25] << 8 | s3m_inst_header[24];
+
   printf("Sample name/filename: %.28s/%.12s\n"
          "Default volume: %02u\n"
          "Sample flags: %01X\n"
          "C frequency: %06u\n"
          "Length/Loop start/end: %06u/%06u/%06u\n",
-         &s3m_inst_header[48], &s3m_inst_header[1], (unsigned int)s3m_inst_header[28],
-         (unsigned int)s3m_inst_header[31], (unsigned int)(s3m_inst_header[33] << 8 | s3m_inst_header[32]),
-         (unsigned int)(s3m_inst_header[17] << 8 | s3m_inst_header[16]),
-         (unsigned int)(s3m_inst_header[21] << 8 | s3m_inst_header[20]),
-         (unsigned int)(s3m_inst_header[25] << 8 | s3m_inst_header[24]));
+         &s3m_inst_header[48], &s3m_inst_header[1], default_volume, sample_flags, c_frequency, length, loop_start,
+         loop_end);
 }
 
 void grab_s3m_parapointers(FILE* file) {
@@ -98,45 +103,47 @@ void check_s3m_channels(void) {
 
 // s3m_song_header is expected to be filled beforehand
 void convert_song_header_s3mtostm(void) {
+  const usize song_flags = s3m_song_header[38], initial_speed = s3m_song_header[49],
+              master_volume = s3m_song_header[51], global_volume = s3m_song_header[48];
+
   strncpy((char*)stm_song_header, (char*)s3m_song_header, 19);
 
-  if (s3m_song_header[38] & S3M_AMIGAFREQLIMITS)
+  if (song_flags & S3M_AMIGAFREQLIMITS) {
     warning_puts("The Amiga frequency limit option is not supported in Scream Tracker 2.");
-
-  if (s3m_song_header[51] & 128)
-    warning_puts("Do not expect the song to play in stereo.");
-
-  if (s3m_song_header[38] & S3M_ST2TEMPO) {
-    stm_song_header[32] = s3m_song_header[49];
+  } else if (song_flags & S3M_ST2TEMPO) {
+    stm_song_header[32] = initial_speed;
   } else {
     // TODO: deal with speed factor
-    stm_song_header[32] = s3m_song_header[49] << 4;
+    stm_song_header[32] = initial_speed << 4;
   }
 
-  // global volume
-  stm_song_header[34] = s3m_song_header[48];
+  if (master_volume & 128)
+    warning_puts("Do not expect the song to play in stereo.");
+
+  stm_song_header[34] = global_volume;
 
   stm_song_header[33] = pattern_count;
 }
 
 void convert_song_header_s3mtostx(void) {
+  const usize song_flags = s3m_song_header[38], initial_speed = s3m_song_header[49],
+              master_volume = s3m_song_header[51], global_volume = s3m_song_header[48];
+
   strncpy((char*)stx_song_header, (char*)s3m_song_header, 19);
 
-  if (s3m_song_header[38] & S3M_AMIGAFREQLIMITS)
+  if (song_flags & S3M_AMIGAFREQLIMITS) {
     warning_puts("Ignoring Amiga frequency limit");
-
-  if (s3m_song_header[51] & 128)
-    warning_puts("Do not expect the song to play in stereo.");
-
-  if (s3m_song_header[38] & S3M_ST2TEMPO) {
-    stx_song_header[43] = s3m_song_header[49];
+  } else if (song_flags & S3M_ST2TEMPO) {
+    stx_song_header[43] = initial_speed;
   } else {
     // TODO: deal with speed factor
-    stx_song_header[43] = s3m_song_header[49] << 4;
+    stx_song_header[43] = initial_speed << 4;
   }
 
-  // global volume
-  stx_song_header[42] = s3m_song_header[48];
+  if (master_volume & 128)
+    warning_puts("Do not expect the song to play in stereo.");
+
+  stx_song_header[42] = global_volume;
 
   stx_song_header[48] = pattern_count;
 
