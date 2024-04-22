@@ -96,6 +96,14 @@ void handle_sample_headers_s3mtostm(FOC_Context* context, usize sample_count);
 int handle_pcm_s3mtostm(FOC_Context* context, usize sample_count);
 void handle_pcm_parapointer_s3mtostm(FOC_Context* context, usize i);
 void handle_patterns_s3mtostm(FOC_Context* context, usize pattern_count);
+void handle_pattern_and_ins_parapointers_s3mtostx(FOC_Context* context, stx_parapointers* parapointers,
+                                                  usize pattern_count, usize sample_count);
+void place_pattern_and_ins_parapointers_s3mtostx(FOC_Context* context, stx_parapointers* parapointers,
+                                                 usize pattern_count, usize sample_count);
+void handle_sample_headers_s3mtostx(FOC_Context* context, usize sample_count);
+int handle_pcm_s3mtostx(FOC_Context* context, usize sample_count);
+void handle_pcm_parapointer_s3mtostx(FOC_Context* context, usize i);
+void handle_patterns_s3mtostx(FOC_Context* context, usize pattern_count);
 
 int check_valid_s3m(FILE* S3Mfile);
 
@@ -329,6 +337,8 @@ int check_valid_s3m(FILE* S3Mfile) {
 int convert_s3m_to_stx(FOC_Context* context) {
   FILE *S3Mfile = context->infile, *STXfile = context->outfile;
   const bool verbose = context->verbose_mode;
+  u8* STXOrders = NULL;
+  stx_parapointers parapointers;
 
   warning_puts("This feature is not finished!\n");
 
@@ -359,5 +369,150 @@ int convert_s3m_to_stx(FOC_Context* context) {
   convert_song_header_s3mtostx();
   fwrite(stx_song_header, sizeof(u8), sizeof(stx_song_header), STXfile);
 
+  grab_s3m_orders(S3Mfile);
+  grab_s3m_parapointers(S3Mfile);
+
+  place_pattern_and_ins_parapointers_s3mtostx(context, &parapointers, pattern_count, sample_count);
+
+  STXOrders = calloc(order_count, sizeof(u8) * STX_ORDERMULTIPLIER);
+  convert_song_orders_s3mtostx(order_count, STXOrders);
+  fwrite(STXOrders, sizeof(u8), sizeof(STXOrders), STXfile);
+  free(STXOrders);
+
+  handle_sample_headers_s3mtostx(context, sample_count);
+
+  handle_patterns_s3mtostx(context, pattern_count);
+
+  if (handle_pcm_s3mtostx(context, sample_count))
+    return FOC_SAMPLE_FAIL;
+
+  handle_pattern_and_ins_parapointers_s3mtostx(context, &parapointers, pattern_count, sample_count);
+
+  puts("Conversion done successfully!");
   return FOC_SUCCESS;
+}
+
+void handle_pattern_and_ins_parapointers_s3mtostx(FOC_Context* context, stx_parapointers* pointers, usize pattern_count,
+                                                  usize sample_count) {
+  FILE* STXfile = context->outfile;
+
+  if (!pointers)
+    return;
+
+  fseek(STXfile, pointers->patpara_table_pos << 4, SEEK_SET);
+  (void)!fwrite(stx_pat_pointers, sizeof(u16), pattern_count, STXfile);
+  fseek(STXfile, pointers->inspara_table_pos << 4, SEEK_SET);
+  (void)!fwrite(stx_inst_pointers, sizeof(u16), sample_count, STXfile);
+}
+
+void place_pattern_and_ins_parapointers_s3mtostx(FOC_Context* context, stx_parapointers* pointers, usize pattern_count,
+                                                 usize sample_count) {
+  FILE* STXfile = context->outfile;
+  usize saved_pos = 0;
+  u8 channel_settings[STX_MAXCHN] = {0};
+
+  if (!pointers)
+    return;
+
+  pointers->patpara_table_pos = (u16)convert_to_parapointer(ftell(STXfile));
+  (void)!fwrite(s3m_pat_pointers, sizeof(u16), pattern_count, STXfile);
+  pointers->inspara_table_pos = (u16)convert_to_parapointer(ftell(STXfile));
+  (void)!fwrite(s3m_inst_pointers, sizeof(u16), sample_count, STXfile);
+  pointers->chn_table_pos = (u16)convert_to_parapointer(ftell(STXfile));
+  (void)!fwrite(channel_settings, sizeof(u8), STX_MAXCHN, STXfile);
+
+  saved_pos = (usize)ftell(STXfile);
+
+  fseek(STXfile, 32, SEEK_SET);
+  (void)!fwrite(&pointers->patpara_table_pos, sizeof(u16), 1, STXfile);
+  (void)!fwrite(&pointers->inspara_table_pos, sizeof(u16), 1, STXfile);
+  (void)!fwrite(&pointers->chn_table_pos, sizeof(u16), 1, STXfile);
+  fseek(STXfile, saved_pos, SEEK_SET);
+}
+
+void handle_sample_headers_s3mtostx(FOC_Context* context, usize sample_count) {
+  FILE *S3Mfile = context->infile, *STXfile = context->outfile;
+  const bool verbose = context->verbose_mode;
+  usize i = 0;
+
+  for (; i < sample_count; i++) {
+    if (verbose)
+      printf("Sample %zu:\n", i);
+    grab_sample_data(S3Mfile, s3m_inst_pointers[i]);
+    s3m_pcm_pointers[i] = grab_s3m_pcm_pointer();
+    s3m_pcm_lens[i] = grab_s3m_pcm_len();
+    if (verbose)
+      show_s3m_inst_header();
+    //convert_s3m_intstrument_header_s3mtostx();
+    stx_inst_pointers[i] = (u16)convert_to_parapointer(ftell(STXfile));
+    fwrite(s3m_inst_header, sizeof(u8), sizeof(s3m_inst_header), STXfile);
+  }
+}
+
+void handle_patterns_s3mtostx(FOC_Context* context, usize pattern_count) {
+  FILE *S3Mfile = context->infile, *STXfile = context->outfile;
+  usize i = 0;
+
+  for (i = 0; i < pattern_count; i++) {
+    printf("Converting pattern %zu...\n", i);
+    parse_s3m_pattern(S3Mfile, s3m_pat_pointers[i]);
+    stx_pat_pointers[i] = (u16)convert_to_parapointer(ftell(STXfile));
+    convert_s3m_pattern_to_stx(STXfile);
+    printf("Pattern %zu written.\n", i);
+  }
+}
+
+int handle_pcm_s3mtostx(FOC_Context* context, usize sample_count) {
+  FILE *S3Mfile = context->infile, *STXfile = context->outfile;
+  usize i = 0;
+  Sample_Context sc;
+  usize sample_len = 0, padding_len = 0;
+
+  for (; i < sample_count; i++) {
+    sample_len = s3m_pcm_lens[i];
+
+    if (!sample_len)
+      continue;
+
+    padding_len = calculate_sample_padding(sample_len);
+
+    sc.length = sample_len;
+    sc.pcm = stm_sample_data;
+
+    printf("Converting sample %zu...\n", i);
+
+    if (dump_sample_data(S3Mfile, s3m_pcm_pointers[i], &sc))
+      return FOC_SAMPLE_FAIL;
+    convert_unsigned_to_signed(&sc);
+
+    if (!padding_len)
+      goto dontaddpadding;
+
+    sample_len += padding_len;
+
+  dontaddpadding:
+    handle_pcm_parapointer_s3mtostx(context, i);
+
+    (void)!fwrite(stm_sample_data, sizeof(u8), sample_len, STXfile);
+
+    (void)!printf("Sample %zu written.\n", i);
+  }
+
+  return FOC_SUCCESS;
+}
+
+void handle_pcm_parapointer_s3mtostx(FOC_Context* context, usize i) {
+  FILE* outfile = context->outfile;
+  const usize saved_pos = (usize)ftell(outfile),
+              header_pos = sizeof(stx_song_header) + (pattern_count * 2) + ((sizeof(s3m_inst_header) * (i + 1)) - 67);
+
+  stx_pcm_pointers[i] = calculate_stx_sample_parapointer();
+
+  (void)!fseek(outfile, (long)header_pos, SEEK_SET);
+
+  fputc(stx_pcm_pointers[i].upper, outfile);
+  fputc(stx_pcm_pointers[i].lower1, outfile);
+  fputc(stx_pcm_pointers[i].lower2, outfile);
+
+  (void)!fseek(outfile, (long)saved_pos, SEEK_SET);
 }

@@ -1,4 +1,5 @@
 #include <stdarg.h>
+#include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -379,8 +380,42 @@ void blank_stm_pattern(void) {
   }
 }
 
-/*
-void convert_s3m_pattern_to_stx(unsigned char* buffer) {
-  // TODO
+void convert_s3m_pattern_to_stx(FILE* file) {
+  u8 row = 0, channel = 0, byte = 0;
+  bool hasnote = false, hasvol = false, haseff = false;
+
+  for (row = 0; row < MAXROWS; ++row) {
+    for (channel = 0; channel < STX_MAXCHN; ++channel) {
+      hasnote = (s3m_unpacked_pattern[row][channel].note != 0xFF) || (s3m_unpacked_pattern[row][channel].ins);
+      hasvol = s3m_unpacked_pattern[row][channel].vol <= 64;
+      haseff = s3m_unpacked_pattern[row][channel].eff || s3m_unpacked_pattern[row][channel].prm;
+
+      if (!hasnote & !hasvol & !haseff)
+        continue;
+
+      byte = channel;
+
+      if (hasnote)
+        byte |= 0x20;
+      if (hasvol)
+        byte |= 0x40;
+      if (haseff)
+        byte |= 0x80;
+
+      fputc(byte, file);
+
+      if (hasnote) {
+        fputc(s3m_unpacked_pattern[row][channel].note, file);
+        fputc(s3m_unpacked_pattern[row][channel].ins, file);
+      }
+      if (hasvol)
+        fputc(s3m_unpacked_pattern[row][channel].vol, file);
+      if (haseff) {
+        fputc(s3m_unpacked_pattern[row][channel].eff, file);
+        fputc(s3m_unpacked_pattern[row][channel].prm, file);
+      }
+    }
+
+    fputc(0, file);
+  }
 }
-*/

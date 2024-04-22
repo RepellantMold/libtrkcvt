@@ -64,4 +64,21 @@ u8 stx_song_header[64] = {
     // magic
     'S', 'C', 'R', 'M'};
 
+typedef struct {
+  // little endian.
+  u8 upper;
+  u8 lower1;
+  u8 lower2;
+} stx_pcm_parapointers;
+
+typedef struct {
+  u16 patpara_table_pos;
+  u16 inspara_table_pos;
+  u16 chn_table_pos;
+} stx_parapointers;
+
+u16 stx_inst_pointers[STX_MAXSMP] = {0};
+u16 stx_pat_pointers[STX_MAXPAT] = {0};
+stx_pcm_parapointers stx_pcm_pointers[STX_MAXSMP] = {0};
+
 #endif
