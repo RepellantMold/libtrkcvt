@@ -427,7 +427,7 @@ void place_pattern_and_ins_parapointers_s3mtostx(FOC_Context* context, stx_parap
   (void)!fwrite(&pointers->patpara_table_pos, sizeof(u16), 1, STXfile);
   (void)!fwrite(&pointers->inspara_table_pos, sizeof(u16), 1, STXfile);
   (void)!fwrite(&pointers->chn_table_pos, sizeof(u16), 1, STXfile);
-  fseek(STXfile, saved_pos, SEEK_SET);
+  fseek(STXfile, (long)saved_pos, SEEK_SET);
 }
 
 void handle_sample_headers_s3mtostx(FOC_Context* context, usize sample_count) {

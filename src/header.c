@@ -17,8 +17,8 @@
 #include "crc.c"
 
 void show_s3m_song_header(void) {
-  const u32 global_volume = s3m_song_header[48], initial_speed = s3m_song_header[49],
-            initial_tempo = s3m_song_header[50], song_flags = s3m_song_header[38];
+  const u8 global_volume = s3m_song_header[48], initial_speed = s3m_song_header[49],
+           initial_tempo = s3m_song_header[50], song_flags = s3m_song_header[38];
 
   printf("Song title: %s\n"
          "Global volume: %u\n"
@@ -28,8 +28,8 @@ void show_s3m_song_header(void) {
 }
 
 void show_s3m_inst_header(void) {
-  const u32 default_volume = s3m_inst_header[29], sample_flags = s3m_inst_header[31],
-            c_frequency = s3m_inst_header[33] << 8 | s3m_inst_header[32],
+  const u8 default_volume = s3m_inst_header[29], sample_flags = s3m_inst_header[31];
+  const u16 c_frequency = s3m_inst_header[33] << 8 | s3m_inst_header[32],
             length = s3m_inst_header[17] << 8 | s3m_inst_header[16],
             loop_start = s3m_inst_header[21] << 8 | s3m_inst_header[20],
             loop_end = s3m_inst_header[25] << 8 | s3m_inst_header[24];

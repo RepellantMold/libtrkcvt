@@ -222,7 +222,7 @@ u8 search_for_last_nonzero_param(usize startingrow, usize c, usize effect) {
 
 u8 search_for_last_nonzero_param2(usize startingrow, usize channel, usize effect) {
   usize i = startingrow;
-  const u8 effect_display = effect + EFFBASE;
+  const u8 effect_display = (u8)effect + EFFBASE;
   u8 lownib = 0, hinib = 0, param = 0;
 
   optional_printf("searching for last nonzero param for %c starting at row %02u and channel %02u\n", effect_display, i,
