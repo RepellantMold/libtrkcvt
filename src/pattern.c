@@ -345,6 +345,20 @@ void handle_s3m_effect(Pattern_Context* context) {
       parameter = handle_effect_memory_separatenibs(context);
       hinib = parameter >> 4, lownib = parameter & 0x0F;
 
+      if (hinib == 0xF) {
+        hinib = 0;
+        if (lownib >> 1)
+          lownib >>= 1;
+        else
+          warning_pattern_puts(context, "Failed to adjust fine volume slide.");
+      } else if (lownib == 0xF) {
+        lownib = 0;
+        if (hinib >> 1)
+          hinib >>= 1;
+        else
+          warning_pattern_puts(context, "Failed to adjust fine volume slide.");
+      }
+
       parameter = (hinib << 4) | lownib;
       break;
 
@@ -352,6 +366,26 @@ void handle_s3m_effect(Pattern_Context* context) {
     case EFF_PORTA_UP:
       parameter = handle_effect_memory(context);
       hinib = parameter >> 4, lownib = parameter & 0x0F;
+
+      if (hinib == 0xF) {
+        hinib = 0;
+        if (lownib >> 2)
+          lownib >>= 2;
+        else if (lownib >> 1)
+          lownib >>= 1;
+        else
+          warning_pattern_puts(context, "Failed to adjust fine portamento.");
+      } else if (hinib == 0xE) {
+        hinib = 0;
+        if (lownib >> 3)
+          lownib >>= 3;
+        else if (lownib >> 2)
+          lownib >>= 2;
+        else if (lownib >> 1)
+          lownib >>= 1;
+        else
+          warning_pattern_puts(context, "Failed to adjust extra-fine portamento.");
+      }
 
       parameter = (hinib << 4) | lownib;
       break;
