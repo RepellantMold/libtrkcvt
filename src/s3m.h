@@ -5,9 +5,7 @@
 #include "ext.h"
 
 #define S3M_MAXPAT          253
-
 #define S3M_MAXCHN          32
-
 #define S3M_MAXSMP          99
 
 #define S3M_ORDERPOS        96

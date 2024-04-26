@@ -10,9 +10,12 @@
 typedef struct {
   u8 row;
   u8 channel;
+  u8 note;
+  u8 instrument;
+  u8 volume;
   u8 effect;
   u8 parameter;
-} Pattern_Display_Context;
+} Pattern_Context;
 
 // STM and STX use the same set of effects.
 enum Effects {
@@ -31,7 +34,7 @@ enum Effects {
 
 void parse_s3m_pattern(FILE* file, usize position);
 
-int check_effect(Pattern_Display_Context* context);
+int check_effect(Pattern_Context* context);
 
 void convert_s3m_pattern_to_stm(void);
 void convert_s3m_pattern_to_stx(FILE* file);
@@ -42,8 +45,8 @@ void blank_stm_pattern(void);
 void print_s3m_row(usize r);
 void print_s3m_pattern(void);
 
-void warning_pattern_puts(Pattern_Display_Context* context, const char* msg);
-void warning_pattern_printf(Pattern_Display_Context* context, const char* format, ...);
+void warning_pattern_puts(Pattern_Context* context, const char* msg);
+void warning_pattern_printf(Pattern_Context* context, const char* format, ...);
 
 // for display purposes
 u8 notetable[12][2] = {"C-", "C#", "D-", "D#", "E-", "F-", "F#", "G-", "G#", "A-", "A#", "B-"};
