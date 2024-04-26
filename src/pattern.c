@@ -220,7 +220,7 @@ u8 search_for_last_nonzero_param(usize startingrow, usize c, usize effect) {
                   i, c);
 
   while (i--) {
-    optional_printf("checking row %02u\n", i);
+    //optional_printf("checking row %02u\n", i);
     if (!s3m_unpacked_pattern[i][c].prm || s3m_unpacked_pattern[i][c].eff != effect)
       continue;
     optional_printf("param is %02X\n", s3m_unpacked_pattern[i][c].prm);
@@ -241,7 +241,7 @@ u8 search_for_last_nonzero_param2(usize startingrow, usize channel, usize effect
 
   i = startingrow;
   while (i--) {
-    optional_printf("checking row %02u for low nibble\n", i);
+    //optional_printf("checking row %02u for low nibble\n", i);
 
     if (!(s3m_unpacked_pattern[i][channel].prm & 0x0F) || s3m_unpacked_pattern[i][channel].eff != effect)
       continue;
@@ -251,7 +251,7 @@ u8 search_for_last_nonzero_param2(usize startingrow, usize channel, usize effect
 
   i = startingrow;
   while (i--) {
-    optional_printf("checking row %02u for high nibble\n", i);
+    //optional_printf("checking row %02u for high nibble\n", i);
 
     if (!(s3m_unpacked_pattern[i][channel].prm >> 4) || s3m_unpacked_pattern[i][channel].eff != effect)
       continue;
@@ -282,12 +282,47 @@ void flush_s3m_pattern_array(void) {
   } while (++row < MAXROWS);
 }
 
+u8 handle_effect_memory(Pattern_Context* context) {
+  const u8 row = context->row, channel = context->channel;
+  const u8 effect = context->effect, lastprm = search_for_last_nonzero_param(row, channel, effect);
+  u8 parameter = context->parameter;
+
+  if (!main_context.handle_effect_memory)
+    return parameter;
+  if (!row || parameter)
+    return parameter;
+
+  if (lastprm) {
+    s3m_unpacked_pattern[row][channel].prm = lastprm;
+    return lastprm;
+  }
+
+  return parameter;
+}
+
+u8 handle_effect_memory_separatenibs(Pattern_Context* context) {
+  const usize row = context->row, channel = context->channel;
+  const u8 effect = context->effect, parameter = context->parameter, hinib = parameter >> 4, lownib = parameter & 0x0F;
+  const u8 lastprm = search_for_last_nonzero_param2(row, channel, effect);
+
+  if (!main_context.handle_effect_memory)
+    return parameter;
+  if (!row || (lownib || hinib))
+    return parameter;
+
+  if (lastprm) {
+    s3m_unpacked_pattern[row][channel].prm = lastprm;
+    return lastprm;
+  }
+
+  return parameter;
+}
+
 void handle_s3m_effect(Pattern_Context* context) {
   const usize row = context->row, channel = context->channel;
-  const u8 songflags = s3m_song_header[38];
+  const u8 songflags = s3m_song_header[38], freechn = check_for_free_channel(row);
   u8 effect = context->effect, parameter = context->parameter;
-  u8 hinib = parameter >> 4, lownib = parameter & 0x0F;
-  u8 freechn = check_for_free_channel(row), lastprm = 0, adjusted_vibrato_depth = 0;
+  u8 hinib = parameter >> 4, lownib = parameter & 0x0F, adjusted_vibrato_depth = 0;
 
   switch (check_effect(context)) {
 
@@ -305,22 +340,26 @@ void handle_s3m_effect(Pattern_Context* context) {
     case EFF_PATTERN_BREAK: parameter = 0; break;
 
     case EFF_VOLUME_SLIDE:
+      parameter = handle_effect_memory_separatenibs(context);
+      hinib = parameter >> 4, lownib = parameter & 0x0F;
 
-    case EFF_PORTA_DOWN:
-    case EFF_PORTA_UP: goto handle_effmem; break;
-
-    case EFF_TONE_PORTA:
-    handle_effmem:
-      if (!main_context.handle_effect_memory)
-        break;
-      if (!row || parameter)
-        break;
-      lastprm = search_for_last_nonzero_param(row, channel, effect);
-      if (lastprm)
-        parameter = s3m_unpacked_pattern[row][channel].prm = lastprm;
+      parameter = (hinib << 4) | lownib;
       break;
 
+    case EFF_PORTA_DOWN:
+    case EFF_PORTA_UP:
+      parameter = handle_effect_memory(context);
+      hinib = parameter >> 4, lownib = parameter & 0x0F;
+
+      parameter = (hinib << 4) | lownib;
+      break;
+
+    case EFF_TONE_PORTA: parameter = handle_effect_memory(context); break;
+
     case EFF_VIBRATO:
+      parameter = handle_effect_memory_separatenibs(context);
+      lownib = parameter & 0x0F;
+
       adjusted_vibrato_depth = lownib >> 1;
 
       if (adjusted_vibrato_depth) {
@@ -333,26 +372,17 @@ void handle_s3m_effect(Pattern_Context* context) {
         optional_printf("adjustment failed... depth %u turned into %u. this will not be adjusted!\n", lownib,
                         adjusted_vibrato_depth);
       }
-      goto handle_effmem2;
       break;
 
     case EFF_TREMOR:
       // newer scream tracker 3 versions actually have memory for this effect..
       if (s3m_cwtv >= 0x1300 && s3m_cwtv < 0x1320)
         break;
-      goto handle_effmem2;
+
+      parameter = handle_effect_memory_separatenibs(context);
       break;
 
-    case EFF_ARPEGGIO:
-    handle_effmem2:
-      if (!main_context.handle_effect_memory)
-        break;
-      if (!row || ((parameter & 0x0F) || (parameter >> 4)))
-        break;
-      lastprm = search_for_last_nonzero_param2(row, channel, effect);
-      if (lastprm)
-        parameter = s3m_unpacked_pattern[row][channel].prm = lastprm;
-      break;
+    case EFF_ARPEGGIO: parameter = handle_effect_memory_separatenibs(context); break;
 
     default: effect = 0, parameter = 0; break;
   };
