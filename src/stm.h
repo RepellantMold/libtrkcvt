@@ -23,11 +23,8 @@ u8 stm_song_header[48] = {
     '\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0',
     '\0',
 
-    /* tracker name
-    Schism Tracker is really picky on this field,
-    libXMP/OpenMPT generally accept anything with
-    displayable ASCII. I left it alone anyway. */
-    '!', 'S', 'c', 'r', 'e', 'a', 'm', '!',
+    // tracker name
+    '!', 'S', 'c', 'r', 'v', 'r', 't', '!',
 
     // DOS EOF
     0x1A,
