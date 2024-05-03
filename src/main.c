@@ -17,23 +17,14 @@
 
 #include "main.h"
 
-#include "header.c"
-#include "parapnt.c"
-#include "pattern.c"
-#include "sample.c"
+#include "header.h"
+#include "parapnt.h"
+#include "pattern.h"
+#include "sample.h"
 
-#include "s3m.h"
-#include "stm.h"
+u8 original_order_count = 0, order_count = 0, sample_count = 0, pattern_count = 0;
 
-// a helper from https://github.com/viiri/st2play!
-u16 fgetw(FILE* fp) {
-  u8 data[2];
-
-  data[0] = (u8)fgetc(fp);
-  data[1] = (u8)fgetc(fp);
-
-  return (data[1] << 8) | data[0];
-}
+FOC_Context main_context;
 
 void eprintf(const char* format, ...) {
   va_list ap;
@@ -91,6 +82,153 @@ void print_help(void) {
   puts("  -stm             Convert the S3M to STM (default)");
   puts("  -stx             Convert the S3M to STX (unfinished)");
 }
+
+// S3M
+
+u8 s3m_song_header[96];
+u8 s3m_inst_header[80];
+
+u8 s3m_order_array[S3M_ORDER_LIST_SIZE] = {S3M_ORDER_END};
+u16 s3m_inst_pointers[S3M_MAXSMP] = {0};
+u16 s3m_pat_pointers[S3M_MAXPAT] = {0};
+u32 s3m_pcm_pointers[S3M_MAXSMP] = {0};
+u16 s3m_pcm_lens[S3M_MAXSMP] = {0};
+u16 s3m_cwtv;
+
+// STM
+u8 stm_song_header[48] = {
+    // song title (ASCIIZ)
+    '\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0',
+    '\0',
+
+    // tracker name
+    '!', 'S', 'c', 'r', 'v', 'r', 't', '!',
+
+    // DOS EOF
+    0x1A,
+
+    // file type (in this case, a module.)
+    2,
+
+    // major version, minor version
+    2, 21,
+
+    // tempo (default)
+    0x60,
+
+    // number of patterns
+    0,
+
+    // global volume
+    64,
+
+    // reserved (which I, RM, turned into a magic string, you're welcome!)
+    'S', 'c', 'r', 'e', 'a', 'm', 'v', 'e', 'r', 't', 'e', 'r', '\0'};
+
+u8 stm_sample_header[32] = {
+    // filename (ASCIIZ)
+    '\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0',
+
+    // reserved
+    0,
+
+    // instrument disk
+    0,
+
+    /* parapointer to the PCM data
+    the official documentation is extremely misleading here since it calls this area reserved!
+    "(used as internal segment while playing)" */
+    0, 0,
+
+    // length in bytes
+    0, 0,
+
+    // loop start
+    0, 0,
+
+    // loop end (0xFFFF means no loop)
+    0xFF, 0xFF,
+
+    // volume
+    64,
+
+    // reserved
+    0,
+
+    // speed for C2/Mid-C (calculated as Hz, with a default of 8448 or 8192 depending on version)
+    0x00, 0x21,
+
+    // reserved
+    0, 0, 0, 0,
+
+    /* reserved, contrary to what the official documentation says...
+       "internal segment address/(in modules:)length in paragraphs" */
+    0, 0};
+
+u8 stm_sample_data[USHRT_MAX] = {0};
+u8 stm_order_list[STM_ORDER_LIST_SIZE] = {STM_ORDER_END};
+u8 stm_pattern[64][4][4] = {{{0xFF, 0x01, 0x80, 0x00}}};
+
+u16 stm_pcm_pointers[STM_MAXSMP] = {0};
+
+// STX
+
+/* NOTE : the STX instrument header format is identical to S3M's (minus 'SRCS'), so it's not included here.
+I'm also mentioning format differences for completeness. */
+
+u8 stx_song_header[64] = {
+    // song title (ASCIIZ)
+    '\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0',
+    '\0',
+
+    // tracker name
+    '!', 'S', 'c', 'r', 'e', 'a', 'm', '!',
+
+    // DOS EOF (1.1)/pattern size (1.0)
+    0x1A, 0,
+
+    // reserved
+    0, 0,
+
+    // pattern table offset
+    0, 0,
+
+    // sample table offset
+    0, 0,
+
+    // channel table offset
+    0, 0,
+
+    // reserved
+    0, 0, 0, 0,
+
+    // global volume
+    64,
+
+    // initial tempo
+    0x60,
+
+    // reserved
+    1, 0, 0, 0,
+
+    // number of patterns
+    0, 0,
+
+    // number of samples
+    0, 0,
+
+    // number of orders
+    0, 0,
+
+    // unknown
+    0, 0, 0, 0, 0, 0,
+
+    // magic
+    'S', 'C', 'R', 'M'};
+
+u16 stx_inst_pointers[STX_MAXSMP] = {0};
+u16 stx_pat_pointers[STX_MAXPAT] = {0};
+stx_pcm_parapointers stx_pcm_pointers[STX_MAXSMP] = {0};
 
 void handle_sample_headers_s3mtostm(FOC_Context* context, usize sample_count);
 int handle_pcm_s3mtostm(FOC_Context* context, usize sample_count);

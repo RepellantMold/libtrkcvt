@@ -4,6 +4,7 @@ based on https://github.com/vkclarke/ansi-c-extensions */
 #define __ANSI_EXT_H
 #include <stddef.h>
 #include <stdio.h>
+#include "envcheck.h"
 
 typedef unsigned char u8;
 typedef signed char i8;

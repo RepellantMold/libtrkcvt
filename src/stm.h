@@ -18,81 +18,16 @@ but the pattern editor does not go above 63 and no players will accept this so..
 
 #define STM_PATSIZE         ((4 * 4) * 64)
 
-u8 stm_song_header[48] = {
-    // song title (ASCIIZ)
-    '\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0',
-    '\0',
+extern u8 stm_song_header[48];
 
-    // tracker name
-    '!', 'S', 'c', 'r', 'v', 'r', 't', '!',
+extern u8 stm_sample_header[32];
 
-    // DOS EOF
-    0x1A,
+extern u8 stm_sample_data[USHRT_MAX];
 
-    // file type (in this case, a module.)
-    2,
+extern u8 stm_order_list[STM_ORDER_LIST_SIZE];
 
-    // major version, minor version
-    2, 21,
+extern u8 stm_pattern[64][4][4];
 
-    // tempo (default)
-    0x60,
-
-    // number of patterns
-    0,
-
-    // global volume
-    64,
-
-    // reserved (which I, RM, turned into a magic string, you're welcome!)
-    'S', 'c', 'r', 'e', 'a', 'm', 'v', 'e', 'r', 't', 'e', 'r', '\0'};
-
-u8 stm_sample_header[32] = {
-    // filename (ASCIIZ)
-    '\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0',
-
-    // reserved
-    0,
-
-    // instrument disk
-    0,
-
-    /* parapointer to the PCM data
-    the official documentation is extremely misleading here since it calls this area reserved!
-    "(used as internal segment while playing)" */
-    0, 0,
-
-    // length in bytes
-    0, 0,
-
-    // loop start
-    0, 0,
-
-    // loop end (0xFFFF means no loop)
-    0xFF, 0xFF,
-
-    // volume
-    64,
-
-    // reserved
-    0,
-
-    // speed for C2/Mid-C (calculated as Hz, with a default of 8448 or 8192 depending on version)
-    0x00, 0x21,
-
-    // reserved
-    0, 0, 0, 0,
-
-    /* reserved, contrary to what the official documentation says...
-       "internal segment address/(in modules:)length in paragraphs" */
-    0, 0};
-
-u8 stm_sample_data[USHRT_MAX] = {0};
-
-u8 stm_order_list[STM_ORDER_LIST_SIZE] = {STM_ORDER_END};
-
-u8 stm_pattern[64][4][4] = {{{0xFF, 0x01, 0x80, 0x00}}};
-
-u16 stm_pcm_pointers[STM_MAXSMP] = {0};
+extern u16 stm_pcm_pointers[STM_MAXSMP];
 
 #endif

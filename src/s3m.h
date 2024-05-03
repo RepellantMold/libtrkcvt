@@ -73,22 +73,22 @@ enum s3m_channel_type {
 5 bytes per row */
 #define S3M_UNPACKED_PATTERN_SIZE ((5 * 32) * 64)
 
-u8 s3m_order_array[S3M_ORDER_LIST_SIZE] = {S3M_ORDER_END};
+extern u8 s3m_order_array[S3M_ORDER_LIST_SIZE];
 
-u8 s3m_song_header[96] = {0};
-u8 s3m_inst_header[80] = {0};
+extern u8 s3m_song_header[96];
+extern u8 s3m_inst_header[80];
 
-u16 s3m_cwtv = 0;
+extern u16 s3m_cwtv;
 
-u16 s3m_inst_pointers[S3M_MAXSMP] = {0};
-u16 s3m_pat_pointers[S3M_MAXPAT] = {0};
-u32 s3m_pcm_pointers[S3M_MAXSMP] = {0};
-u16 s3m_pcm_lens[S3M_MAXSMP] = {0};
+extern u16 s3m_inst_pointers[S3M_MAXSMP];
+extern u16 s3m_pat_pointers[S3M_MAXPAT];
+extern u32 s3m_pcm_pointers[S3M_MAXSMP];
+extern u16 s3m_pcm_lens[S3M_MAXSMP];
 
 struct S3MEvent {
   u8 note, ins, vol, eff, prm;
 };
 
-struct S3MEvent s3m_unpacked_pattern[64][32] = {{{0xFF, 0x00, 0xFF, 0x00, 0x00}}};
+static struct S3MEvent s3m_unpacked_pattern[64][32] = {{{0xFF, 0x00, 0xFF, 0x00, 0x00}}};
 
 #endif

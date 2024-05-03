@@ -48,7 +48,4 @@ void print_s3m_pattern(void);
 void warning_pattern_puts(Pattern_Context* context, const char* msg);
 void warning_pattern_printf(Pattern_Context* context, const char* format, ...);
 
-// for display purposes
-u8 notetable[12][2] = {"C-", "C#", "D-", "D#", "E-", "F-", "F#", "G-", "G#", "A-", "A#", "B-"};
-
 #endif

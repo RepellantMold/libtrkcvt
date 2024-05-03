@@ -10,6 +10,7 @@
 
 #include "s3m.h"
 #include "stm.h"
+#include "stx.h"
 
 u16 calculate_stm_sample_parapointer(void) {
   const usize pos = (usize)ftell(main_context.outfile);
