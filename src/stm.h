@@ -18,7 +18,7 @@ but the pattern editor does not go above 63 and no players will accept this so..
 
 #define STM_PATSIZE         ((4 * 4) * 64)
 
-static u8 stm_song_header[48] = {
+u8 stm_song_header[48] = {
     // song title (ASCIIZ)
     '\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0',
     '\0',
@@ -47,7 +47,7 @@ static u8 stm_song_header[48] = {
     // reserved (which I, RM, turned into a magic string, you're welcome!)
     'S', 'c', 'r', 'e', 'a', 'm', 'v', 'e', 'r', 't', 'e', 'r', '\0'};
 
-static u8 stm_sample_header[32] = {
+u8 stm_sample_header[32] = {
     // filename (ASCIIZ)
     '\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0',
 
@@ -87,12 +87,12 @@ static u8 stm_sample_header[32] = {
        "internal segment address/(in modules:)length in paragraphs" */
     0, 0};
 
-static u8 stm_sample_data[USHRT_MAX] = {0};
+u8 stm_sample_data[USHRT_MAX] = {0};
 
-static u8 stm_order_list[STM_ORDER_LIST_SIZE] = {STM_ORDER_END};
+u8 stm_order_list[STM_ORDER_LIST_SIZE] = {STM_ORDER_END};
 
-static u8 stm_pattern[64][4][4] = {{{0xFF, 0x01, 0x80, 0x00}}};
+u8 stm_pattern[64][4][4] = {{{0xFF, 0x01, 0x80, 0x00}}};
 
-static u16 stm_pcm_pointers[STM_MAXSMP] = {0};
+u16 stm_pcm_pointers[STM_MAXSMP] = {0};
 
 #endif

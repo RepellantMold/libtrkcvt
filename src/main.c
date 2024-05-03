@@ -16,15 +16,24 @@
 #include "ext.h"
 
 #include "main.h"
-#include "header.h"
-#include "pattern.h"
-#include "parapnt.h"
-#include "sample.h"
-#include "pattern.h"
+
+#include "header.c"
+#include "parapnt.c"
+#include "pattern.c"
+#include "sample.c"
 
 #include "s3m.h"
 #include "stm.h"
-#include "stx.h"
+
+// a helper from https://github.com/viiri/st2play!
+u16 fgetw(FILE* fp) {
+  u8 data[2];
+
+  data[0] = (u8)fgetc(fp);
+  data[1] = (u8)fgetc(fp);
+
+  return (data[1] << 8) | data[0];
+}
 
 void eprintf(const char* format, ...) {
   va_list ap;

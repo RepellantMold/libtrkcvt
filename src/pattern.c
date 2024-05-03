@@ -11,7 +11,6 @@
 
 #include "s3m.h"
 #include "stm.h"
-#include "stx.h"
 
 void warning_pattern_puts(Pattern_Context* context, const char* msg) {
   const u8 effect = EFFBASE + context->effect, row = context->row, channel = context->channel;

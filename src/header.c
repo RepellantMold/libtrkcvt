@@ -13,17 +13,8 @@
 #include "header.h"
 #include "parapnt.h"
 #include "sample.h"
-#include "crc.h"
 
-// a helper from https://github.com/viiri/st2play!
-u16 fgetw(FILE* fp) {
-  u8 data[2];
-
-  data[0] = (u8)fgetc(fp);
-  data[1] = (u8)fgetc(fp);
-
-  return (data[1] << 8) | data[0];
-}
+#include "crc.c"
 
 void show_s3m_song_header(void) {
   const u8 global_volume = s3m_song_header[48], initial_speed = s3m_song_header[49],

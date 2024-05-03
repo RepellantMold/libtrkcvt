@@ -14,7 +14,7 @@
 /* NOTE : the STX instrument header format is identical to S3M's (minus 'SRCS'), so it's not included here.
 I'm also mentioning format differences for completeness. */
 
-static u8 stx_song_header[64] = {
+u8 stx_song_header[64] = {
     // song title (ASCIIZ)
     '\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0',
     '\0',
@@ -77,8 +77,8 @@ typedef struct {
   u16 chn_table_pos;
 } stx_parapointers;
 
-static u16 stx_inst_pointers[STX_MAXSMP] = {0};
-static u16 stx_pat_pointers[STX_MAXPAT] = {0};
-static stx_pcm_parapointers stx_pcm_pointers[STX_MAXSMP] = {0};
+u16 stx_inst_pointers[STX_MAXSMP] = {0};
+u16 stx_pat_pointers[STX_MAXPAT] = {0};
+stx_pcm_parapointers stx_pcm_pointers[STX_MAXSMP] = {0};
 
 #endif
