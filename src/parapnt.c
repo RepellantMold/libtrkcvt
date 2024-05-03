@@ -8,9 +8,9 @@
 #include "parapnt.h"
 #include "sample.h"
 
-#include "s3m.h"
-#include "stm.h"
-#include "stx.h"
+#include "fmt/s3m.h"
+#include "fmt/stm.h"
+#include "fmt/stx.h"
 
 u16 calculate_stm_sample_parapointer(void) {
   const usize pos = (usize)ftell(main_context.outfile);

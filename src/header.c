@@ -1,3 +1,4 @@
+#define _CRT_SECURE_NO_WARNINGS
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -6,9 +7,9 @@
 #include "ext.h"
 #include "main.h"
 
-#include "s3m.h"
-#include "stm.h"
-#include "stx.h"
+#include "fmt/s3m.h"
+#include "fmt/stm.h"
+#include "fmt/stx.h"
 
 #include "header.h"
 #include "parapnt.h"

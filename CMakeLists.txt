@@ -5,6 +5,8 @@ project(SCREAMVERTER)
 set(CMAKE_C_STANDARD 99)
 set(CMAKE_C_EXTENSIONS OFF)
 
+include_directories(include)
+
 add_executable( screamverter
                 src/main.c
                 src/crc.c

@@ -6,8 +6,9 @@
 #include "ext.h"
 
 #include "main.h"
-#include "s3m.h"
-#include "stm.h"
+
+#include "fmt/s3m.h"
+#include "fmt/stm.h"
 
 #include "sample.h"
 

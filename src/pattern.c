@@ -9,8 +9,8 @@
 #include "main.h"
 #include "pattern.h"
 
-#include "s3m.h"
-#include "stm.h"
+#include "fmt/s3m.h"
+#include "fmt/stm.h"
 
 static u8 notetable[12][2] = {"C-", "C#", "D-", "D#", "E-", "F-", "F#", "G-", "G#", "A-", "A#", "B-"};
 
@@ -401,7 +401,7 @@ void convert_s3m_pattern_to_stm(void) {
 
   do {
     for (channel = 0; channel < STM_MAXCHN; ++channel) {
-      pattern.row = row, pattern.channel = channel;
+      pattern.row = (u8)row, pattern.channel = (u8)channel;
       pattern.note = s3m_unpacked_pattern[row][channel].note,
       pattern.instrument = s3m_unpacked_pattern[row][channel].ins,
       pattern.volume = s3m_unpacked_pattern[row][channel].vol, pattern.effect = s3m_unpacked_pattern[row][channel].eff,
