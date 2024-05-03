@@ -4,6 +4,7 @@
 #include <stdlib.h>
 
 #include "ext.h"
+#include "stx.h"
 
 u16 calculate_stm_sample_parapointer(void);
 stx_pcm_parapointers calculate_stx_sample_parapointer(void);

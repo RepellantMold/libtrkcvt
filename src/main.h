@@ -2,14 +2,14 @@
 #define __MAIN_H
 #include <stdio.h>
 #include <stdlib.h>
-
+#include <stdbool.h>
 #include "envcheck.h"
 #include "ext.h"
 
 #include "s3m.h"
 #include "stm.h"
 
-u8 original_order_count = 0, order_count = 0, sample_count = 0, pattern_count = 0;
+static u8 original_order_count = 0, order_count = 0, sample_count = 0, pattern_count = 0;
 
 typedef struct {
   FILE* infile;
@@ -35,7 +35,7 @@ enum FOC_ReturnCode {
   FOC_SAMPLE_FAIL = 0x80,
 };
 
-FOC_Context main_context;
+static FOC_Context main_context;
 
 void eprintf(const char* format, ...);
 void eputs(const char* msg);
@@ -45,7 +45,5 @@ void optional_puts(const char* msg);
 
 void warning_puts(const char* msg);
 void warning_printf(const char* format, ...);
-
-static u16 fgetw(FILE* fp);
 
 #endif
