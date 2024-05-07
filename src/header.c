@@ -182,10 +182,7 @@ void convert_song_orders_s3mtostm(usize length) {
     if (i >= length)
       break;
 
-    // the original order list is already parsed out, so don't worry about it here.
-    //stm_order_list[i] = (s3m_order_array[i] >= STM_MAXPAT) ? STM_ORDER_END : s3m_order_array[i];
-
-    stm_order_list[i] = s3m_order_array[i];
+    stm_order_list[i] = (s3m_order_array[i] > STM_MAXPAT) ? STM_ORDER_END : s3m_order_array[i];
   } while (++i < STM_ORDER_LIST_SIZE);
 }
 
