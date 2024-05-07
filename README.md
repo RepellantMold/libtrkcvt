@@ -10,6 +10,7 @@ A command line tool to downgrade (that being a **very heavy keyword**) Scream Tr
 - [Maintainers](#maintainers)
 - [Contributing](#contributing)
 - [License](#license)
+- [Acknowledgements](#acknowledgements)
 
 ## Usage
 
@@ -19,13 +20,13 @@ A command line tool to downgrade (that being a **very heavy keyword**) Scream Tr
 
 > [!IMPORTANT]
 > These points are important for a decent conversion.
-> 
+>
 > - 4 channels preferably (it only converts the first four channels.)
 > - Sample sizes cannot exceed 65535 (and no 16-bit samples.)
 > - No panning or Adlib, Scream Tracker 2/Scream Tracker Music Interface Kit is mono.
 > - Sample names are gonna truncated heavily to 12 characters if its file name field is blank.
 > - You can only use effects A - J, with some caveats with the table shown below.
-> 
+>
 > | Effect | Function in ST2/STMIK - in ST3/others | Notes/Quirks (Effect memory **does not exist** in Scream Tracker 2, so a parameter of 0 will act like a no-op for any effect that normally has it. (e.g. volume slide, portamento slides, vibrato, etc.)) |
 > |---:|:---:|---|
 > | Axx | Set speed - Set ticks per row | It has a scaling factor (TODO: handle it) alongside setting ticks per row. |
@@ -59,3 +60,8 @@ Small note: If editing the README, please conform to the
 ## License
 
 [ISC](LICENSE) © 2024 RepellantMold
+
+## Acknowledgements
+
+- Future Crew: [Scream Tracker 2](https://github.com/libxmp/libxmp/blob/master/docs/formats/stm.txt) and [3](http://www.textfiles.com/programming/FORMATS/s3m-form.txt) specifications
+- [Claudio Matsuoka: unofficial Scream Tracker Music Interface Kit format specifications](https://github.com/libxmp/libxmp/blob/master/docs/formats/stx-format.txt)
