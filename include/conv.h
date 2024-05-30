@@ -5,6 +5,8 @@
 #include "fmt/stx.h"
 
 #include "ext.h"
+#include "log.h"
+#include "file.h"
 #include "main.h"
 #include "header.h"
 #include "parapnt.h"

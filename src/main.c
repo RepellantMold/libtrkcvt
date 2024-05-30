@@ -19,53 +19,9 @@
 
 #include "conv.h"
 
-
 u8 original_order_count = 0, order_count = 0, sample_count = 0, pattern_count = 0;
 
 FOC_Context main_context;
-
-void eprintf(const char* format, ...) {
-  va_list ap;
-
-  va_start(ap, format);
-  vfprintf(stderr, format, ap);
-  va_end(ap);
-}
-
-void eputs(const char* msg) {
-  fputs(msg, stderr);
-  fputc('\n', stderr);
-}
-
-void optional_printf(const char* format, ...) {
-  if (main_context.verbose_mode) {
-    va_list ap;
-
-    va_start(ap, format);
-    vprintf(format, ap);
-    va_end(ap);
-  }
-}
-
-void optional_puts(const char* msg) {
-  if (main_context.verbose_mode)
-    puts(msg);
-}
-
-void warning_puts(const char* msg) {
-  printf("WARNING: ");
-  puts(msg);
-}
-
-void warning_printf(const char* format, ...) {
-  va_list ap;
-
-  printf("WARNING: ");
-
-  va_start(ap, format);
-  vprintf(format, ap);
-  va_end(ap);
-}
 
 void print_help(void) {
   puts("Usage: screamverter [options] <inputfile> <outputfile>");
@@ -92,7 +48,6 @@ u16 s3m_pat_pointers[S3M_MAXPAT] = {0};
 u32 s3m_pcm_pointers[S3M_MAXSMP] = {0};
 u16 s3m_pcm_lens[S3M_MAXSMP] = {0};
 u16 s3m_cwtv;
-
 
 int check_valid_s3m(FILE* S3Mfile);
 
@@ -172,10 +127,13 @@ int check_valid_s3m(FILE* S3Mfile) {
 
   (void)!fseek(S3Mfile, 44, SEEK_SET);
 
-  (void)!fread(scrm, sizeof(char), 4, S3Mfile);
+  if (fread(scrm, sizeof(char), 4, S3Mfile) != 4) {
+    print_error("Failed to read S3M header!");
+    return FOC_MALFORMED_FILE;
+  };
 
   if (memcmp(scrm, "SCRM", 4)) {
-    eprintf("This is not an S3M file!");
+    print_error("This is not an S3M file!");
     return FOC_NOT_S3M_FILE;
   }
 

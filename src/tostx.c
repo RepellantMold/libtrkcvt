@@ -69,7 +69,7 @@ int convert_s3m_to_stx(FOC_Context* context) {
   u8* STXOrders = NULL;
   stx_parapointers parapointers;
 
-  warning_puts("This feature is not finished!\n");
+  print_warning("This feature is not finished!\n");
 
   if (!S3Mfile || !STXfile)
     return FOC_OPEN_FAILURE;
@@ -82,14 +82,13 @@ int convert_s3m_to_stx(FOC_Context* context) {
   original_order_count = s3m_song_header[32];
   sample_count = s3m_song_header[34];
   if (sample_count > STM_MAXSMP) {
-    warning_printf("Sample count exceeds %u (%u > %u), only using %u.\n", STM_MAXSMP, sample_count, STM_MAXSMP,
-                   STM_MAXSMP);
+    print_warning("Sample count exceeds 31 (%u > 31), only using 31.", sample_count);
   }
   pattern_count = s3m_song_header[36];
   if (pattern_count > STM_MAXPAT) {
-    warning_printf("Pattern count exceeds %u (%u > %u), only converting %u.\n", STM_MAXPAT, pattern_count, STM_MAXPAT,
-                   STM_MAXPAT);
+    print_warning("Pattern count exceeds 63 (%u > 63), only converting 63.", pattern_count);
   }
+
   if (verbose)
     show_s3m_song_header();
 
@@ -170,9 +169,12 @@ static void handle_sample_headers_s3mtostx(FOC_Context* context, usize sample_co
     grab_sample_data(S3Mfile, s3m_inst_pointers[i]);
     s3m_pcm_pointers[i] = grab_s3m_pcm_pointer();
     s3m_pcm_lens[i] = grab_s3m_pcm_len();
+
     if (verbose)
       show_s3m_inst_header();
+
     //convert_s3m_intstrument_header_s3mtostx();
+
     stx_inst_pointers[i] = (u16)convert_to_parapointer(ftell(STXfile));
     fwrite(s3m_inst_header, sizeof(u8), sizeof(s3m_inst_header), STXfile);
   }
@@ -183,11 +185,11 @@ static void handle_patterns_s3mtostx(FOC_Context* context, usize pattern_count) 
   usize i = 0;
 
   for (i = 0; i < pattern_count; i++) {
-    printf("Converting pattern %zu...\n", i);
+    (void)!printf("Converting pattern %zu...\n", i);
     parse_s3m_pattern(S3Mfile, s3m_pat_pointers[i]);
     stx_pat_pointers[i] = (u16)convert_to_parapointer(ftell(STXfile));
     convert_s3m_pattern_to_stx(STXfile);
-    printf("Pattern %zu written.\n", i);
+    (void)!printf("Pattern %zu written.\n", i);
   }
 }
 
@@ -208,10 +210,11 @@ static int handle_pcm_s3mtostx(FOC_Context* context, usize sample_count) {
     sc.length = sample_len;
     sc.pcm = sample_data;
 
-    printf("Converting sample %zu...\n", i);
+    (void)!printf("Converting sample %zu...\n", i);
 
     if (dump_sample_data(S3Mfile, s3m_pcm_pointers[i], &sc))
       return FOC_SAMPLE_FAIL;
+
     convert_unsigned_to_signed(&sc);
 
     if (!padding_len)

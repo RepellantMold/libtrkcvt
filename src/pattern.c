@@ -6,37 +6,29 @@
 #include "envcheck.h"
 #include "ext.h"
 
+#include "log.h"
 #include "main.h"
 #include "pattern.h"
+
 
 #include "fmt/s3m.h"
 #include "fmt/stm.h"
 
 static u8 notetable[12][2] = {"C-", "C#", "D-", "D#", "E-", "F-", "F#", "G-", "G#", "A-", "A#", "B-"};
 
-void warning_pattern_puts(Pattern_Context* context, const char* msg) {
-  const u8 effect = EFFBASE + context->effect, row = context->row, channel = context->channel;
-
-  printf("WARNING (row %02u/channel %02u", row, channel);
-  if (context->effect)
-    printf(", effect %c", effect);
-  printf("): ");
-
-  puts(msg);
-}
-
-void warning_pattern_printf(Pattern_Context* context, const char* format, ...) {
+void print_warning_pattern(Pattern_Context* context, const char* format, ...) {
   va_list ap;
   const u8 effect = EFFBASE + context->effect, row = context->row, channel = context->channel;
-
-  printf("WARNING (row %02u/channel %02u", row, channel);
-  if (context->effect)
-    printf(", effect %c", effect);
-  printf("): ");
+  char buffer[192];
 
   va_start(ap, format);
-  vprintf(format, ap);
+  vsnprintf(buffer, sizeof(buffer), format, ap);
   va_end(ap);
+
+  if (context->effect)
+    printf("WARNING (row %02u/channel %02u, effect %c): %s\n", row, channel, effect, buffer);
+  else
+    printf("WARNING (row %02u/channel %02u): %s\n", row, channel, buffer);
 }
 
 void print_s3m_row(usize row) {
@@ -78,7 +70,7 @@ void print_s3m_pattern(void) {
   usize row = 0;
 
   for (; row < MAXROWS; ++row) {
-    optional_printf("r:%02u = ", row);
+    print_diagnostic("r:%02u = ", row);
 
     print_s3m_row(row);
   }
@@ -95,12 +87,12 @@ int check_effect(Pattern_Context* context) {
 
     case EFF_SET_TEMPO:
       if (hinib)
-        warning_pattern_printf(context, "you can only have up to $F ticks per row, found $%02X!\n", parameter);
+        print_warning_pattern(context, "you can only have up to $F ticks per row, found $%02X!", parameter);
       break;
 
     case EFF_SET_POSITION:
       if (context->row < 63) {
-        warning_pattern_puts(
+        print_warning_pattern(
             context,
             "set position does not do a pattern break, please use a pattern break alongside this if it's intended!");
       }
@@ -108,14 +100,14 @@ int check_effect(Pattern_Context* context) {
 
     case EFF_PATTERN_BREAK:
       if (parameter)
-        warning_pattern_puts(context, "pattern break ignores parameter!");
+        print_warning_pattern(context, "pattern break ignores parameter!");
       break;
 
     case EFF_VOLUME_SLIDE:
       if ((hinib == 0xF && lownib > 0) || (lownib == 0xF && hinib > 0))
-        warning_pattern_puts(context, "there's no fine volume slides!");
+        print_warning_pattern(context, "there's no fine volume slides!");
       else if (hinib && lownib)
-        warning_pattern_printf(context, "both x (%1X) and y (%1X) specified, y will take priority!\n", hinib, lownib);
+        print_warning_pattern(context, "both x (%1X) and y (%1X) specified, y will take priority!", hinib, lownib);
 
       goto noeffectmemory;
       break;
@@ -123,7 +115,7 @@ int check_effect(Pattern_Context* context) {
     case EFF_PORTA_DOWN:
     case EFF_PORTA_UP:
       if (hinib >= 0xE)
-        warning_pattern_puts(context, "there's no fine/extra-fine porta up/down!");
+        print_warning_pattern(context, "there's no fine/extra-fine porta up/down!");
       goto noeffectmemory;
       break;
 
@@ -131,10 +123,10 @@ int check_effect(Pattern_Context* context) {
 
     case EFF_VIBRATO:
       if (!main_context.handle_effect_memory && !parameter) {
-        warning_pattern_puts(context, "there's no effect memory with this effect, this will be treated as a no-op.");
+        print_warning_pattern(context, "there's no effect memory with this effect, this will be treated as a no-op.");
         break;
       }
-      warning_pattern_puts(context, "vibrato depth is doubled compared to other trackers!");
+      print_warning_pattern(context, "vibrato depth is doubled compared to other trackers!");
       break;
 
     case EFF_TREMOR:
@@ -143,14 +135,14 @@ int check_effect(Pattern_Context* context) {
 
     case EFF_ARPEGGIO: goto noeffectmemory; break;
 
-    default: warning_pattern_puts(context, "unsupported effect!"); break;
+    default: print_warning_pattern(context, "unsupported effect!"); break;
   }
 
   return effect;
 
 noeffectmemory:
   if (!main_context.handle_effect_memory && !parameter)
-    warning_pattern_puts(context, "there's no effect memory with this effect, this will be treated as a no-op.");
+    print_warning_pattern(context, "there's no effect memory with this effect, this will be treated as a no-op.");
   return effect;
 }
 
@@ -218,18 +210,18 @@ u8 check_for_free_channel(usize row) {
 u8 search_for_last_nonzero_param(usize startingrow, usize c, usize effect) {
   usize i = startingrow;
 
-  optional_printf("searching for last nonzero param for %c starting at row %02u and channel %02u\n", effect + EFFBASE,
-                  i, c);
+  print_diagnostic("searching for last nonzero param for %c starting at row %02u and channel %02u", effect + EFFBASE,
+                   i, c);
 
   while (i--) {
-    //optional_printf("checking row %02u\n", i);
+    //print_diagnostic("checking row %02u", i);
     if (!s3m_unpacked_pattern[i][c].prm || s3m_unpacked_pattern[i][c].eff != effect)
       continue;
-    optional_printf("param is %02X\n", s3m_unpacked_pattern[i][c].prm);
+    print_diagnostic("param is %02X", s3m_unpacked_pattern[i][c].prm);
     return s3m_unpacked_pattern[i][c].prm;
   }
 
-  optional_printf("no matches found...\n");
+  print_diagnostic("no matches found...");
   return 0;
 }
 
@@ -238,12 +230,12 @@ u8 search_for_last_nonzero_param2(usize startingrow, usize channel, usize effect
   const u8 effect_display = (u8)effect + EFFBASE;
   u8 lownib = 0, hinib = 0, param = 0;
 
-  optional_printf("searching for last nonzero param for %c starting at row %02u and channel %02u\n", effect_display, i,
-                  channel);
+  print_diagnostic("searching for last nonzero param for %c starting at row %02u and channel %02u", effect_display, i,
+                   channel);
 
   i = startingrow;
   while (i--) {
-    //optional_printf("checking row %02u for low nibble\n", i);
+    //print_diagnostic("checking row %02u for low nibble", i);
 
     if (!(s3m_unpacked_pattern[i][channel].prm & 0x0F) || s3m_unpacked_pattern[i][channel].eff != effect)
       continue;
@@ -253,7 +245,7 @@ u8 search_for_last_nonzero_param2(usize startingrow, usize channel, usize effect
 
   i = startingrow;
   while (i--) {
-    //optional_printf("checking row %02u for high nibble\n", i);
+    //print_diagnostic("checking row %02u for high nibble", i);
 
     if (!(s3m_unpacked_pattern[i][channel].prm >> 4) || s3m_unpacked_pattern[i][channel].eff != effect)
       continue;
@@ -265,11 +257,11 @@ u8 search_for_last_nonzero_param2(usize startingrow, usize channel, usize effect
     goto nomatches;
 
   param = (hinib << 4) | lownib;
-  optional_printf("param (low) is %1X and param (high) is %1X, forming %02X\n", lownib, hinib, param);
+  print_diagnostic("param (low) is %1X and param (high) is %1X, forming %02X", lownib, hinib, param);
   return param;
 
 nomatches:
-  optional_printf("no matches found...\n");
+  print_diagnostic("no matches found...");
   return 0;
 }
 
@@ -350,13 +342,13 @@ void handle_s3m_effect(Pattern_Context* context) {
         if (lownib >> 1)
           lownib >>= 1;
         else
-          warning_pattern_puts(context, "Failed to adjust fine volume slide.");
+          print_warning_pattern(context, "Failed to adjust fine volume slide.");
       } else if (lownib == 0xF) {
         lownib = 0;
         if (hinib >> 1)
           hinib >>= 1;
         else
-          warning_pattern_puts(context, "Failed to adjust fine volume slide.");
+          print_warning_pattern(context, "Failed to adjust fine volume slide.");
       }
 
       parameter = (hinib << 4) | lownib;
@@ -374,7 +366,7 @@ void handle_s3m_effect(Pattern_Context* context) {
         else if (lownib >> 1)
           lownib >>= 1;
         else
-          warning_pattern_puts(context, "Failed to adjust fine portamento.");
+          print_warning_pattern(context, "Failed to adjust fine portamento.");
       } else if (hinib == 0xE) {
         hinib = 0;
         if (lownib >> 3)
@@ -384,7 +376,7 @@ void handle_s3m_effect(Pattern_Context* context) {
         else if (lownib >> 1)
           lownib >>= 1;
         else
-          warning_pattern_puts(context, "Failed to adjust extra-fine portamento.");
+          print_warning_pattern(context, "Failed to adjust extra-fine portamento.");
       }
 
       parameter = (hinib << 4) | lownib;
@@ -400,13 +392,13 @@ void handle_s3m_effect(Pattern_Context* context) {
 
       if (adjusted_vibrato_depth) {
         if (!(songflags & S3M_ST2VIB)) {
-          optional_printf("adjusting vibrato depth from %u to %u.\n", lownib, adjusted_vibrato_depth);
+          print_diagnostic("adjusting vibrato depth from %u to %u.", lownib, adjusted_vibrato_depth);
           lownib = adjusted_vibrato_depth;
-          optional_puts("adjustment successful!\n");
+          print_diagnostic("adjustment successful!");
         }
       } else if (lownib) {
-        optional_printf("adjustment failed... depth %u turned into %u. this will not be adjusted!\n", lownib,
-                        adjusted_vibrato_depth);
+        print_diagnostic("adjustment failed... depth %u turned into %u. this will not be adjusted!", lownib,
+                         adjusted_vibrato_depth);
       }
       break;
 

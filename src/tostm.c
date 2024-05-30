@@ -97,10 +97,10 @@ int convert_s3m_to_stm(FOC_Context* context) {
   original_order_count = s3m_song_header[32];
   sample_count = s3m_song_header[34];
   if (sample_count > STM_MAXSMP)
-    warning_printf("Sample count exceeds 31 (%u > %u), only using %u.\n", sample_count, STM_MAXSMP, STM_MAXSMP);
+    print_warning("Sample count exceeds 31 (%u > 31), only using 31.", sample_count);
   pattern_count = s3m_song_header[36];
   if (pattern_count > STM_MAXPAT)
-    warning_printf("Pattern count exceeds 63 (%u > %u), only converting %u.\n", pattern_count, STM_MAXPAT, STM_MAXPAT);
+    print_warning("Pattern count exceeds 63 (%u > 63), only converting 63.", pattern_count);
   if (verbose)
     show_s3m_song_header();
 
@@ -139,11 +139,14 @@ static void handle_sample_headers_s3mtostm(FOC_Context* context, usize sample_co
 
     if (verbose)
       printf("Sample %zu:\n", i);
+
     grab_sample_data(S3Mfile, s3m_inst_pointers[i]);
     s3m_pcm_pointers[i] = grab_s3m_pcm_pointer();
     s3m_pcm_lens[i] = grab_s3m_pcm_len();
+
     if (verbose)
       show_s3m_inst_header();
+
     convert_s3m_intstrument_header_s3mtostm();
 
   skiptowritingsampleheader:
@@ -190,6 +193,7 @@ static int handle_pcm_s3mtostm(FOC_Context* context, usize sample_count) {
 
     if (dump_sample_data(S3Mfile, s3m_pcm_pointers[i], &sc))
       return FOC_SAMPLE_FAIL;
+
     convert_unsigned_to_signed(&sc);
 
     if (!padding_len)
@@ -201,7 +205,6 @@ static int handle_pcm_s3mtostm(FOC_Context* context, usize sample_count) {
     handle_pcm_parapointer_s3mtostm(context, i);
 
     (void)!fwrite(sample_data, sizeof(u8), sample_len, STMfile);
-
     (void)!printf("Sample %zu written.\n", i);
   }
 

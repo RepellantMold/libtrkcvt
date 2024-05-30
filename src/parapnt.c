@@ -4,6 +4,7 @@
 #include "envcheck.h"
 #include "ext.h"
 
+#include "log.h"
 #include "main.h"
 #include "parapnt.h"
 #include "sample.h"
@@ -28,11 +29,11 @@ stx_pcm_parapointers calculate_stx_sample_parapointer(void) {
 }
 
 usize convert_to_parapointer(usize pointer) {
-  optional_printf("%04X -> %04X\n", pointer, pointer >> 4);
+  print_diagnostic("%04X -> %04X", pointer, pointer >> 4);
   return pointer >> 4;
 }
 
 usize convert_from_parapointer(usize parapointer) {
-  optional_printf("%04X -> %04X\n", parapointer, parapointer << 4);
+  print_diagnostic("%04X -> %04X", parapointer, parapointer << 4);
   return parapointer << 4;
 }

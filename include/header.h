@@ -27,6 +27,4 @@ void convert_s3m_intstrument_header_s3mtostm(void);
 
 void handle_sample_name_s3m2stm(void);
 
-static u16 fgetw(FILE* fp);
-
 #endif

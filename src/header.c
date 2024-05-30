@@ -11,21 +11,13 @@
 #include "fmt/stm.h"
 #include "fmt/stx.h"
 
+#include "file.h"
+#include "log.h"
 #include "header.h"
 #include "parapnt.h"
 #include "sample.h"
 
 #include "crc.h"
-
-// a helper from https://github.com/viiri/st2play!
-u16 fgetw(FILE* fp) {
-  u8 data[2];
-
-  data[0] = (u8)fgetc(fp);
-  data[1] = (u8)fgetc(fp);
-
-  return (data[1] << 8) | data[0];
-}
 
 void show_s3m_song_header(void) {
   const u8 global_volume = s3m_song_header[48], initial_speed = s3m_song_header[49],
@@ -70,7 +62,7 @@ void grab_s3m_orders(FILE* file) {
       s3m_order_array[i] = s3m_order_array[count];
       if (s3m_order_array[count] > pattern_count)
         pattern_count = s3m_order_array[count];
-      optional_printf("Order %zu -> %zu\n", count, i++);
+      print_diagnostic("Order %zu -> %zu", count, i++);
     }
   }
   order_count = (u8)i;
@@ -86,13 +78,13 @@ void grab_s3m_parapointers(FILE* file) {
 
   for (i = 0; i < sample_count; i++) {
     s3m_inst_pointers[i] = fgetw(file);
-    optional_printf("Sample %zu:\n", i);
+    print_diagnostic("Sample %zu:", i);
     s3m_inst_pointers[i] = (u16)convert_from_parapointer(s3m_inst_pointers[i]);
   }
 
   for (i = 0; i < pattern_count; i++) {
     s3m_pat_pointers[i] = fgetw(file);
-    optional_printf("Pattern %zu:\n", i);
+    print_diagnostic("Pattern %zu:", i);
     s3m_pat_pointers[i] = (u16)convert_from_parapointer(s3m_pat_pointers[i]);
   }
 }
@@ -107,16 +99,16 @@ void check_s3m_channels(void) {
       break;
 
     if (i > STM_MAXCHN) {
-      warning_puts("There's more than 4 channels, they'll be truncated.");
+      print_warning("There's more than 4 channels, they'll be truncated.");
       break;
     }
 
     if (channel & S3MCHN_MUTE)
-      warning_printf("Channel %u is muted which is unsupported, the notes will be converted anyway.\n", i);
+      print_warning("Channel %u is muted which is unsupported, the notes will be converted anyway.", i);
 
     if (channel >= S3MCHN_ADLIBMEL1 && channel <= S3MCHN_ADLIBHATDRUM) {
-      warning_printf(
-          "Adlib channel detected (channel %u), the notes will be converted as is without the instrument data.\n", i);
+      print_warning(
+          "Adlib channel detected (channel %u), the notes will be converted as is without the instrument data.", i);
     }
   }
 }
@@ -129,7 +121,7 @@ void convert_song_header_s3mtostm(void) {
   strncpy((char*)stm_song_header, (char*)s3m_song_header, 19);
 
   if (song_flags & S3M_AMIGAFREQLIMITS)
-    warning_puts("The Amiga frequency limit option is not supported in Scream Tracker 2.");
+    print_warning("The Amiga frequency limit option is not supported in Scream Tracker 2.");
 
   if (song_flags & S3M_ST2TEMPO) {
     stm_song_header[32] = initial_speed;
@@ -139,7 +131,7 @@ void convert_song_header_s3mtostm(void) {
   }
 
   if (master_volume & 128)
-    warning_puts("Do not expect the song to play in stereo.");
+    print_warning("Do not expect the song to play in stereo.");
 
   stm_song_header[34] = global_volume;
 
@@ -153,7 +145,7 @@ void convert_song_header_s3mtostx(void) {
   strncpy((char*)stx_song_header, (char*)s3m_song_header, 19);
 
   if (song_flags & S3M_AMIGAFREQLIMITS)
-    warning_puts("Ignoring Amiga frequency limit");
+    print_warning("Ignoring Amiga frequency limit");
   if (song_flags & S3M_ST2TEMPO) {
     stx_song_header[43] = initial_speed;
   } else {
@@ -162,7 +154,7 @@ void convert_song_header_s3mtostx(void) {
   }
 
   if (master_volume & 128)
-    warning_puts("Do not expect the song to play in stereo.");
+    print_warning("Do not expect the song to play in stereo.");
 
   stx_song_header[42] = global_volume;
 
@@ -302,7 +294,7 @@ void convert_s3m_intstrument_header_s3mtostm(void) {
       break;
 
     default:
-      warning_puts("Adlib instrument is not supported, only converting sample name.");
+      print_warning("Adlib instrument is not supported, only converting sample name.");
       goto generateblanksample;
       break;
   }
@@ -310,7 +302,7 @@ void convert_s3m_intstrument_header_s3mtostm(void) {
 
 u32 grab_s3m_pcm_pointer(void) {
   const u32 parapointer = (s3m_inst_header[13] << 16 | s3m_inst_header[15] << 8 | s3m_inst_header[14]) << 4;
-  optional_printf("PCM Parapointer: %lX\n", parapointer);
+  print_diagnostic("PCM Parapointer: %lX", parapointer);
   return parapointer;
 }
 
@@ -318,7 +310,7 @@ u16 grab_s3m_pcm_len(void) {
   const u16 length = s3m_inst_header[17] << 8 | s3m_inst_header[16];
 
   if ((s3m_inst_header[19] << 8 | s3m_inst_header[18]) != 0)
-    warning_puts("the sample is too long, only converting the first 64kb of it.\n");
+    print_warning("the sample is too long, only converting the first 64kb of it.");
 
   return length;
 }

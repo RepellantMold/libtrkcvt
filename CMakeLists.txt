@@ -9,6 +9,8 @@ include_directories(include)
 
 add_executable( screamverter
                 src/main.c
+                src/log.c
+                src/file.c
                 src/crc.c
                 src/header.c
                 src/parapnt.c
