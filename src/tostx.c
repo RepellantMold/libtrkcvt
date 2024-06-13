@@ -1,55 +1,7 @@
 #include "conv.h"
 
 // Arrays
-u8 stx_song_header[64] = {
-    // song title (ASCIIZ)
-    '\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0',
-    '\0',
-
-    // tracker name
-    '!', 'S', 'c', 'r', 'e', 'a', 'm', '!',
-
-    // DOS EOF (1.1)/pattern size (1.0)
-    0x1A, 0,
-
-    // reserved
-    0, 0,
-
-    // pattern table offset
-    0, 0,
-
-    // sample table offset
-    0, 0,
-
-    // channel table offset
-    0, 0,
-
-    // reserved
-    0, 0, 0, 0,
-
-    // global volume
-    64,
-
-    // initial tempo
-    0x60,
-
-    // reserved
-    1, 0, 0, 0,
-
-    // number of patterns
-    0, 0,
-
-    // number of samples
-    0, 0,
-
-    // number of orders
-    0, 0,
-
-    // unknown
-    0, 0, 0, 0, 0, 0,
-
-    // magic
-    'S', 'C', 'R', 'M'};
+stx_song_header_t stx_song_header;
 
 u16 stx_inst_pointers[STX_MAXSMP] = {0};
 u16 stx_pat_pointers[STX_MAXPAT] = {0};
@@ -78,13 +30,14 @@ int convert_s3m_to_stx(FOC_Context* context) {
   if (check_valid_s3m(S3Mfile))
     return FOC_NOT_S3M_FILE;
 
-  (void)!fread(s3m_song_header, sizeof(u8), sizeof(s3m_song_header), S3Mfile);
-  original_order_count = s3m_song_header[32];
-  sample_count = s3m_song_header[34];
+  grab_s3m_song_header(S3Mfile);
+
+  original_order_count = s3m_song_header.total_orders;
+  sample_count = s3m_song_header.total_instruments;
   if (sample_count > STM_MAXSMP) {
     print_warning("Sample count exceeds 31 (%u > 31), only using 31.", sample_count);
   }
-  pattern_count = s3m_song_header[36];
+  pattern_count = s3m_song_header.total_patterns;
   if (pattern_count > STM_MAXPAT) {
     print_warning("Pattern count exceeds 63 (%u > 63), only converting 63.", pattern_count);
   }
@@ -95,7 +48,7 @@ int convert_s3m_to_stx(FOC_Context* context) {
   check_s3m_channels();
 
   convert_song_header_s3mtostx();
-  fwrite(stx_song_header, sizeof(u8), sizeof(stx_song_header), STXfile);
+  write_stx_song_header(STXfile);
 
   grab_s3m_orders(S3Mfile);
   grab_s3m_parapointers(S3Mfile);
@@ -166,7 +119,7 @@ static void handle_sample_headers_s3mtostx(FOC_Context* context, usize sample_co
   for (; i < sample_count; i++) {
     if (verbose)
       printf("Sample %zu:\n", i);
-    grab_sample_data(S3Mfile, s3m_inst_pointers[i]);
+    grab_s3m_isntrument_header_data(S3Mfile, s3m_inst_pointers[i]);
     s3m_pcm_pointers[i] = grab_s3m_pcm_pointer();
     s3m_pcm_lens[i] = grab_s3m_pcm_len();
 
@@ -176,7 +129,7 @@ static void handle_sample_headers_s3mtostx(FOC_Context* context, usize sample_co
     //convert_s3m_intstrument_header_s3mtostx();
 
     stx_inst_pointers[i] = (u16)convert_to_parapointer(ftell(STXfile));
-    fwrite(s3m_inst_header, sizeof(u8), sizeof(s3m_inst_header), STXfile);
+    write_stx_instrument_header(STXfile);
   }
 }
 
@@ -236,15 +189,15 @@ static int handle_pcm_s3mtostx(FOC_Context* context, usize sample_count) {
 static void handle_pcm_parapointer_s3mtostx(FOC_Context* context, usize i) {
   FILE* outfile = context->outfile;
   const usize saved_pos = (usize)ftell(outfile),
-              header_pos = sizeof(stx_song_header) + (pattern_count * 2) + ((sizeof(s3m_inst_header) * (i + 1)) - 67);
+              header_pos = 64 + (pattern_count * 2) + ((80 * (i + 1)) - 67);
 
   stx_pcm_pointers[i] = calculate_stx_sample_parapointer();
 
   (void)!fseek(outfile, (long)header_pos, SEEK_SET);
 
-  fputc(stx_pcm_pointers[i].upper, outfile);
-  fputc(stx_pcm_pointers[i].lower1, outfile);
-  fputc(stx_pcm_pointers[i].lower2, outfile);
+  fputc(stx_pcm_pointers[i].memseg.bytes.high, outfile);
+  fputc(stx_pcm_pointers[i].memseg.bytes.low1, outfile);
+  fputc(stx_pcm_pointers[i].memseg.bytes.low2, outfile);
 
   (void)!fseek(outfile, (long)saved_pos, SEEK_SET);
 }

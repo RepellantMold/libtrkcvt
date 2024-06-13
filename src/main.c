@@ -32,15 +32,15 @@ void print_help(void) {
   puts("  -h, --help       Print this help and exit");
   puts("  -v, --verbose    Enable extremely verbose output");
   puts("  -s, --sanitize   Sanitize sample names during conversion, useful for saving them on DOS");
-  puts("  -m, --memory     Handle effects calling effect memory (experimental)");
+  puts("  -m, --memory     Handle effects calling effect memory (helps with Scream Tracker 2.24 and below)");
   puts("  -stm             Convert the S3M to STM (default)");
   puts("  -stx             Convert the S3M to STX (unfinished)");
 }
 
 // S3M
 
-u8 s3m_song_header[96];
-u8 s3m_inst_header[80];
+s3m_song_header_t s3m_song_header;
+s3m_instrument_header_t s3m_inst_header;
 
 u8 s3m_order_array[S3M_ORDER_LIST_SIZE] = {S3M_ORDER_END};
 u16 s3m_inst_pointers[S3M_MAXSMP] = {0};

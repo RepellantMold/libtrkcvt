@@ -12,37 +12,35 @@
 #include "fmt/stx.h"
 
 #include "file.h"
-#include "log.h"
 #include "header.h"
+#include "log.h"
 #include "parapnt.h"
 #include "sample.h"
 
 #include "crc.h"
 
 void show_s3m_song_header(void) {
-  const u8 global_volume = s3m_song_header[48], initial_speed = s3m_song_header[49],
-           initial_tempo = s3m_song_header[50], song_flags = s3m_song_header[38];
+  const u8 global_volume = s3m_song_header.global_volume, initial_speed = s3m_song_header.initial_speed,
+           initial_tempo = s3m_song_header.initial_tempo, song_flags = s3m_song_header.flags;
 
   printf("Song title: %s\n"
          "Global volume: %u\n"
          "Initial speed/tempo: %02X/%02X\n"
          "Song flags: %02X\n",
-         s3m_song_header, global_volume, initial_speed, initial_tempo, song_flags);
+         s3m_song_header.title, global_volume, initial_speed, initial_tempo, song_flags);
 }
 
 void show_s3m_inst_header(void) {
-  const u8 default_volume = s3m_inst_header[29], sample_flags = s3m_inst_header[31];
-  const u16 c_frequency = s3m_inst_header[33] << 8 | s3m_inst_header[32],
-            length = s3m_inst_header[17] << 8 | s3m_inst_header[16],
-            loop_start = s3m_inst_header[21] << 8 | s3m_inst_header[20],
-            loop_end = s3m_inst_header[25] << 8 | s3m_inst_header[24];
+  const u8 default_volume = s3m_inst_header.default_volume, sample_flags = s3m_inst_header.flags;
+  const u16 c_frequency = s3m_inst_header.c_speed.full, length = s3m_inst_header.length.full,
+            loop_start = s3m_inst_header.loop_start.full, loop_end = s3m_inst_header.loop_end.full;
 
   printf("Sample name/filename: %.28s/%.12s\n"
          "Default volume: %02u\n"
          "Sample flags: %01X\n"
          "C frequency: %06u\n"
          "Length/Loop start/end: %06u/%06u/%06u\n",
-         &s3m_inst_header[48], &s3m_inst_header[1], default_volume, sample_flags, c_frequency, length, loop_start,
+         s3m_inst_header.name, s3m_inst_header.filename, default_volume, sample_flags, c_frequency, length, loop_start,
          loop_end);
 }
 
@@ -93,7 +91,7 @@ void check_s3m_channels(void) {
   usize i = 0, channel = 0;
 
   while (i++ < S3M_MAXCHN) {
-    channel = s3m_song_header[S3M_CHANNELARRAYPOS + (i - 1)];
+    channel = s3m_song_header.channel_settings[(i - 1)];
 
     if (channel == S3MCHN_DISABLED)
       break;
@@ -113,56 +111,189 @@ void check_s3m_channels(void) {
   }
 }
 
+void grab_s3m_song_header(FILE* S3Mfile) {
+  const bool verbose = main_context.verbose_mode;
+  if (!S3Mfile || feof(S3Mfile) || ferror(S3Mfile))
+    return;
+
+  fread(s3m_song_header.title, 28, 1, S3Mfile);
+  s3m_song_header.dos_eof = fgetb(S3Mfile);
+  s3m_song_header.type = fgetb(S3Mfile);
+  s3m_song_header.reserved1 = fgetw(S3Mfile);
+  s3m_song_header.total_orders = fgetw(S3Mfile);
+  s3m_song_header.total_instruments = fgetw(S3Mfile);
+  s3m_song_header.total_patterns = fgetw(S3Mfile);
+  s3m_song_header.flags = fgetw(S3Mfile);
+  s3m_song_header.created_with_tracker_version = fgetw(S3Mfile);
+  s3m_song_header.file_format_information = fgetw(S3Mfile);
+  fread(s3m_song_header.scrm, 4, 1, S3Mfile);
+  s3m_song_header.global_volume = fgetb(S3Mfile);
+  s3m_song_header.initial_speed = fgetb(S3Mfile);
+  s3m_song_header.initial_tempo = fgetb(S3Mfile);
+  s3m_song_header.master_volume = fgetb(S3Mfile);
+  s3m_song_header.ultraclick_removal = fgetb(S3Mfile);
+  s3m_song_header.default_panning = fgetb(S3Mfile);
+  fread(s3m_song_header.reserved2, 8, 1, S3Mfile);
+  s3m_song_header.special = fgetw(S3Mfile);
+  s3m_cwtv = s3m_song_header.created_with_tracker_version;
+  original_order_count = s3m_song_header.total_orders;
+  sample_count = s3m_song_header.total_instruments;
+  if (verbose)
+    show_s3m_song_header();
+
+  check_s3m_channels();
+}
+
+void write_stm_song_header(FILE* STMfile) {
+  if (!STMfile || feof(STMfile) || ferror(STMfile))
+    return;
+  stm_song_header.tracker[0] = '!';
+  stm_song_header.tracker[1] = 'S';
+  stm_song_header.tracker[2] = 'c';
+  stm_song_header.tracker[3] = 'r';
+  stm_song_header.tracker[4] = 'v';
+  stm_song_header.tracker[5] = 'r';
+  stm_song_header.tracker[6] = 't';
+  stm_song_header.tracker[7] = '!';
+  stm_song_header.dos_eof = 0x1A;
+  stm_song_header.type = 0x02;
+  stm_song_header.version.bytes.major = 0x02;
+  stm_song_header.version.bytes.minor = 0x15;
+
+  fwrite(stm_song_header.title, 20, 1, STMfile);
+  fwrite(stm_song_header.tracker, 8, 1, STMfile);
+  fputc(stm_song_header.dos_eof, STMfile);
+  fputc(stm_song_header.type, STMfile);
+  fputc(stm_song_header.version.bytes.major, STMfile);
+  fputc(stm_song_header.version.bytes.minor, STMfile);
+  fputc(stm_song_header.initial_tempo, STMfile);
+  fputc(stm_song_header.total_patterns, STMfile);
+  fputc(stm_song_header.global_volume, STMfile);
+  fwrite(stm_song_header.reserved1, 13, 1, STMfile);
+}
+
+void write_stx_song_header(FILE* STXfile) {
+  if (!STXfile || feof(STXfile) || ferror(STXfile))
+    return;
+
+  stx_song_header.tracker[0] = '!';
+  stx_song_header.tracker[1] = 'S';
+  stx_song_header.tracker[2] = 'c';
+  stx_song_header.tracker[3] = 'r';
+  stx_song_header.tracker[4] = 'e';
+  stx_song_header.tracker[5] = 'a';
+  stx_song_header.tracker[6] = 'm';
+  stx_song_header.tracker[7] = '!';
+  stx_song_header.misc.dos_eof = 0x1A;
+  stx_song_header.reserved2 = 1;
+  stx_song_header.scrm[0] = 'S';
+  stx_song_header.scrm[1] = 'C';
+  stx_song_header.scrm[2] = 'R';
+  stx_song_header.scrm[3] = 'M';
+
+  fwrite(stx_song_header.title, 20, 1, STXfile);
+  fwrite(stx_song_header.tracker, 8, 1, STXfile);
+  fputw(stx_song_header.misc.first_pattern_size, STXfile);
+  fputw(stx_song_header.reserved1, STXfile);
+  fputw(stx_song_header.pattern_table_parapointer, STXfile);
+  fputw(stx_song_header.instrument_table_parapointer, STXfile);
+  fputw(stx_song_header.channel_table_parapointer, STXfile);
+  fputl(stx_song_header.reserved2, STXfile);
+  fputc(stx_song_header.global_volume, STXfile);
+  fputc(stx_song_header.initial_tempo, STXfile);
+  fputc(stx_song_header.reserved3, STXfile);
+  fputw(stx_song_header.total_patterns, STXfile);
+  fputw(stx_song_header.total_instruments, STXfile);
+  fputw(stx_song_header.total_orders, STXfile);
+  fwrite(stx_song_header.reserved4, 6, 1, STXfile);
+  fwrite(stx_song_header.scrm, 4, 1, STXfile);
+}
+
+void write_stm_instrument_header(FILE* STMfile, stm_instrument_header_t* stm_instrument_header) {
+  fwrite(stm_instrument_header->filename, 12, 1, STMfile);
+  fputc(stm_instrument_header->zero, STMfile);
+  fputc(stm_instrument_header->disk, STMfile);
+  fputw(stm_instrument_header->parapointer, STMfile);
+  fputw(stm_instrument_header->length, STMfile);
+  fputw(stm_instrument_header->loop_start, STMfile);
+  fputw(stm_instrument_header->loop_end, STMfile);
+  fputc(stm_instrument_header->default_volume, STMfile);
+  fputc(stm_instrument_header->reserved1, STMfile);
+  fputw(stm_instrument_header->c_speed, STMfile);
+  fwrite(stm_instrument_header->reserved2, 6, 1, STMfile);
+}
+
+void write_stx_instrument_header(FILE* STXfile) {
+  fputc(s3m_inst_header.type, STXfile);
+  fwrite(s3m_inst_header.filename, 12, 1, STXfile);
+  fputc(s3m_inst_header.memseg.bytes.high, STXfile);
+  fputc(s3m_inst_header.memseg.bytes.low1, STXfile);
+  fputc(s3m_inst_header.memseg.bytes.low2, STXfile);
+  fputw(s3m_inst_header.length.words.low, STXfile);
+  fputw(s3m_inst_header.length.words.high, STXfile);
+  fputw(s3m_inst_header.loop_start.words.low, STXfile);
+  fputw(s3m_inst_header.loop_start.words.high, STXfile);
+  fputw(s3m_inst_header.loop_end.words.low, STXfile);
+  fputw(s3m_inst_header.loop_end.words.high, STXfile);
+  fputc(s3m_inst_header.default_volume, STXfile);
+  fputc(s3m_inst_header.reserved1, STXfile);
+  fputc(s3m_inst_header.packing, STXfile);
+  fputc(s3m_inst_header.flags, STXfile);
+  fputw(s3m_inst_header.c_speed.words.low, STXfile);
+  fputw(s3m_inst_header.c_speed.words.high, STXfile);
+  fwrite(s3m_inst_header.reserved2, 12, 1, STXfile);
+  fwrite(s3m_inst_header.name, 28, 1, STXfile);
+  fwrite(s3m_inst_header.scrs, 4, 1, STXfile);
+}
+
 // s3m_song_header is expected to be filled beforehand
 void convert_song_header_s3mtostm(void) {
-  const u8 song_flags = s3m_song_header[38], initial_speed = s3m_song_header[49], master_volume = s3m_song_header[51],
-           global_volume = s3m_song_header[48];
+  const u8 song_flags = s3m_song_header.flags, initial_speed = s3m_song_header.initial_speed,
+           master_volume = s3m_song_header.master_volume, global_volume = s3m_song_header.global_volume;
 
-  strncpy((char*)stm_song_header, (char*)s3m_song_header, 19);
+  strncpy((char*)stm_song_header.title, (char*)s3m_song_header.title, 19);
 
   if (song_flags & S3M_AMIGAFREQLIMITS)
     print_warning("The Amiga frequency limit option is not supported in Scream Tracker 2.");
 
   if (song_flags & S3M_ST2TEMPO) {
-    stm_song_header[32] = initial_speed;
+    stm_song_header.initial_tempo = initial_speed;
   } else {
     // TODO: deal with speed factor
-    stm_song_header[32] = initial_speed << 4;
+    stm_song_header.initial_tempo = initial_speed << 4;
   }
 
   if (master_volume & 128)
     print_warning("Do not expect the song to play in stereo.");
 
-  stm_song_header[34] = global_volume;
+  stm_song_header.global_volume = global_volume;
 
-  stm_song_header[33] = pattern_count;
+  stm_song_header.total_patterns = pattern_count;
 }
 
 void convert_song_header_s3mtostx(void) {
-  const u8 song_flags = s3m_song_header[38], initial_speed = s3m_song_header[49], master_volume = s3m_song_header[51],
-           global_volume = s3m_song_header[48];
+  const u8 song_flags = s3m_song_header.flags, initial_speed = s3m_song_header.initial_speed,
+           master_volume = s3m_song_header.master_volume, global_volume = s3m_song_header.global_volume;
 
-  strncpy((char*)stx_song_header, (char*)s3m_song_header, 19);
+  strncpy((char*)stx_song_header.title, (char*)s3m_song_header.title, 19);
 
   if (song_flags & S3M_AMIGAFREQLIMITS)
     print_warning("Ignoring Amiga frequency limit");
   if (song_flags & S3M_ST2TEMPO) {
-    stx_song_header[43] = initial_speed;
+    stx_song_header.initial_tempo = initial_speed;
   } else {
     // TODO: deal with speed factor
-    stx_song_header[43] = initial_speed << 4;
+    stx_song_header.initial_tempo = initial_speed << 4;
   }
 
   if (master_volume & 128)
     print_warning("Do not expect the song to play in stereo.");
 
-  stx_song_header[42] = global_volume;
+  stx_song_header.global_volume = global_volume;
 
-  stx_song_header[48] = pattern_count;
-
-  stx_song_header[50] = sample_count;
-
-  stx_song_header[52] = order_count;
+  stx_song_header.total_patterns = pattern_count;
+  stx_song_header.total_instruments = sample_count;
+  stx_song_header.total_orders = order_count;
 }
 
 void convert_song_orders_s3mtostm(usize length) {
@@ -190,107 +321,115 @@ void convert_song_orders_s3mtostx(usize length, u8* order_list) {
   } while (++i < length);
 }
 
-void grab_sample_data(FILE* file, usize position) {
+void grab_s3m_isntrument_header_data(FILE* file, usize position) {
   if (!file || feof(file) || ferror(file))
     return;
   fseek(file, (long)position, SEEK_SET);
-  (void)!fread(s3m_inst_header, sizeof(u8), 80, file);
+  s3m_inst_header.type = fgetb(file);
+  fread(s3m_inst_header.filename, 12, 1, file);
+  s3m_inst_header.memseg.bytes.high = fgetb(file);
+  s3m_inst_header.memseg.bytes.low1 = fgetb(file);
+  s3m_inst_header.memseg.bytes.low2 = fgetb(file);
+  s3m_inst_header.memseg.full = (s3m_inst_header.memseg.bytes.high << 16 | s3m_inst_header.memseg.bytes.low2 << 8
+                                 | s3m_inst_header.memseg.bytes.low1);
+  s3m_inst_header.length.words.low = fgetw(file);
+  s3m_inst_header.length.words.high = fgetw(file);
+  s3m_inst_header.loop_start.words.low = fgetw(file);
+  s3m_inst_header.loop_start.words.high = fgetw(file);
+  s3m_inst_header.loop_end.words.low = fgetw(file);
+  s3m_inst_header.loop_end.words.high = fgetw(file);
+  s3m_inst_header.default_volume = fgetb(file);
+  s3m_inst_header.reserved1 = fgetb(file);
+  s3m_inst_header.packing = fgetb(file);
+  s3m_inst_header.flags = fgetb(file);
+  s3m_inst_header.c_speed.words.low = fgetw(file);
+  s3m_inst_header.c_speed.words.high = fgetw(file);
+  fread(s3m_inst_header.reserved2, 12, 1, file);
+  fread(s3m_inst_header.name, 28, 1, file);
+  fread(s3m_inst_header.scrs, 4, 1, file);
 }
 
-void handle_sample_name_s3m2stm(void) {
+void handle_sample_name_s3m2stm(stm_instrument_header_t* stm_sample_header) {
   usize i = 0, random = 0;
-  const u32 crc = crc32(s3m_inst_header, 80);
+  const u32 crc = crc32((u8*)&s3m_inst_header, sizeof(s3m_inst_header));
 
   srand(crc);
 
   random = (usize)rand();
 
-  if (s3m_inst_header[1] != 0) {
-    memcpy((char*)stm_sample_header, (char*)&s3m_inst_header[1], 12);
-  } else if (s3m_inst_header[48] != 0) {
-    memcpy((char*)stm_sample_header, (char*)&s3m_inst_header[48], 12);
+  if (s3m_inst_header.filename[0] != 0) {
+    memcpy((char*)stm_sample_header->filename, (char*)&s3m_inst_header.filename, 12);
+  } else if (s3m_inst_header.name[0] != 0) {
+    strncpy((char*)stm_sample_header->filename, (char*)&s3m_inst_header.name, 12);
 
     if (!main_context.sanitize_sample_names)
       return;
 
     // sanitization for 8.3 filenames
     for (i = 0; i < 8; i++) {
-      if (stm_sample_header[i] == 0x20) {
+      u8 c = stm_sample_header->filename[i];
+      if (c == 0x20) {
         // non-breaking space, it'll look strange in OpenMPT but oh well.
-        stm_sample_header[i] = 0xFF;
-      } else if (stm_sample_header[i] < 0x20 || stm_sample_header[i] >= 0x7E) {
+        c = 0xFF;
+      } else if (c < 0x20 || c > 0x7E) {
         // me exploiting the fact that Scream Tracker is coded in C, hehe!
-        stm_sample_header[i] = 0x00;
+        c = 0x00;
       }
+
+      stm_sample_header->filename[i] = c;
     }
-    stm_sample_header[8] = '.';
-    snprintf((char*)&stm_sample_header[9], 4, "%03zu", (usize)crc % 999);
+    stm_sample_header->filename[8] = '.';
+    snprintf((char*)&stm_sample_header->filename[9], 4, "%03zu", (usize)crc % 999);
   } else {
     if (!main_context.sanitize_sample_names) {
-      memset(stm_sample_header, 0, 12);
+      memset(stm_sample_header->filename, 0, 12);
       return;
     };
-    snprintf((char*)&stm_sample_header[0], 12, "X%06zuX", (usize)random);
-    stm_sample_header[8] = '.';
-    snprintf((char*)&stm_sample_header[9], 4, "%03zu", (usize)crc % 999);
+    snprintf((char*)&stm_sample_header->filename[0], 13, "X%06zuX.%03zu", (usize)random, (usize)crc % 999);
   }
 }
 
-void convert_s3m_intstrument_header_s3mtostm(void) {
-  const usize type = s3m_inst_header[0], flags = s3m_inst_header[31];
+void convert_s3m_intstrument_header_s3mtostm(stm_instrument_header_t* stm_sample_header) {
+  const usize type = s3m_inst_header.type, flags = s3m_inst_header.flags;
 
   switch (type) {
     case S3MSMPTYPE_MSG:
     generateblanksample:
-      // instrument name
-      if (s3m_inst_header[1] != 0)
-        memcpy((char*)stm_sample_header, (char*)&s3m_inst_header[1], 12);
-      else if (s3m_inst_header[48] != 0)
-        strncpy((char*)stm_sample_header, (char*)&s3m_inst_header[48], 12);
+      if (s3m_inst_header.filename[0] != 0)
+        memcpy((char*)stm_sample_header->filename, (char*)&s3m_inst_header.filename, 12);
+      else if (s3m_inst_header.name[0] != 0)
+        strncpy((char*)stm_sample_header->filename, (char*)&s3m_inst_header.name, 12);
       else
-        memset(stm_sample_header, 0, 12);
+        memset(stm_sample_header->filename, 0, 12);
 
-      // instrument disk
-      stm_sample_header[13] = 0;
+      stm_sample_header->disk = 0;
 
-      // lengths
-      stm_sample_header[17] = 0, stm_sample_header[16] = 0;
+      stm_sample_header->length = 0;
+      stm_sample_header->loop_start = 0;
+      stm_sample_header->loop_end = 0xFFFF;
 
-      // loop points
-      stm_sample_header[19] = 0, stm_sample_header[18] = 0;
-      stm_sample_header[21] = 0xFF, stm_sample_header[20] = 0xFF;
+      stm_sample_header->default_volume = 0;
 
-      // volume
-      stm_sample_header[22] = 0;
-
-      // c2spd
-      stm_sample_header[25] = 0x21, stm_sample_header[24] = 0;
+      stm_sample_header->c_speed = 8448;
       break;
 
     case S3MSMPTYPE_SMP:
-      handle_sample_name_s3m2stm();
+      handle_sample_name_s3m2stm(stm_sample_header);
 
-      // instrument disk
-      stm_sample_header[13] = 0;
+      stm_sample_header->disk = 0;
 
-      // lengths
-      stm_sample_header[17] = s3m_inst_header[17], stm_sample_header[16] = s3m_inst_header[16];
-
-      // loop points
+      stm_sample_header->length = s3m_inst_header.length.words.low;
       if (flags & S3MSMP_LOOP) {
-        stm_sample_header[19] = s3m_inst_header[21], stm_sample_header[18] = s3m_inst_header[20];
-
-        stm_sample_header[21] = s3m_inst_header[25], stm_sample_header[20] = s3m_inst_header[24];
+        stm_sample_header->loop_start = s3m_inst_header.loop_start.words.low;
+        stm_sample_header->loop_end = s3m_inst_header.loop_end.words.low;
       } else {
-        stm_sample_header[19] = 0, stm_sample_header[18] = 0;
-        stm_sample_header[21] = 0xFF, stm_sample_header[20] = 0xFF;
+        stm_sample_header->loop_start = 0;
+        stm_sample_header->loop_end = 0xFFFF;
       }
 
-      // volume
-      stm_sample_header[22] = s3m_inst_header[28];
+      stm_sample_header->default_volume = s3m_inst_header.default_volume;
 
-      // c2spd
-      stm_sample_header[25] = s3m_inst_header[33], stm_sample_header[24] = s3m_inst_header[32];
+      stm_sample_header->c_speed = s3m_inst_header.c_speed.words.low;
       break;
 
     default:
@@ -301,36 +440,31 @@ void convert_s3m_intstrument_header_s3mtostm(void) {
 }
 
 u32 grab_s3m_pcm_pointer(void) {
-  const u32 parapointer = (s3m_inst_header[13] << 16 | s3m_inst_header[15] << 8 | s3m_inst_header[14]) << 4;
+  //const u32 parapointer = (s3m_inst_header.memseg.bytes.high << 16 | s3m_inst_header.memseg.bytes.low2 << 8 | s3m_inst_header.memseg.bytes.low1) << 4;
+  const u32 parapointer = s3m_inst_header.memseg.full << 4;
   print_diagnostic("PCM Parapointer: %lX", parapointer);
   return parapointer;
 }
 
 u16 grab_s3m_pcm_len(void) {
-  const u16 length = s3m_inst_header[17] << 8 | s3m_inst_header[16];
+  const u16 length = s3m_inst_header.length.words.low;
 
-  if ((s3m_inst_header[19] << 8 | s3m_inst_header[18]) != 0)
+  if ((s3m_inst_header.length.words.high) != 0)
     print_warning("the sample is too long, only converting the first 64kb of it.");
 
   return length;
 }
 
-void generate_blank_stm_instrument(void) {
-  memset(stm_sample_header, 0, 12);
+void generate_blank_stm_instrument(stm_instrument_header_t* stm_sample_header) {
+  memset(stm_sample_header->filename, 0, 12);
 
-  // instrument disk
-  stm_sample_header[13] = 0;
+  stm_sample_header->disk = 0;
 
-  // lengths
-  stm_sample_header[17] = 0, stm_sample_header[16] = 0;
+  stm_sample_header->length = 0;
+  stm_sample_header->loop_start = 0;
+  stm_sample_header->loop_end = 0xFFFF;
 
-  // loop points
-  stm_sample_header[19] = 0, stm_sample_header[18] = 0;
-  stm_sample_header[21] = 0xFF, stm_sample_header[20] = 0xFF;
+  stm_sample_header->default_volume = 0;
 
-  // volume
-  stm_sample_header[22] = 0;
-
-  // c2spd
-  stm_sample_header[25] = 0x21, stm_sample_header[24] = 0;
+  stm_sample_header->c_speed = 8448;
 }

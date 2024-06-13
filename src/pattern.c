@@ -14,6 +14,8 @@
 #include "fmt/s3m.h"
 #include "fmt/stm.h"
 
+static struct S3MEvent s3m_unpacked_pattern[64][32] = {{{0xFF, 0x00, 0xFF, 0x00, 0x00}}};
+
 static u8 notetable[12][2] = {"C-", "C#", "D-", "D#", "E-", "F-", "F#", "G-", "G#", "A-", "A#", "B-"};
 
 void print_warning_pattern(Pattern_Context* context, const char* format, ...) {
@@ -313,8 +315,9 @@ u8 handle_effect_memory_separatenibs(Pattern_Context* context) {
 }
 
 void handle_s3m_effect(Pattern_Context* context) {
-  const usize row = context->row, channel = context->channel;
-  const u8 songflags = s3m_song_header[38], freechn = check_for_free_channel(row);
+  const usize row = context->row;
+  const bool st2vib_flag = GET_BIT(s3m_song_header.flags, S3M_ST2VIB);
+  u8 freechn = check_for_free_channel(row);
   u8 effect = context->effect, parameter = context->parameter;
   u8 hinib = parameter >> 4, lownib = parameter & 0x0F, adjusted_vibrato_depth = 0;
 
@@ -391,7 +394,7 @@ void handle_s3m_effect(Pattern_Context* context) {
       adjusted_vibrato_depth = lownib >> 1;
 
       if (adjusted_vibrato_depth) {
-        if (!(songflags & S3M_ST2VIB)) {
+        if (!st2vib_flag) {
           print_diagnostic("adjusting vibrato depth from %u to %u.", lownib, adjusted_vibrato_depth);
           lownib = adjusted_vibrato_depth;
           print_diagnostic("adjustment successful!");

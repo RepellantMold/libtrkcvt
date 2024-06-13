@@ -14,6 +14,8 @@ typedef unsigned long int u32;
 typedef signed long int i32;
 typedef size_t usize;
 
+#define GET_BIT(byte, bit) ((byte) & (1 << (bit)))
+
 /* do {} forever / forever {} */
 #define forever while (1)
 

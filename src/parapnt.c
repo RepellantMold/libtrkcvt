@@ -19,12 +19,14 @@ u16 calculate_stm_sample_parapointer(void) {
 }
 
 stx_pcm_parapointers calculate_stx_sample_parapointer(void) {
-  const u32 pos = (u32)ftell(main_context.outfile) >> 4;
+  const long pos = ftell(main_context.outfile);
   stx_pcm_parapointers parapointer;
 
-  parapointer.upper = (u8)(pos >> 16);
-  parapointer.lower1 = (u8)(pos >> 8);
-  parapointer.lower2 = (u8)pos;
+  parapointer.memseg.bytes.high = (u8)(pos >> 16);
+  parapointer.memseg.bytes.low1 = (u8)(pos >> 8);
+  parapointer.memseg.bytes.low2 = (u8)pos;
+
+  parapointer.memseg.full >>= 4;
   return parapointer;
 }
 

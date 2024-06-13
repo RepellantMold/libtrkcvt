@@ -6,11 +6,11 @@
 #include "main.h"
 
 void print_diagnostic(const char* format, ...) {
-  if (!main_context.verbose_mode)
-    return;
-
   va_list ap;
   char buffer[192];
+
+  if (!main_context.verbose_mode)
+    return;
 
   va_start(ap, format);
   vsnprintf(buffer, sizeof(buffer), format, ap);
