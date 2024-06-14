@@ -169,10 +169,10 @@ void write_stx_song_header(FILE* STXfile) {
   if (!STXfile || feof(STXfile) || ferror(STXfile))
     return;
 
-  memcpy(stm_song_header.tracker, "!Scream!", 8);
+  memcpy(stx_song_header.tracker, "!Scream!", 8);
   stx_song_header.misc.dos_eof = 0x1A;
   stx_song_header.reserved2 = 1;
-  memcpy(stm_song_header.scrm, "SCRM", 4);
+  memcpy(stx_song_header.scrm, "SCRM", 4);
 
   fwrite(stx_song_header.title, 20, 1, STXfile);
   fwrite(stx_song_header.tracker, 8, 1, STXfile);
