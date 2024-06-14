@@ -147,14 +147,7 @@ void grab_s3m_song_header(FILE* S3Mfile) {
 void write_stm_song_header(FILE* STMfile) {
   if (!STMfile || feof(STMfile) || ferror(STMfile))
     return;
-  stm_song_header.tracker[0] = '!';
-  stm_song_header.tracker[1] = 'S';
-  stm_song_header.tracker[2] = 'c';
-  stm_song_header.tracker[3] = 'r';
-  stm_song_header.tracker[4] = 'v';
-  stm_song_header.tracker[5] = 'r';
-  stm_song_header.tracker[6] = 't';
-  stm_song_header.tracker[7] = '!';
+  memcpy(stm_song_header.tracker, "!Scrvrt!", 8);
   stm_song_header.dos_eof = 0x1A;
   stm_song_header.type = 0x02;
   stm_song_header.version.bytes.major = 0x02;
@@ -176,20 +169,10 @@ void write_stx_song_header(FILE* STXfile) {
   if (!STXfile || feof(STXfile) || ferror(STXfile))
     return;
 
-  stx_song_header.tracker[0] = '!';
-  stx_song_header.tracker[1] = 'S';
-  stx_song_header.tracker[2] = 'c';
-  stx_song_header.tracker[3] = 'r';
-  stx_song_header.tracker[4] = 'e';
-  stx_song_header.tracker[5] = 'a';
-  stx_song_header.tracker[6] = 'm';
-  stx_song_header.tracker[7] = '!';
+  memcpy(stm_song_header.tracker, "!Scream!", 8);
   stx_song_header.misc.dos_eof = 0x1A;
   stx_song_header.reserved2 = 1;
-  stx_song_header.scrm[0] = 'S';
-  stx_song_header.scrm[1] = 'C';
-  stx_song_header.scrm[2] = 'R';
-  stx_song_header.scrm[3] = 'M';
+  memcpy(stm_song_header.scrm, "SCRM", 4);
 
   fwrite(stx_song_header.title, 20, 1, STXfile);
   fwrite(stx_song_header.tracker, 8, 1, STXfile);
