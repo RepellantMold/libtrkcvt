@@ -340,13 +340,13 @@ void handle_s3m_effect(Pattern_Context* context) {
       parameter = handle_effect_memory_separatenibs(context);
       hinib = parameter >> 4, lownib = parameter & 0x0F;
 
-      if (hinib == 0xF) {
+      if (hinib == 0xF && lownib != 0) {
         hinib = 0;
         if (lownib >> 1)
           lownib >>= 1;
         else
           print_warning_pattern(context, "Failed to adjust fine volume slide.");
-      } else if (lownib == 0xF) {
+      } else if (lownib == 0xF && hinib != 0) {
         lownib = 0;
         if (hinib >> 1)
           hinib >>= 1;
