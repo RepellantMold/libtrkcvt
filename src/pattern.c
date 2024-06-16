@@ -6,10 +6,10 @@
 #include "envcheck.h"
 #include "ext.h"
 
+#include "file.h"
 #include "log.h"
 #include "main.h"
 #include "pattern.h"
-
 
 #include "fmt/s3m.h"
 #include "fmt/stm.h"
@@ -212,8 +212,8 @@ u8 check_for_free_channel(usize row) {
 u8 search_for_last_nonzero_param(usize startingrow, usize c, usize effect) {
   usize i = startingrow;
 
-  print_diagnostic("searching for last nonzero param for %c starting at row %02u and channel %02u", effect + EFFBASE,
-                   i, c);
+  print_diagnostic("searching for last nonzero param for %c starting at row %02u and channel %02u", effect + EFFBASE, i,
+                   c);
 
   while (i--) {
     //print_diagnostic("checking row %02u", i);

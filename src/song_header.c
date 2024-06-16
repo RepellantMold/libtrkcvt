@@ -158,43 +158,6 @@ void write_stx_song_header(FILE* STXfile) {
   fwrite(stx_song_header.scrm, 4, 1, STXfile);
 }
 
-void write_stm_instrument_header(FILE* STMfile, stm_instrument_header_t* stm_instrument_header) {
-  fwrite(stm_instrument_header->filename, 12, 1, STMfile);
-  fputc(stm_instrument_header->zero, STMfile);
-  fputc(stm_instrument_header->disk, STMfile);
-  fputw(stm_instrument_header->parapointer, STMfile);
-  fputw(stm_instrument_header->length, STMfile);
-  fputw(stm_instrument_header->loop_start, STMfile);
-  fputw(stm_instrument_header->loop_end, STMfile);
-  fputc(stm_instrument_header->default_volume, STMfile);
-  fputc(stm_instrument_header->reserved1, STMfile);
-  fputw(stm_instrument_header->c_speed, STMfile);
-  fwrite(stm_instrument_header->reserved2, 6, 1, STMfile);
-}
-
-void write_stx_instrument_header(FILE* STXfile) {
-  fputc(s3m_inst_header.type, STXfile);
-  fwrite(s3m_inst_header.filename, 12, 1, STXfile);
-  fputc(s3m_inst_header.memseg.bytes.high, STXfile);
-  fputc(s3m_inst_header.memseg.bytes.low1, STXfile);
-  fputc(s3m_inst_header.memseg.bytes.low2, STXfile);
-  fputw(s3m_inst_header.length.words.low, STXfile);
-  fputw(s3m_inst_header.length.words.high, STXfile);
-  fputw(s3m_inst_header.loop_start.words.low, STXfile);
-  fputw(s3m_inst_header.loop_start.words.high, STXfile);
-  fputw(s3m_inst_header.loop_end.words.low, STXfile);
-  fputw(s3m_inst_header.loop_end.words.high, STXfile);
-  fputc(s3m_inst_header.default_volume, STXfile);
-  fputc(s3m_inst_header.reserved1, STXfile);
-  fputc(s3m_inst_header.packing, STXfile);
-  fputc(s3m_inst_header.flags, STXfile);
-  fputw(s3m_inst_header.c_speed.words.low, STXfile);
-  fputw(s3m_inst_header.c_speed.words.high, STXfile);
-  fwrite(s3m_inst_header.reserved2, 12, 1, STXfile);
-  fwrite(s3m_inst_header.name, 28, 1, STXfile);
-  fwrite(s3m_inst_header.scrs, 4, 1, STXfile);
-}
-
 // s3m_song_header is expected to be filled beforehand
 void convert_song_header_s3mtostm(void) {
   const u8 song_flags = s3m_song_header.flags, initial_speed = s3m_song_header.initial_speed,
