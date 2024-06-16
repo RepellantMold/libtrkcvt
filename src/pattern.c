@@ -165,7 +165,7 @@ void parse_s3m_pattern(FILE* file, usize position) {
   flush_s3m_pattern_array();
 
   while (row < MAXROWS) {
-    byte = (u8)fgetc(file);
+    byte = fgetb(file);
 
     if (!byte) {
       ++row;
@@ -175,17 +175,17 @@ void parse_s3m_pattern(FILE* file, usize position) {
     channel = (byte & 31);
 
     if (byte & 0x20)
-      note = (u8)fgetc(file), ins = (u8)fgetc(file);
+      note = fgetb(file), ins = fgetb(file);
     else
       note = 0xFF, ins = 0x00;
 
     if (byte & 0x40)
-      volume = (u8)fgetc(file);
+      volume = fgetb(file);
     else
       volume = 0xFF;
 
     if (byte & 0x80)
-      effect = (u8)fgetc(file), parameter = (u8)fgetc(file);
+      effect = fgetb(file), parameter = fgetb(file);
     else
       effect = 0x00, parameter = 0x00;
 
