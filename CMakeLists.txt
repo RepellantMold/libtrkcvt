@@ -12,7 +12,8 @@ add_executable( screamverter
                 src/log.c
                 src/file.c
                 src/crc.c
-                src/header.c
+                src/song_header.c
+                src/sample_header.c
                 src/parapnt.c
                 src/pattern.c
                 src/sample.c

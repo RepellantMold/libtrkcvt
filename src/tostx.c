@@ -8,10 +8,12 @@ u16 stx_pat_pointers[STX_MAXPAT] = {0};
 stx_pcm_parapointers stx_pcm_pointers[STX_MAXSMP] = {0};
 static u8 sample_data[USHRT_MAX] = {0};
 
-static void place_pattern_and_ins_parapointers_s3mtostx(FOC_Context* context, stx_parapointers* pointers, usize pattern_count, usize sample_count);
+static void place_pattern_and_ins_parapointers_s3mtostx(FOC_Context* context, stx_parapointers* pointers,
+                                                        usize pattern_count, usize sample_count);
 static void handle_sample_headers_s3mtostx(FOC_Context* context, usize sample_count);
 static void handle_patterns_s3mtostx(FOC_Context* context, usize pattern_count);
-static void handle_pattern_and_ins_parapointers_s3mtostx(FOC_Context* context, stx_parapointers* pointers, usize pattern_count, usize sample_count);
+static void handle_pattern_and_ins_parapointers_s3mtostx(FOC_Context* context, stx_parapointers* pointers,
+                                                         usize pattern_count, usize sample_count);
 static void handle_pcm_parapointer_s3mtostx(FOC_Context* context, usize i);
 static int handle_pcm_s3mtostx(FOC_Context* context, usize sample_count);
 
@@ -34,13 +36,11 @@ int convert_s3m_to_stx(FOC_Context* context) {
 
   original_order_count = s3m_song_header.total_orders;
   sample_count = s3m_song_header.total_instruments;
-  if (sample_count > STM_MAXSMP) {
+  if (sample_count > STM_MAXSMP)
     print_warning("Sample count exceeds 31 (%u > 31), only using 31.", sample_count);
-  }
   pattern_count = s3m_song_header.total_patterns;
-  if (pattern_count > STM_MAXPAT) {
+  if (pattern_count > STM_MAXPAT)
     print_warning("Pattern count exceeds 63 (%u > 63), only converting 63.", pattern_count);
-  }
 
   if (verbose)
     show_s3m_song_header();
@@ -73,8 +73,8 @@ int convert_s3m_to_stx(FOC_Context* context) {
   return FOC_SUCCESS;
 }
 
-static void handle_pattern_and_ins_parapointers_s3mtostx(FOC_Context* context, stx_parapointers* pointers, usize pattern_count,
-                                                  usize sample_count) {
+static void handle_pattern_and_ins_parapointers_s3mtostx(FOC_Context* context, stx_parapointers* pointers,
+                                                         usize pattern_count, usize sample_count) {
   FILE* STXfile = context->outfile;
 
   if (!pointers)
@@ -86,8 +86,8 @@ static void handle_pattern_and_ins_parapointers_s3mtostx(FOC_Context* context, s
   (void)!fwrite(stx_inst_pointers, sizeof(u16), sample_count, STXfile);
 }
 
-static void place_pattern_and_ins_parapointers_s3mtostx(FOC_Context* context, stx_parapointers* pointers, usize pattern_count,
-                                                 usize sample_count) {
+static void place_pattern_and_ins_parapointers_s3mtostx(FOC_Context* context, stx_parapointers* pointers,
+                                                        usize pattern_count, usize sample_count) {
   FILE* STXfile = context->outfile;
   usize saved_pos = 0;
   u8 channel_settings[STX_MAXCHN] = {0};
@@ -119,14 +119,14 @@ static void handle_sample_headers_s3mtostx(FOC_Context* context, usize sample_co
   for (; i < sample_count; i++) {
     if (verbose)
       printf("Sample %zu:\n", i);
-    grab_s3m_isntrument_header_data(S3Mfile, s3m_inst_pointers[i]);
+    grab_s3m_instrument_header_data(S3Mfile, s3m_inst_pointers[i]);
     s3m_pcm_pointers[i] = grab_s3m_pcm_pointer();
     s3m_pcm_lens[i] = grab_s3m_pcm_len();
 
     if (verbose)
       show_s3m_inst_header();
 
-    //convert_s3m_intstrument_header_s3mtostx();
+    //convert_s3m_instrument_header_s3mtostx();
 
     stx_inst_pointers[i] = (u16)convert_to_parapointer(ftell(STXfile));
     write_stx_instrument_header(STXfile);
@@ -188,8 +188,7 @@ static int handle_pcm_s3mtostx(FOC_Context* context, usize sample_count) {
 
 static void handle_pcm_parapointer_s3mtostx(FOC_Context* context, usize i) {
   FILE* outfile = context->outfile;
-  const usize saved_pos = (usize)ftell(outfile),
-              header_pos = 64 + (pattern_count * 2) + ((80 * (i + 1)) - 67);
+  const usize saved_pos = (usize)ftell(outfile), header_pos = 64 + (pattern_count * 2) + ((80 * (i + 1)) - 67);
 
   stx_pcm_pointers[i] = calculate_stx_sample_parapointer();
 

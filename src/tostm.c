@@ -11,7 +11,8 @@ u16 stm_pcm_pointers[STM_MAXSMP] = {0};
 
 static int handle_pcm_s3mtostm(FOC_Context* context, usize sample_count);
 static void handle_pcm_parapointer_s3mtostm(FOC_Context* context, usize i);
-static void handle_sample_headers_s3mtostm(FOC_Context* context, usize sample_count, stm_instrument_header_t* stm_instrument_header);
+static void handle_sample_headers_s3mtostm(FOC_Context* context, usize sample_count,
+                                           stm_instrument_header_t* stm_instrument_header);
 static void handle_patterns_s3mtostm(FOC_Context* context, usize pattern_count);
 
 int convert_s3m_to_stm(FOC_Context* context) {
@@ -52,7 +53,8 @@ int convert_s3m_to_stm(FOC_Context* context) {
   return FOC_SUCCESS;
 }
 
-static void handle_sample_headers_s3mtostm(FOC_Context* context, usize sample_count, stm_instrument_header_t* stm_instrument_header) {
+static void handle_sample_headers_s3mtostm(FOC_Context* context, usize sample_count,
+                                           stm_instrument_header_t* stm_instrument_header) {
   FILE *S3Mfile = context->infile, *STMfile = context->outfile;
   const bool verbose = context->verbose_mode;
   usize i = 0;
@@ -66,14 +68,14 @@ static void handle_sample_headers_s3mtostm(FOC_Context* context, usize sample_co
     if (verbose)
       printf("Sample %zu:\n", i);
 
-    grab_s3m_isntrument_header_data(S3Mfile, s3m_inst_pointers[i]);
+    grab_s3m_instrument_header_data(S3Mfile, s3m_inst_pointers[i]);
     s3m_pcm_pointers[i] = grab_s3m_pcm_pointer();
     s3m_pcm_lens[i] = grab_s3m_pcm_len();
 
     if (verbose)
       show_s3m_inst_header();
 
-    convert_s3m_intstrument_header_s3mtostm(&stm_instrument_header[i]);
+    convert_s3m_instrument_header_s3mtostm(&stm_instrument_header[i]);
 
   skiptowritingsampleheader:
     write_stm_instrument_header(STMfile, &stm_instrument_header[i]);
@@ -138,8 +140,7 @@ static int handle_pcm_s3mtostm(FOC_Context* context, usize sample_count) {
 }
 
 static void handle_pcm_parapointer_s3mtostm(FOC_Context* context, usize i) {
-  const usize saved_pos = (usize)ftell(context->outfile),
-              header_pos = 48 + ((32 * (i + 1)) - 18);
+  const usize saved_pos = (usize)ftell(context->outfile), header_pos = 48 + ((32 * (i + 1)) - 18);
 
   stm_pcm_pointers[i] = calculate_stm_sample_parapointer();
 

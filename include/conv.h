@@ -5,13 +5,15 @@
 #include "fmt/stx.h"
 
 #include "ext.h"
-#include "log.h"
 #include "file.h"
+#include "log.h"
 #include "main.h"
-#include "header.h"
 #include "parapnt.h"
 #include "pattern.h"
 #include "sample.h"
+#include "sample_header.h"
+#include "song_header.h"
+
 
 void convert_song_header_s3mtostm(void);
 void convert_song_header_s3mtostx(void);

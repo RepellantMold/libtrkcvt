@@ -11,4 +11,6 @@ stx_pcm_parapointers calculate_stx_sample_parapointer(void);
 
 usize convert_to_parapointer(usize pointer);
 usize convert_from_parapointer(usize parapointer);
+
+void grab_s3m_parapointers(FILE* file);
 #endif
