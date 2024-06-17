@@ -10,6 +10,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <time.h>
 
 #include "envcheck.h"
 #include "ext.h"
@@ -103,6 +104,8 @@ int main(int argc, char* argv[]) {
   main_context.infile = infile;
   main_context.outfile = outfile;
   main_context.conversion_type = conversion_type;
+
+  srand((u32)time(0));
 
   switch (conversion_type) {
     case FOC_S3MTOSTM: return_value |= convert_s3m_to_stm(&main_context); break;

@@ -22,7 +22,7 @@
 
 void show_s3m_song_header(void) {
   const u8 global_volume = s3m_song_header.global_volume, initial_speed = s3m_song_header.initial_speed,
-           initial_tempo = s3m_song_header.initial_tempo, song_flags = s3m_song_header.flags;
+           initial_tempo = s3m_song_header.initial_tempo, song_flags = (u8)s3m_song_header.flags;
 
   printf("Song title: %s\n"
          "Global volume: %u\n"
@@ -102,8 +102,8 @@ void grab_s3m_song_header(FILE* S3Mfile) {
   fread(s3m_song_header.reserved2, 8, 1, S3Mfile);
   s3m_song_header.special = fgetw(S3Mfile);
   s3m_cwtv = s3m_song_header.created_with_tracker_version;
-  original_order_count = s3m_song_header.total_orders;
-  sample_count = s3m_song_header.total_instruments;
+  original_order_count = (u8)s3m_song_header.total_orders;
+  sample_count = (u8)s3m_song_header.total_instruments;
   if (verbose)
     show_s3m_song_header();
 
@@ -159,7 +159,7 @@ void write_stx_song_header(FILE* STXfile) {
 }
 
 void convert_song_header_s3mtostm(void) {
-  const u8 song_flags = s3m_song_header.flags, initial_speed = s3m_song_header.initial_speed,
+  const u8 song_flags = (u8)s3m_song_header.flags, initial_speed = s3m_song_header.initial_speed,
            master_volume = s3m_song_header.master_volume, global_volume = s3m_song_header.global_volume;
 
   strncpy((char*)stm_song_header.title, (char*)s3m_song_header.title, 19);
@@ -171,7 +171,7 @@ void convert_song_header_s3mtostm(void) {
     stm_song_header.initial_tempo = initial_speed;
   } else {
     /* TODO: deal with speed factor */
-    stm_song_header.initial_tempo = initial_speed << 4;
+    stm_song_header.initial_tempo = (u8)(initial_speed << 4);
   }
 
   if (master_volume & 128)
@@ -183,7 +183,7 @@ void convert_song_header_s3mtostm(void) {
 }
 
 void convert_song_header_s3mtostx(void) {
-  const u8 song_flags = s3m_song_header.flags, initial_speed = s3m_song_header.initial_speed,
+  const u8 song_flags = (u8)s3m_song_header.flags, initial_speed = s3m_song_header.initial_speed,
            master_volume = s3m_song_header.master_volume, global_volume = s3m_song_header.global_volume;
 
   strncpy((char*)stx_song_header.title, (char*)s3m_song_header.title, 19);
@@ -194,7 +194,7 @@ void convert_song_header_s3mtostx(void) {
     stx_song_header.initial_tempo = initial_speed;
   } else {
     /* TODO: deal with speed factor */
-    stx_song_header.initial_tempo = initial_speed << 4;
+    stx_song_header.initial_tempo = (u8)(initial_speed << 4);
   }
 
   if (master_volume & 128)
@@ -221,7 +221,7 @@ void convert_song_orders_s3mtostm(usize length) {
 }
 
 void convert_song_orders_s3mtostx(usize length, u8* order_list) {
-  usize i = 0;
+  register usize i = 0;
 
   if (!order_list)
     return;

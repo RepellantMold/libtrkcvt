@@ -29,7 +29,7 @@ enum Effects {
   EFF_TONE_PORTA = EFF('G'),
   EFF_VIBRATO = EFF('H'),
   EFF_TREMOR = EFF('I'),
-  EFF_ARPEGGIO = EFF('J'),
+  EFF_ARPEGGIO = EFF('J')
 };
 
 void parse_s3m_pattern(FILE* file, usize position);

@@ -256,7 +256,7 @@ u8 search_for_last_nonzero_param2(usize startingrow, usize channel, usize effect
   if (!lownib || !hinib)
     goto nomatches;
 
-  param = (hinib << 4) | lownib;
+  param = (u8)((hinib << 4) | lownib);
   print_diagnostic("param (low) is %1X and param (high) is %1X, forming %02X", lownib, hinib, param);
   return param;
 
@@ -323,7 +323,7 @@ void handle_s3m_effect(Pattern_Context* context) {
 
     case EFF_SET_TEMPO:
       /* TODO: implement speed factor */
-      parameter = lownib << 4;
+      parameter = (u8)(lownib << 4);
       break;
 
     case EFF_SET_POSITION:
@@ -352,7 +352,7 @@ void handle_s3m_effect(Pattern_Context* context) {
           print_warning_pattern(context, "Failed to adjust fine volume slide.");
       }
 
-      parameter = (hinib << 4) | lownib;
+      parameter = (u8)((hinib << 4) | lownib);
       break;
 
     case EFF_PORTA_DOWN:
@@ -380,7 +380,7 @@ void handle_s3m_effect(Pattern_Context* context) {
           print_warning_pattern(context, "Failed to adjust extra-fine portamento.");
       }
 
-      parameter = (hinib << 4) | lownib;
+      parameter = (u8)((hinib << 4) | lownib);
       break;
 
     case EFF_TONE_PORTA: parameter = handle_effect_memory(context); break;
@@ -435,7 +435,7 @@ void convert_s3m_pattern_to_stm(void) {
       pattern.parameter = s3m_unpacked_pattern[row][channel].prm;
 
       if (pattern.note < 0xFE)
-        proper_octave = (pattern.note >> 4) - 2, pattern.note = (proper_octave << 4) | (pattern.note & 0x0F);
+        proper_octave = (u8)((pattern.note >> 4) - 2), pattern.note = (u8)((proper_octave << 4) | (pattern.note & 0x0F));
 
       if (pattern.volume > 64)
         pattern.volume = 65;
@@ -443,8 +443,8 @@ void convert_s3m_pattern_to_stm(void) {
       handle_s3m_effect(&pattern);
 
       stm_pattern[row][channel][0] = pattern.note,
-      stm_pattern[row][channel][1] = ((pattern.instrument & 31) << 3) | (pattern.volume & 7),
-      stm_pattern[row][channel][2] = ((pattern.volume & 0x78) << 1) | (pattern.effect & 15),
+      stm_pattern[row][channel][1] = (u8)((pattern.instrument & 31) << 3) | (pattern.volume & 7),
+      stm_pattern[row][channel][2] = (u8)((pattern.volume & 0x78) << 1) | (pattern.effect & 15),
       stm_pattern[row][channel][3] = pattern.parameter;
     }
   } while (++row < MAXROWS);

@@ -32,7 +32,7 @@ enum FOC_ReturnCode {
   FOC_ALLOC_FAIL = 0x10,
   FOC_MALFORMED_BUFFER = 0x20,
   FOC_NO_FILENAMES = 0x40,
-  FOC_SAMPLE_FAIL = 0x80,
+  FOC_SAMPLE_FAIL = 0x80
 };
 
 extern FOC_Context main_context;

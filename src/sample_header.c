@@ -21,14 +21,14 @@
 
 void show_s3m_inst_header(void) {
   const u8 default_volume = s3m_inst_header.default_volume, sample_flags = s3m_inst_header.flags;
-  const u16 c_frequency = s3m_inst_header.c_speed.full, length = s3m_inst_header.length.full,
+  const u32 c_frequency = s3m_inst_header.c_speed.full, length = s3m_inst_header.length.full,
             loop_start = s3m_inst_header.loop_start.full, loop_end = s3m_inst_header.loop_end.full;
 
   printf("Sample name/filename: %.28s/%.12s\n"
          "Default volume: %02u\n"
          "Sample flags: %01X\n"
-         "C frequency: %06u\n"
-         "Length/Loop start/end: %06u/%06u/%06u\n",
+         "C frequency: %06lu\n"
+         "Length/Loop start/end: %06lu/%06lu/%06lu\n",
          s3m_inst_header.name, s3m_inst_header.filename, default_volume, sample_flags, c_frequency, length, loop_start,
          loop_end);
 }
@@ -62,14 +62,11 @@ void grab_s3m_instrument_header_data(FILE* file, usize position) {
 }
 
 void sanitize_sample_name(char* name) {
-  usize i = 0, j = 0, random;
+  usize i = 0, j = 0;
   const u32 crc = crc_sum((u8*)&s3m_inst_header.name, sizeof(s3m_inst_header.name));
 
-  srand(crc_sum((u8*)&s3m_inst_header, sizeof(s3m_inst_header)));
-  random = (usize)rand();
-
   if (!name[0]) {
-    sprintf((char*)&name[0], "X%06zuX.%03zu", (usize)random % 999999, (usize)random % 999);
+    sprintf(name, "X%06uX.%03u", (rand() % 999999), (u16)(rand() % 999));
     return;
   }
 

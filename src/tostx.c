@@ -33,11 +33,11 @@ int convert_s3m_to_stx(FOC_Context* context) {
 
   grab_s3m_song_header(S3Mfile);
 
-  original_order_count = s3m_song_header.total_orders;
-  sample_count = s3m_song_header.total_instruments;
+  original_order_count = (u8)s3m_song_header.total_orders;
+  sample_count = (u8)s3m_song_header.total_instruments;
   if (sample_count > STM_MAXSMP)
     print_warning("Sample count exceeds 31 (%u > 31), only using 31.", sample_count);
-  pattern_count = s3m_song_header.total_patterns;
+  pattern_count = (u8)s3m_song_header.total_patterns;
   if (pattern_count > STM_MAXPAT)
     print_warning("Pattern count exceeds 63 (%u > 63), only converting 63.", pattern_count);
 
