@@ -82,11 +82,29 @@ void sanitize_sample_name(char* name) {
   for (i = 0; i < 8; i++) {
     u8 c = name[i];
 
-    if (c < 0x20 || c > 0x7E
-        || (c == 0x20 || c == 0x22 || c == 0x2A || c == 0x2B || c == 0x2C || c == 0x2F || c == 0x3A || c == 0x3B
-            || c == 0x3C || c == 0x3D || c == 0x3E || c == 0x3F || c == 0x5B || c == 0x5C || c == 0x5D || c == 0x5E
-            || c == 0x7C)) {
-      c = 0x5F;
+    switch (c) {
+      case 0x20:
+      case 0x22:
+      case 0x2A:
+      case 0x2B:
+      case 0x2C:
+      case 0x2F:
+      case 0x3A:
+      case 0x3B:
+      case 0x3C:
+      case 0x3D:
+      case 0x3E:
+      case 0x3F:
+      case 0x5B:
+      case 0x5C:
+      case 0x5D:
+      case 0x5E:
+      case 0x7C: c = 0x5F; break;
+
+      default:
+        if (c < 0x20 || c > 0x7E)
+          c = 0;
+        break;
     }
 
     name[i] = c;
