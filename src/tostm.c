@@ -56,7 +56,7 @@ static void handle_sample_headers_s3mtostm(FOC_Context* context, usize sample_co
                                            stm_instrument_header_t* stm_instrument_header) {
   FILE *S3Mfile = context->infile, *STMfile = context->outfile;
   const bool verbose = context->verbose_mode;
-  usize i = 0;
+  register usize i = 0;
 
   for (; i < STM_MAXSMP; i++) {
     if (i >= sample_count) {
@@ -83,7 +83,7 @@ static void handle_sample_headers_s3mtostm(FOC_Context* context, usize sample_co
 
 static void handle_patterns_s3mtostm(FOC_Context* context, usize pattern_count) {
   FILE *S3Mfile = context->infile, *STMfile = context->outfile;
-  usize i = 0;
+  register usize i = 0;
 
   for (i = 0; i < STM_MAXPAT; i++) {
     if (i >= pattern_count)
@@ -98,9 +98,8 @@ static void handle_patterns_s3mtostm(FOC_Context* context, usize pattern_count) 
 
 static int handle_pcm_s3mtostm(FOC_Context* context, usize sample_count) {
   FILE *S3Mfile = context->infile, *STMfile = context->outfile;
-  usize i = 0;
+  register usize i = 0, sample_len = 0, padding_len = 0;
   Sample_Context sc;
-  usize sample_len = 0, padding_len = 0;
 
   for (; i < STM_MAXSMP; i++) {
     if (i >= sample_count)

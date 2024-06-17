@@ -44,7 +44,7 @@ usize convert_from_parapointer(usize parapointer) {
 }
 
 void grab_s3m_parapointers(FILE* file) {
-  usize i = 0;
+  register usize i = 0;
 
   if (!file || feof(file) || ferror(file))
     return;

@@ -32,7 +32,7 @@ void show_s3m_song_header(void) {
 }
 
 void grab_s3m_orders(FILE* file) {
-  usize i = 0, count = 0;
+  register usize i = 0, count = 0;
 
   if (!file || feof(file) || ferror(file))
     return;
@@ -54,7 +54,7 @@ void grab_s3m_orders(FILE* file) {
 }
 
 void check_s3m_channels(void) {
-  usize i = 0, channel = 0;
+  register usize i = 0, channel = 0;
 
   while (i++ < S3M_MAXCHN) {
     channel = s3m_song_header.channel_settings[(i - 1)];
@@ -208,7 +208,7 @@ void convert_song_header_s3mtostx(void) {
 }
 
 void convert_song_orders_s3mtostm(usize length) {
-  usize i = 0;
+  register usize i = 0;
 
   memset(stm_order_list, STM_ORDER_END, STM_ORDER_LIST_SIZE);
 

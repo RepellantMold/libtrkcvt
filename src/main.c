@@ -53,7 +53,7 @@ int convert_s3m_to_stm(FOC_Context* context);
 int convert_s3m_to_stx(FOC_Context* context);
 
 int main(int argc, char* argv[]) {
-  int i = 0, return_value = FOC_SUCCESS;
+  register int i = 0, return_value = FOC_SUCCESS;
   usize conversion_type = FOC_S3MTOSTM;
   FILE *outfile = NULL, *infile = NULL;
 

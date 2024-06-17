@@ -25,7 +25,7 @@ int dump_sample_data(FILE* file, usize position, Sample_Context* context) {
 }
 
 void pcm_swap_sign(Sample_Context* context) {
-  usize i = 0;
+  register usize i = 0;
 
   if (!context)
     return;

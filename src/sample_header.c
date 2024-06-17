@@ -62,7 +62,7 @@ void grab_s3m_instrument_header_data(FILE* file, usize position) {
 }
 
 void sanitize_sample_name(char* name) {
-  usize i = 0, j = 0;
+  register usize i = 0, j = 0;
   const u32 crc = crc_sum((u8*)&s3m_inst_header.name, sizeof(s3m_inst_header.name));
 
   if (!name[0]) {

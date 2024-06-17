@@ -113,7 +113,7 @@ static void place_pattern_and_ins_parapointers_s3mtostx(FOC_Context* context, st
 static void handle_sample_headers_s3mtostx(FOC_Context* context, usize sample_count) {
   FILE *S3Mfile = context->infile, *STXfile = context->outfile;
   const bool verbose = context->verbose_mode;
-  usize i = 0;
+  register usize i = 0;
 
   for (; i < sample_count; i++) {
     if (verbose)
@@ -134,7 +134,7 @@ static void handle_sample_headers_s3mtostx(FOC_Context* context, usize sample_co
 
 static void handle_patterns_s3mtostx(FOC_Context* context, usize pattern_count) {
   FILE *S3Mfile = context->infile, *STXfile = context->outfile;
-  usize i = 0;
+  register usize i = 0;
 
   for (i = 0; i < pattern_count; i++) {
     (void)!printf("Converting pattern %zu...\n", i);
@@ -147,9 +147,8 @@ static void handle_patterns_s3mtostx(FOC_Context* context, usize pattern_count) 
 
 static int handle_pcm_s3mtostx(FOC_Context* context, usize sample_count) {
   FILE *S3Mfile = context->infile, *STXfile = context->outfile;
-  usize i = 0;
+  register usize i = 0, sample_len = 0, padding_len = 0;
   Sample_Context sc;
-  usize sample_len = 0, padding_len = 0;
 
   for (; i < sample_count; i++) {
     sample_len = s3m_pcm_lens[i];

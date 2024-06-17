@@ -33,7 +33,7 @@ void print_warning_pattern(Pattern_Context* context, const char* format, ...) {
 }
 
 void print_s3m_row(usize row) {
-  usize channel = 0;
+  register usize channel = 0;
   u8 note, ins, volume, effect, parameter;
 
   do {
@@ -148,7 +148,7 @@ noeffectmemory:
 }
 
 void parse_s3m_pattern(FILE* file, usize position) {
-  u8 channel = 0, row = 0, byte = 0;
+  register u8 channel = 0, row = 0, byte = 0;
   u8 note = 0xFF, ins = 0x00, volume = 0xFF, effect = 0x00, parameter = 0x00;
 
   if (!file || !position)
@@ -197,7 +197,7 @@ void parse_s3m_pattern(FILE* file, usize position) {
 }
 
 u8 check_for_free_channel(usize row) {
-  usize free_channel = 0;
+  register usize free_channel = 0;
 
   do {
     if (!s3m_unpacked_pattern[row][free_channel].eff)
@@ -208,7 +208,7 @@ u8 check_for_free_channel(usize row) {
 }
 
 u8 search_for_last_nonzero_param(usize startingrow, usize c, usize effect) {
-  usize i = startingrow;
+  register usize i = startingrow;
 
   print_diagnostic("searching for last nonzero param for %c starting at row %02u and channel %02u", effect + EFFBASE, i,
                    c);
@@ -226,9 +226,9 @@ u8 search_for_last_nonzero_param(usize startingrow, usize c, usize effect) {
 }
 
 u8 search_for_last_nonzero_param2(usize startingrow, usize channel, usize effect) {
-  usize i = startingrow;
+  register usize i = startingrow;
   const u8 effect_display = (u8)effect + EFFBASE;
-  u8 lownib = 0, hinib = 0, param = 0;
+  register u8 lownib = 0, hinib = 0, param = 0;
 
   print_diagnostic("searching for last nonzero param for %c starting at row %02u and channel %02u", effect_display, i,
                    channel);
@@ -266,7 +266,7 @@ nomatches:
 }
 
 void flush_s3m_pattern_array(void) {
-  usize row = 0, channel = 0;
+  register usize row = 0, channel = 0;
   do {
     for (channel = 0; channel < S3M_MAXCHN; ++channel) {
       s3m_unpacked_pattern[row][channel].note = 0xFF, s3m_unpacked_pattern[row][channel].ins = 0x00,
@@ -278,8 +278,8 @@ void flush_s3m_pattern_array(void) {
 
 u8 handle_effect_memory(Pattern_Context* context) {
   const u8 row = context->row, channel = context->channel;
-  const u8 effect = context->effect, lastprm = search_for_last_nonzero_param(row, channel, effect);
-  u8 parameter = context->parameter;
+  const u8 effect = context->effect, lastprm = search_for_last_nonzero_param(row, channel, effect),
+           parameter = context->parameter;
 
   if (!main_context.handle_effect_memory)
     return parameter;
@@ -296,8 +296,8 @@ u8 handle_effect_memory(Pattern_Context* context) {
 
 u8 handle_effect_memory_separatenibs(Pattern_Context* context) {
   const usize row = context->row, channel = context->channel;
-  const u8 effect = context->effect, parameter = context->parameter, hinib = parameter >> 4, lownib = parameter & 0x0F;
-  const u8 lastprm = search_for_last_nonzero_param2(row, channel, effect);
+  const u8 effect = context->effect, parameter = context->parameter, hinib = parameter >> 4, lownib = parameter & 0x0F,
+           lastprm = search_for_last_nonzero_param2(row, channel, effect);
 
   if (!main_context.handle_effect_memory)
     return parameter;
@@ -315,9 +315,8 @@ u8 handle_effect_memory_separatenibs(Pattern_Context* context) {
 void handle_s3m_effect(Pattern_Context* context) {
   const usize row = context->row;
   const bool st2vib_flag = GET_BIT(s3m_song_header.flags, S3M_ST2VIB);
-  u8 freechn = check_for_free_channel(row);
-  u8 effect = context->effect, parameter = context->parameter;
-  u8 hinib = parameter >> 4, lownib = parameter & 0x0F, adjusted_vibrato_depth = 0;
+  register u8 freechn = check_for_free_channel(row), effect = context->effect, parameter = context->parameter,
+              hinib = parameter >> 4, lownib = parameter & 0x0F, adjusted_vibrato_depth = 0;
 
   switch (check_effect(context)) {
 
@@ -434,8 +433,10 @@ void convert_s3m_pattern_to_stm(void) {
       pattern.volume = s3m_unpacked_pattern[row][channel].vol, pattern.effect = s3m_unpacked_pattern[row][channel].eff,
       pattern.parameter = s3m_unpacked_pattern[row][channel].prm;
 
-      if (pattern.note < 0xFE)
-        proper_octave = (u8)((pattern.note >> 4) - 2), pattern.note = (u8)((proper_octave << 4) | (pattern.note & 0x0F));
+      if (pattern.note < 0xFE) {
+        proper_octave = (u8)((pattern.note >> 4) - 2),
+        pattern.note = (u8)((proper_octave << 4) | (pattern.note & 0x0F));
+      }
 
       if (pattern.volume > 64)
         pattern.volume = 65;
