@@ -61,14 +61,39 @@ void grab_s3m_instrument_header_data(FILE* file, usize position) {
   fread(s3m_inst_header.scrs, 4, 1, file);
 }
 
-void handle_sample_name_s3m2stm(stm_instrument_header_t* stm_sample_header) {
-  usize i = 0, random = 0;
-  const u32 crc = crc32((u8*)&s3m_inst_header, sizeof(s3m_inst_header));
+void sanitize_sample_name(char* name) {
+  usize i = 0, j = 0, random;
+  const u32 crc = crc_sum((u8*)&s3m_inst_header.name, sizeof(s3m_inst_header.name));
 
-  srand(crc);
-
+  srand(crc_sum((u8*)&s3m_inst_header, sizeof(s3m_inst_header)));
   random = (usize)rand();
 
+  if (!name[0]) {
+    sprintf((char*)&name[0], "X%06zuX.%03zu", (usize)random % 999999, (usize)random % 999);
+    return;
+  }
+
+  for (i = 0; i < strlen(s3m_inst_header.name); i++) {
+    if (name[i] == 0x20)
+      for (j = i; j < strlen(s3m_inst_header.name) - 1; j++) name[j] = name[j + 1];
+  }
+
+  // sanitization for 8.3 filenames
+  for (i = 0; i < 8; i++) {
+    u8 c = name[i];
+
+    if (c < 0x20 || c > 0x7E) {
+      // me exploiting the fact that Scream Tracker is coded in C, hehe!
+      c = 0x00;
+    }
+
+    name[i] = c;
+  }
+  name[8] = '.';
+  sprintf((char*)&name[9], "%03zu", (usize)crc % 999);
+}
+
+void handle_sample_name_s3m2stm(stm_instrument_header_t* stm_sample_header) {
   if (s3m_inst_header.filename[0] != 0) {
     memcpy((char*)stm_sample_header->filename, (char*)&s3m_inst_header.filename, 12);
   } else if (s3m_inst_header.name[0] != 0) {
@@ -77,27 +102,13 @@ void handle_sample_name_s3m2stm(stm_instrument_header_t* stm_sample_header) {
     if (!main_context.sanitize_sample_names)
       return;
 
-    // sanitization for 8.3 filenames
-    for (i = 0; i < 8; i++) {
-      u8 c = stm_sample_header->filename[i];
-      if (c == 0x20) {
-        // non-breaking space, it'll look strange in OpenMPT but oh well.
-        c = 0xFF;
-      } else if (c < 0x20 || c > 0x7E) {
-        // me exploiting the fact that Scream Tracker is coded in C, hehe!
-        c = 0x00;
-      }
-
-      stm_sample_header->filename[i] = c;
-    }
-    stm_sample_header->filename[8] = '.';
-    snprintf((char*)&stm_sample_header->filename[9], 4, "%03zu", (usize)crc % 999);
+    sanitize_sample_name((char*)stm_sample_header->filename);
   } else {
     if (!main_context.sanitize_sample_names) {
       memset(stm_sample_header->filename, 0, 12);
       return;
     };
-    snprintf((char*)&stm_sample_header->filename[0], 13, "X%06zuX.%03zu", (usize)random, (usize)crc % 999);
+    sanitize_sample_name((char*)stm_sample_header->filename);
   }
 }
 

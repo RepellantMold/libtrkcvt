@@ -14,9 +14,9 @@
 #include "fmt/s3m.h"
 #include "fmt/stm.h"
 
-static struct S3MEvent s3m_unpacked_pattern[64][32] = {{{0xFF, 0x00, 0xFF, 0x00, 0x00}}};
+static s3mevent_t s3m_unpacked_pattern[64][32] = {{{0xFF, 0x00, 0xFF, 0x00, 0x00}}};
 
-static u8 notetable[12][2] = {"C-", "C#", "D-", "D#", "E-", "F-", "F#", "G-", "G#", "A-", "A#", "B-"};
+static const u8 notetable[12][2] = {"C-", "C#", "D-", "D#", "E-", "F-", "F#", "G-", "G#", "A-", "A#", "B-"};
 
 void print_warning_pattern(Pattern_Context* context, const char* format, ...) {
   va_list ap;

@@ -174,8 +174,8 @@ extern u16 s3m_pat_pointers[S3M_MAXPAT];
 extern u32 s3m_pcm_pointers[S3M_MAXSMP];
 extern u16 s3m_pcm_lens[S3M_MAXSMP];
 
-struct S3MEvent {
+typedef struct {
   u8 note, ins, vol, eff, prm;
-};
+} s3mevent_t;
 
 #endif
