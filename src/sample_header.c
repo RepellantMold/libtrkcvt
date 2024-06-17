@@ -78,13 +78,15 @@ void sanitize_sample_name(char* name) {
       for (j = i; j < strlen(s3m_inst_header.name) - 1; j++) name[j] = name[j + 1];
   }
 
-  // sanitization for 8.3 filenames
+  /* be sure that the file names are valid 8.3 names */
   for (i = 0; i < 8; i++) {
     u8 c = name[i];
 
-    if (c < 0x20 || c > 0x7E) {
-      // me exploiting the fact that Scream Tracker is coded in C, hehe!
-      c = 0x00;
+    if (c < 0x20 || c > 0x7E
+        || (c == 0x20 || c == 0x22 || c == 0x2A || c == 0x2B || c == 0x2C || c == 0x2F || c == 0x3A || c == 0x3B
+            || c == 0x3C || c == 0x3D || c == 0x3E || c == 0x3F || c == 0x5B || c == 0x5C || c == 0x5D || c == 0x5E
+            || c == 0x7C)) {
+      c = 0x5F;
     }
 
     name[i] = c;
@@ -163,7 +165,6 @@ void convert_s3m_instrument_header_s3mtostm(stm_instrument_header_t* stm_sample_
 }
 
 u32 grab_s3m_pcm_pointer(void) {
-  //const u32 parapointer = (s3m_inst_header.memseg.bytes.high << 16 | s3m_inst_header.memseg.bytes.low2 << 8 | s3m_inst_header.memseg.bytes.low1) << 4;
   const u32 parapointer = s3m_inst_header.memseg.full << 4;
   print_diagnostic("PCM Parapointer: %lX", parapointer);
   return parapointer;

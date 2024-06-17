@@ -7,7 +7,7 @@ u8 fgetb(FILE* fp) {
   return (u8)fgetc(fp);
 }
 
-// a helper from https://github.com/viiri/st2play
+/* a helper from https://github.com/viiri/st2play */
 u16 fgetw(FILE* fp) {
   u8 data[2];
 
@@ -17,7 +17,7 @@ u16 fgetw(FILE* fp) {
   return (data[1] << 8) | data[0];
 }
 
-// another helper from https://github.com/viiri/st2play
+/* another helper from https://github.com/viiri/st2play */
 u32 fgetl(FILE *fp)
 {
 	u8 data[4];

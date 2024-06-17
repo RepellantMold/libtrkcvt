@@ -2,12 +2,11 @@
  * Screamverter
  * Made by RepellantMold/cs127 under ISC license
  *
- * Written in C99
+ * Written in ANSI C
  */
 
 #define _CRT_SECURE_NO_WARNINGS
 #include <stdarg.h>
-#include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -36,8 +35,6 @@ void print_help(void) {
   puts("  -stm             Convert the S3M to STM (default)");
   puts("  -stx             Convert the S3M to STX (unfinished)");
 }
-
-// S3M
 
 s3m_song_header_t s3m_song_header;
 s3m_instrument_header_t s3m_inst_header;

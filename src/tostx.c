@@ -1,6 +1,5 @@
 #include "conv.h"
 
-// Arrays
 stx_song_header_t stx_song_header;
 
 u16 stx_inst_pointers[STX_MAXSMP] = {0};
@@ -126,7 +125,7 @@ static void handle_sample_headers_s3mtostx(FOC_Context* context, usize sample_co
     if (verbose)
       show_s3m_inst_header();
 
-    //convert_s3m_instrument_header_s3mtostx();
+    /* convert_s3m_instrument_header_s3mtostx(); */
 
     stx_inst_pointers[i] = (u16)convert_to_parapointer(ftell(STXfile));
     write_stx_instrument_header(STXfile);

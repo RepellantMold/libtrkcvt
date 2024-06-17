@@ -41,7 +41,7 @@ void grab_s3m_orders(FILE* file) {
 
   (void)!fread(s3m_order_array, sizeof(u8), original_order_count, file);
 
-  // see section "2.6 Load Order Data" from "FireLight S3M Player Tutorial.txt"
+  /* see section "2.6 Load Order Data" from "FireLight S3M Player Tutorial.txt" */
   for (count = 0; count < original_order_count; ++count) {
     if (s3m_order_array[count] < S3M_ORDER_MARKER) {
       s3m_order_array[i] = s3m_order_array[count];
@@ -158,7 +158,6 @@ void write_stx_song_header(FILE* STXfile) {
   fwrite(stx_song_header.scrm, 4, 1, STXfile);
 }
 
-// s3m_song_header is expected to be filled beforehand
 void convert_song_header_s3mtostm(void) {
   const u8 song_flags = s3m_song_header.flags, initial_speed = s3m_song_header.initial_speed,
            master_volume = s3m_song_header.master_volume, global_volume = s3m_song_header.global_volume;
@@ -171,7 +170,7 @@ void convert_song_header_s3mtostm(void) {
   if (song_flags & S3M_ST2TEMPO) {
     stm_song_header.initial_tempo = initial_speed;
   } else {
-    // TODO: deal with speed factor
+    /* TODO: deal with speed factor */
     stm_song_header.initial_tempo = initial_speed << 4;
   }
 
@@ -194,7 +193,7 @@ void convert_song_header_s3mtostx(void) {
   if (song_flags & S3M_ST2TEMPO) {
     stx_song_header.initial_tempo = initial_speed;
   } else {
-    // TODO: deal with speed factor
+    /* TODO: deal with speed factor */
     stx_song_header.initial_tempo = initial_speed << 4;
   }
 
@@ -228,7 +227,7 @@ void convert_song_orders_s3mtostx(usize length, u8* order_list) {
     return;
 
   do {
-    // I have no idea why STX specifically has its order list like this...
+    /* I have no idea why STX specifically has its order list like this... */
     order_list[i * STX_ORDERMULTIPLIER] = s3m_order_array[i];
   } while (++i < length);
 }

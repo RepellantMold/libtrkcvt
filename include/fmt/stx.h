@@ -39,7 +39,7 @@ typedef struct {
 extern stx_song_header_t stx_song_header;
 
 typedef struct {
-  // little endian.
+  /* little endian. */
   union {
     struct {
       u8 high;

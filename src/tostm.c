@@ -2,7 +2,6 @@
 
 stm_song_header_t stm_song_header;
 
-// Arrays
 static u8 sample_data[USHRT_MAX] = {0};
 u8 stm_order_list[STM_ORDER_LIST_SIZE] = {STM_ORDER_END};
 u8 stm_pattern[64][4][4] = {{{0xFF, 0x01, 0x80, 0x00}}};

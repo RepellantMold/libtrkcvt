@@ -113,7 +113,7 @@ typedef struct {
       u16 low;
     } words;
 
-    u32 full; // technically wrong but there's no 24-bit type....
+    u32 full; /* technically wrong but there's no 24-bit type.... */
   } memseg;
 
   union {

@@ -17,7 +17,7 @@ typedef struct {
   u8 parameter;
 } Pattern_Context;
 
-// STM and STX use the same set of effects.
+/* STM and STX use the same set of effects. */
 enum Effects {
   EFF_NO_EFFECT = 0,
   EFF_SET_TEMPO = EFF('A'),

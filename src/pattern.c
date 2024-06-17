@@ -1,5 +1,4 @@
 #include <stdarg.h>
-#include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -148,7 +147,6 @@ noeffectmemory:
   return effect;
 }
 
-// prototype function (NOT TESTED)
 void parse_s3m_pattern(FILE* file, usize position) {
   u8 channel = 0, row = 0, byte = 0;
   u8 note = 0xFF, ins = 0x00, volume = 0xFF, effect = 0x00, parameter = 0x00;
@@ -216,7 +214,7 @@ u8 search_for_last_nonzero_param(usize startingrow, usize c, usize effect) {
                    c);
 
   while (i--) {
-    //print_diagnostic("checking row %02u", i);
+    /* print_diagnostic("checking row %02u", i); */
     if (!s3m_unpacked_pattern[i][c].prm || s3m_unpacked_pattern[i][c].eff != effect)
       continue;
     print_diagnostic("param is %02X", s3m_unpacked_pattern[i][c].prm);
@@ -237,7 +235,7 @@ u8 search_for_last_nonzero_param2(usize startingrow, usize channel, usize effect
 
   i = startingrow;
   while (i--) {
-    //print_diagnostic("checking row %02u for low nibble", i);
+    /* print_diagnostic("checking row %02u for low nibble", i); */
 
     if (!(s3m_unpacked_pattern[i][channel].prm & 0x0F) || s3m_unpacked_pattern[i][channel].eff != effect)
       continue;
@@ -247,7 +245,7 @@ u8 search_for_last_nonzero_param2(usize startingrow, usize channel, usize effect
 
   i = startingrow;
   while (i--) {
-    //print_diagnostic("checking row %02u for high nibble", i);
+    /* print_diagnostic("checking row %02u for high nibble", i); */
 
     if (!(s3m_unpacked_pattern[i][channel].prm >> 4) || s3m_unpacked_pattern[i][channel].eff != effect)
       continue;
@@ -324,7 +322,7 @@ void handle_s3m_effect(Pattern_Context* context) {
   switch (check_effect(context)) {
 
     case EFF_SET_TEMPO:
-      // TODO: implement speed factor
+      /* TODO: implement speed factor */
       parameter = lownib << 4;
       break;
 
@@ -406,7 +404,7 @@ void handle_s3m_effect(Pattern_Context* context) {
       break;
 
     case EFF_TREMOR:
-      // newer scream tracker 3 versions actually have memory for this effect..
+      /* newer scream tracker 3 versions actually have memory for this effect.. */
       if (s3m_cwtv >= 0x1300 && s3m_cwtv < 0x1320)
         break;
 

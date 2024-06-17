@@ -1,6 +1,5 @@
 #ifndef __MAIN_H
 #define __MAIN_H
-#include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -23,7 +22,7 @@ typedef struct {
 
 enum FOC_ConversionMode { FOC_S3MTOSTM = 0x00, FOC_S3MTOSTX = 0x01 };
 
-// RM: stealing cs127's NTCheck's return values!
+/* RM: stealing cs127's NTCheck's return values! */
 enum FOC_ReturnCode {
   FOC_SUCCESS = 0x00,
   FOC_OPEN_FAILURE = 0x01,
