@@ -167,7 +167,7 @@ static int handle_pcm_s3mtostx(FOC_Context* context, usize sample_count) {
     if (dump_sample_data(S3Mfile, s3m_pcm_pointers[i], &sc))
       return FOC_SAMPLE_FAIL;
 
-    convert_unsigned_to_signed(&sc);
+    pcm_swap_sign(&sc);
 
     if (!padding_len)
       goto dontaddpadding;

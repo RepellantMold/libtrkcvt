@@ -24,7 +24,7 @@ int dump_sample_data(FILE* file, usize position, Sample_Context* context) {
   return FOC_SUCCESS;
 }
 
-void convert_unsigned_to_signed(Sample_Context* context) {
+void pcm_swap_sign(Sample_Context* context) {
   usize i = 0;
 
   if (!context)
@@ -38,4 +38,4 @@ void convert_unsigned_to_signed(Sample_Context* context) {
   } while (i++ < context->length);
 }
 
-usize calculate_sample_padding(size_t sample_size) { return 16 - (sample_size % 16); }
+usize calculate_sample_padding(usize sample_size) { return 16 - (sample_size & 15); }

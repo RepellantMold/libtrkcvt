@@ -121,7 +121,7 @@ static int handle_pcm_s3mtostm(FOC_Context* context, usize sample_count) {
     if (dump_sample_data(S3Mfile, s3m_pcm_pointers[i], &sc))
       return FOC_SAMPLE_FAIL;
 
-    convert_unsigned_to_signed(&sc);
+    pcm_swap_sign(&sc);
 
     if (!padding_len)
       goto dontaddpadding;
@@ -145,7 +145,7 @@ static void handle_pcm_parapointer_s3mtostm(FOC_Context* context, usize i) {
 
   (void)!fseek(context->outfile, (long)header_pos, SEEK_SET);
 
-  (void)!fwrite(&stm_pcm_pointers[i], 2, 1, context->outfile);
+  fputw(stm_pcm_pointers[i], context->outfile);
 
   (void)!fseek(context->outfile, (long)saved_pos, SEEK_SET);
 }
