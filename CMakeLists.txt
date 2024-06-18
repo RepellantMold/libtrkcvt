@@ -6,6 +6,7 @@ set(CMAKE_C_STANDARD 90)
 set(CMAKE_C_EXTENSIONS OFF)
 
 include_directories(include)
+include_directories(extern)
 
 add_executable( screamverter
                 src/main.c

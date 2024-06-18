@@ -12,6 +12,10 @@
 #include <string.h>
 #include <time.h>
 
+#define OPTPARSE_IMPLEMENTATION
+#define OPTPARSE_API static
+#include "optparse/optparse.h"
+
 #include "envcheck.h"
 #include "ext.h"
 
@@ -24,7 +28,7 @@ u8 original_order_count = 0, order_count = 0, sample_count = 0, pattern_count = 
 internal_state_t main_context;
 
 void print_help(void) {
-  puts("Usage: screamverter [options] <inputfile> <outputfile>");
+  puts("Usage: screamverter [options] -i<inputfile> -o<outputfile>");
   puts("(C) RepellantMold/cs127, 2024");
   puts("Licensed under ISC");
   puts("");
@@ -33,8 +37,10 @@ void print_help(void) {
   puts("  -v, --verbose    Enable extremely verbose output");
   puts("  -s, --sanitize   Sanitize sample names during conversion, useful for saving them on DOS");
   puts("  -m, --memory     Handle effects calling effect memory (helps with Scream Tracker 2.24 and below)");
-  puts("  -stm             Convert the S3M to STM (default)");
-  puts("  -stx             Convert the S3M to STX (unfinished)");
+  puts("  -2, --stm        Convert the S3M to STM (default)");
+  puts("  -x, --stx        Convert the S3M to STX (unfinished)");
+  puts("  -i, --input      Input file");
+  puts("  -o, --output     Output file");
 }
 
 s3m_song_header_t s3m_song_header;
@@ -47,15 +53,24 @@ u32 s3m_pcm_pointers[S3M_MAXSMP] = {0};
 u16 s3m_pcm_lens[S3M_MAXSMP] = {0};
 u16 s3m_cwtv;
 
+static char input_filename[4096], output_filename[4096];
+
 int check_valid_s3m(FILE* S3Mfile);
 
 int convert_s3m_to_stm(internal_state_t* context);
 int convert_s3m_to_stx(internal_state_t* context);
 
 int main(int argc, char* argv[]) {
-  register int i = 0, return_value = FOC_SUCCESS;
+  register int return_value = FOC_SUCCESS;
   usize conversion_type = FOC_S3MTOSTM;
   FILE *outfile = NULL, *infile = NULL;
+
+  int option;
+  struct optparse options;
+  struct optparse_long longopts[] = {
+      {"sanitize", 's', OPTPARSE_NONE},  {"verbose", 'v', OPTPARSE_NONE},    {"memory", 'm', OPTPARSE_NONE},
+      {"help", 'h', OPTPARSE_NONE},      {"stm", '2', OPTPARSE_NONE},        {"stx", 'x', OPTPARSE_NONE},
+      {"input", 'i', OPTPARSE_REQUIRED}, {"output", 'o', OPTPARSE_REQUIRED}, {0}};
 
   if (argc < 2) {
   print_da_help:
@@ -63,42 +78,28 @@ int main(int argc, char* argv[]) {
     return FOC_NO_FILENAMES;
   }
 
-  for (i = 1; i < argc; i++) {
-    if (!(strcmp(argv[i], "-v")) || !(strcmp(argv[i], "--verbose"))) {
-      main_context.flags.verbose_mode = true;
-    }
-
-    else if (!(strcmp(argv[i], "-s")) || !(strcmp(argv[i], "--sanitize"))) {
-      main_context.flags.sanitize_sample_names = true;
-    }
-
-    else if (!(strcmp(argv[i], "-h")) || !(strcmp(argv[i], "--help"))) {
-      goto print_da_help;
-    }
-
-    else if (!(strcmp(argv[i], "-m")) || !(strcmp(argv[i], "--memory"))) {
-      main_context.flags.handle_effect_memory = true;
-    }
-
-    else if (!(strcmp(argv[i], "-stm"))) {
-      conversion_type = FOC_S3MTOSTM;
-    }
-
-    else if (!(strcmp(argv[i], "-stx"))) {
-      conversion_type = FOC_S3MTOSTX;
-    }
-
-    else if (!infile) {
-      infile = fopen(argv[i], "rb");
-    } else if (!outfile) {
-      outfile = fopen(argv[i], "wb");
+  optparse_init(&options, argv);
+  while ((option = optparse_long(&options, longopts, NULL)) != -1) {
+    switch (option) {
+      case 'v': main_context.flags.verbose_mode = true; break;
+      case 's': main_context.flags.sanitize_sample_names = true; break;
+      case 'm': main_context.flags.handle_effect_memory = true; break;
+      case '2': conversion_type = FOC_S3MTOSTM; break;
+      case 'x': conversion_type = FOC_S3MTOSTX; break;
+      case 'i': strncpy(input_filename, options.optarg, sizeof(input_filename)); break;
+      case 'o': strncpy(output_filename, options.optarg, sizeof(output_filename)); break;
+      case 'h': goto print_da_help; break;
+      case '?': fprintf(stderr, "%s: %s\n", argv[0], options.errmsg); exit(EXIT_FAILURE);
     }
   }
+
+  infile = fopen(input_filename, "rb");
+  outfile = fopen(output_filename, "wb");
 
   if (!infile || !outfile) {
     return_value |= FOC_OPEN_FAILURE;
     perror("Failed to open file");
-    goto closefiledescriptors;
+    exit(EXIT_FAILURE);
   }
 
   main_context.infile = infile;
@@ -112,7 +113,6 @@ int main(int argc, char* argv[]) {
     case FOC_S3MTOSTX: return_value |= convert_s3m_to_stx(&main_context); break;
   }
 
-closefiledescriptors:
   fclose(infile);
   fclose(outfile);
 
