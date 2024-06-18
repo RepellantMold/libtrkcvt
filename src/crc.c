@@ -1,3 +1,6 @@
+#include "ext.h"
+#include "envcheck.h"
+
 #include "crc.h"
 
  /* 
