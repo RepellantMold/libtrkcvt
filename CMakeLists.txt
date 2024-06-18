@@ -10,6 +10,7 @@ include_directories(include)
 add_executable( screamverter
                 src/main.c
                 src/log.c
+                src/effects.c
                 src/file.c
                 src/crc.c
                 src/song_header.c
