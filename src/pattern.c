@@ -13,7 +13,7 @@
 #include "fmt/s3m.h"
 #include "fmt/stm.h"
 
-static s3mevent_t s3m_unpacked_pattern[64][32] = {{{0xFF, 0x00, 0xFF, 0x00, 0x00}}};
+static s3mevent_t unpacked_pattern[64][32] = {{{0xFF, 0x00, 0xFF, 0x00, 0x00}}};
 
 static const u8 notetable[12][2] = {"C-", "C#", "D-", "D#", "E-", "F-", "F#", "G-", "G#", "A-", "A#", "B-"};
 
@@ -32,51 +32,58 @@ void print_warning_pattern(Pattern_Context* context, const char* format, ...) {
     printf("WARNING (row %02u/channel %02u): %s\n", row, channel, buffer);
 }
 
-void print_s3m_row(usize row) {
+static void format_s3m_row(char* buffer, usize row, usize max) {
   register usize channel = 0;
   u8 note, ins, volume, effect, parameter;
+  register int offset = 0;
 
   do {
-    note = s3m_unpacked_pattern[row][channel].note, ins = s3m_unpacked_pattern[row][channel].ins,
-    volume = s3m_unpacked_pattern[row][channel].vol, effect = s3m_unpacked_pattern[row][channel].eff,
-    parameter = s3m_unpacked_pattern[row][channel].prm;
+    note = unpacked_pattern[row][channel].note;
+    ins = unpacked_pattern[row][channel].ins;
+    volume = unpacked_pattern[row][channel].vol;
+    effect = unpacked_pattern[row][channel].eff;
+    parameter = unpacked_pattern[row][channel].prm;
 
     if (note < 0xFE)
-      printf("%.2s%01u", notetable[note & 0x0F], (note >> 4) + 1);
+      offset += sprintf(buffer + offset, "%.2s%01u", notetable[note & 0x0F], (note >> 4) + 1);
     else if (note == 0xFE)
-      printf("^^^");
+      offset += sprintf(buffer + offset, "^^^");
     else if (note == 0xFF)
-      printf("...");
+      offset += sprintf(buffer + offset, "...");
 
     if (ins)
-      printf(" %02u ", ins);
+      offset += sprintf(buffer + offset, " %02u ", ins);
     else
-      printf(" .. ");
+      offset += sprintf(buffer + offset, " .. ");
 
     if (volume <= 64)
-      printf("%02u ", volume);
+      offset += sprintf(buffer + offset, "%02u ", volume);
     else
-      printf(".. ");
+      offset += sprintf(buffer + offset, ".. ");
 
     if (effect)
-      printf("%c%02X ", EFFBASE + effect, parameter);
+      offset += sprintf(buffer + offset, "%c%02X ", EFFBASE + effect, parameter);
     else
-      printf("... ");
-  } while (++channel < STM_MAXCHN);
-
-  fputs("\n", stdout);
+      offset += sprintf(buffer + offset, "... ");
+  } while (++channel < max);
 }
 
-void print_s3m_pattern(void) {
-  usize row = 0;
+void print_s3m_pattern(usize max_channels_shown) {
+  register usize row = 0;
+  char* buffer;
 
-  for (; row < MAXROWS; ++row) {
-    print_diagnostic("r:%02u = ", row);
-
-    print_s3m_row(row);
+  buffer = (char*)calloc(14, MAXROWS * max_channels_shown);
+  if (!buffer) {
+    print_error("failed to allocate buffer!");
+    exit(1);
   }
 
-  fputs("\n", stdout);
+  for (; row < MAXROWS; ++row) {
+    format_s3m_row(buffer, row, max_channels_shown);
+    print_diagnostic("r:%02u = %s", row, buffer);
+  }
+
+  free(buffer);
 }
 
 int check_effect(Pattern_Context* context) {
@@ -187,20 +194,20 @@ void parse_s3m_pattern(FILE* file, usize position) {
     else
       effect = 0x00, parameter = 0x00;
 
-    s3m_unpacked_pattern[row][channel].note = note, s3m_unpacked_pattern[row][channel].ins = ins,
-    s3m_unpacked_pattern[row][channel].vol = volume, s3m_unpacked_pattern[row][channel].eff = effect,
-    s3m_unpacked_pattern[row][channel].prm = parameter;
+    unpacked_pattern[row][channel].note = note, unpacked_pattern[row][channel].ins = ins,
+    unpacked_pattern[row][channel].vol = volume, unpacked_pattern[row][channel].eff = effect,
+    unpacked_pattern[row][channel].prm = parameter;
   };
 
   if (main_context.flags.verbose_mode)
-    print_s3m_pattern();
+    print_s3m_pattern(STM_MAXCHN);
 }
 
 u8 check_for_free_channel(usize row) {
   register usize free_channel = 0;
 
   do {
-    if (!s3m_unpacked_pattern[row][free_channel].eff)
+    if (!unpacked_pattern[row][free_channel].eff)
       return (u8)free_channel;
   } while (++free_channel < S3M_MAXCHN);
 
@@ -215,10 +222,10 @@ u8 search_for_last_nonzero_param(usize startingrow, usize c, usize effect) {
 
   while (i--) {
     /* print_diagnostic("checking row %02u", i); */
-    if (!s3m_unpacked_pattern[i][c].prm || s3m_unpacked_pattern[i][c].eff != effect)
+    if (!unpacked_pattern[i][c].prm || unpacked_pattern[i][c].eff != effect)
       continue;
-    print_diagnostic("param is %02X", s3m_unpacked_pattern[i][c].prm);
-    return s3m_unpacked_pattern[i][c].prm;
+    print_diagnostic("param is %02X", unpacked_pattern[i][c].prm);
+    return unpacked_pattern[i][c].prm;
   }
 
   print_diagnostic("no matches found...");
@@ -237,20 +244,20 @@ u8 search_for_last_nonzero_param2(usize startingrow, usize channel, usize effect
   while (i--) {
     /* print_diagnostic("checking row %02u for low nibble", i); */
 
-    if (!(s3m_unpacked_pattern[i][channel].prm & 0x0F) || s3m_unpacked_pattern[i][channel].eff != effect)
+    if (!(unpacked_pattern[i][channel].prm & 0x0F) || unpacked_pattern[i][channel].eff != effect)
       continue;
 
-    lownib = s3m_unpacked_pattern[i][channel].prm & 0x0F;
+    lownib = unpacked_pattern[i][channel].prm & 0x0F;
   }
 
   i = startingrow;
   while (i--) {
     /* print_diagnostic("checking row %02u for high nibble", i); */
 
-    if (!(s3m_unpacked_pattern[i][channel].prm >> 4) || s3m_unpacked_pattern[i][channel].eff != effect)
+    if (!(unpacked_pattern[i][channel].prm >> 4) || unpacked_pattern[i][channel].eff != effect)
       continue;
 
-    hinib = s3m_unpacked_pattern[i][channel].prm >> 4;
+    hinib = unpacked_pattern[i][channel].prm >> 4;
   }
 
   if (!lownib || !hinib)
@@ -269,9 +276,9 @@ void flush_s3m_pattern_array(void) {
   register usize row = 0, channel = 0;
   do {
     for (channel = 0; channel < S3M_MAXCHN; ++channel) {
-      s3m_unpacked_pattern[row][channel].note = 0xFF, s3m_unpacked_pattern[row][channel].ins = 0x00,
-      s3m_unpacked_pattern[row][channel].vol = 0xFF, s3m_unpacked_pattern[row][channel].eff = 0x00,
-      s3m_unpacked_pattern[row][channel].prm = 0x00;
+      unpacked_pattern[row][channel].note = 0xFF, unpacked_pattern[row][channel].ins = 0x00,
+      unpacked_pattern[row][channel].vol = 0xFF, unpacked_pattern[row][channel].eff = 0x00,
+      unpacked_pattern[row][channel].prm = 0x00;
     }
   } while (++row < MAXROWS);
 }
@@ -287,7 +294,7 @@ u8 handle_effect_memory(Pattern_Context* context) {
     return parameter;
 
   if (lastprm) {
-    s3m_unpacked_pattern[row][channel].prm = lastprm;
+    unpacked_pattern[row][channel].prm = lastprm;
     return lastprm;
   }
 
@@ -305,7 +312,7 @@ u8 handle_effect_memory_separatenibs(Pattern_Context* context) {
     return parameter;
 
   if (lastprm) {
-    s3m_unpacked_pattern[row][channel].prm = lastprm;
+    unpacked_pattern[row][channel].prm = lastprm;
     return lastprm;
   }
 
@@ -328,7 +335,7 @@ void handle_s3m_effect(Pattern_Context* context) {
     case EFF_SET_POSITION:
       if (freechn >= STM_MAXCHN)
         break;
-      s3m_unpacked_pattern[row][freechn].eff = EFF_PATTERN_BREAK;
+      unpacked_pattern[row][freechn].eff = EFF_PATTERN_BREAK;
       break;
 
     case EFF_PATTERN_BREAK: parameter = 0; break;
@@ -428,10 +435,10 @@ void convert_s3m_pattern_to_stm(void) {
   do {
     for (channel = 0; channel < STM_MAXCHN; ++channel) {
       pattern.row = (u8)row, pattern.channel = (u8)channel;
-      pattern.note = s3m_unpacked_pattern[row][channel].note,
-      pattern.instrument = s3m_unpacked_pattern[row][channel].ins,
-      pattern.volume = s3m_unpacked_pattern[row][channel].vol, pattern.effect = s3m_unpacked_pattern[row][channel].eff,
-      pattern.parameter = s3m_unpacked_pattern[row][channel].prm;
+      pattern.note = unpacked_pattern[row][channel].note,
+      pattern.instrument = unpacked_pattern[row][channel].ins,
+      pattern.volume = unpacked_pattern[row][channel].vol, pattern.effect = unpacked_pattern[row][channel].eff,
+      pattern.parameter = unpacked_pattern[row][channel].prm;
 
       if (pattern.note < 0xFE) {
         proper_octave = (u8)((pattern.note >> 4) - 2),
@@ -467,9 +474,9 @@ void convert_s3m_pattern_to_stx(FILE* file) {
 
   for (row = 0; row < MAXROWS; ++row) {
     for (channel = 0; channel < STX_MAXCHN; ++channel) {
-      hasnote = (s3m_unpacked_pattern[row][channel].note != 0xFF) || (s3m_unpacked_pattern[row][channel].ins);
-      hasvol = s3m_unpacked_pattern[row][channel].vol <= 64;
-      haseff = s3m_unpacked_pattern[row][channel].eff || s3m_unpacked_pattern[row][channel].prm;
+      hasnote = (unpacked_pattern[row][channel].note != 0xFF) || (unpacked_pattern[row][channel].ins);
+      hasvol = unpacked_pattern[row][channel].vol <= 64;
+      haseff = unpacked_pattern[row][channel].eff || unpacked_pattern[row][channel].prm;
 
       if (!hasnote & !hasvol & !haseff)
         continue;
@@ -486,14 +493,14 @@ void convert_s3m_pattern_to_stx(FILE* file) {
       fputc(byte, file);
 
       if (hasnote) {
-        fputc(s3m_unpacked_pattern[row][channel].note, file);
-        fputc(s3m_unpacked_pattern[row][channel].ins, file);
+        fputc(unpacked_pattern[row][channel].note, file);
+        fputc(unpacked_pattern[row][channel].ins, file);
       }
       if (hasvol)
-        fputc(s3m_unpacked_pattern[row][channel].vol, file);
+        fputc(unpacked_pattern[row][channel].vol, file);
       if (haseff) {
-        fputc(s3m_unpacked_pattern[row][channel].eff, file);
-        fputc(s3m_unpacked_pattern[row][channel].prm, file);
+        fputc(unpacked_pattern[row][channel].eff, file);
+        fputc(unpacked_pattern[row][channel].prm, file);
       }
     }
 
