@@ -123,7 +123,7 @@ int check_effect(Pattern_Context* context) {
     case EFF_TONE_PORTA: goto noeffectmemory; break;
 
     case EFF_VIBRATO:
-      if (!main_context.handle_effect_memory && !parameter) {
+      if (!main_context.flags.handle_effect_memory && !parameter) {
         print_warning_pattern(context, "there's no effect memory with this effect, this will be treated as a no-op.");
         break;
       }
@@ -142,7 +142,7 @@ int check_effect(Pattern_Context* context) {
   return effect;
 
 noeffectmemory:
-  if (!main_context.handle_effect_memory && !parameter)
+  if (!main_context.flags.handle_effect_memory && !parameter)
     print_warning_pattern(context, "there's no effect memory with this effect, this will be treated as a no-op.");
   return effect;
 }
@@ -192,7 +192,7 @@ void parse_s3m_pattern(FILE* file, usize position) {
     s3m_unpacked_pattern[row][channel].prm = parameter;
   };
 
-  if (main_context.verbose_mode)
+  if (main_context.flags.verbose_mode)
     print_s3m_pattern();
 }
 
@@ -281,7 +281,7 @@ u8 handle_effect_memory(Pattern_Context* context) {
   const u8 effect = context->effect, lastprm = search_for_last_nonzero_param(row, channel, effect),
            parameter = context->parameter;
 
-  if (!main_context.handle_effect_memory)
+  if (!main_context.flags.handle_effect_memory)
     return parameter;
   if (!row || parameter)
     return parameter;
@@ -299,7 +299,7 @@ u8 handle_effect_memory_separatenibs(Pattern_Context* context) {
   const u8 effect = context->effect, parameter = context->parameter, hinib = parameter >> 4, lownib = parameter & 0x0F,
            lastprm = search_for_last_nonzero_param2(row, channel, effect);
 
-  if (!main_context.handle_effect_memory)
+  if (!main_context.flags.handle_effect_memory)
     return parameter;
   if (!row || (lownib || hinib))
     return parameter;

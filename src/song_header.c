@@ -78,7 +78,7 @@ void check_s3m_channels(void) {
 }
 
 void grab_s3m_song_header(FILE* S3Mfile) {
-  const bool verbose = main_context.verbose_mode;
+  const bool verbose = main_context.flags.verbose_mode;
   if (!S3Mfile || feof(S3Mfile) || ferror(S3Mfile))
     return;
 

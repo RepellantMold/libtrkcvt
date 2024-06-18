@@ -9,7 +9,7 @@ void print_diagnostic(const char* format, ...) {
   va_list ap;
   char buffer[192];
 
-  if (!main_context.verbose_mode)
+  if (!main_context.flags.verbose_mode)
     return;
 
   va_start(ap, format);

@@ -116,12 +116,12 @@ void handle_sample_name_s3m2stm(stm_instrument_header_t* stm_sample_header) {
   } else if (s3m_inst_header.name[0] != 0) {
     strncpy((char*)stm_sample_header->filename, (char*)&s3m_inst_header.name, 12);
 
-    if (!main_context.sanitize_sample_names)
+    if (!main_context.flags.sanitize_sample_names)
       return;
 
     sanitize_sample_name((char*)stm_sample_header->filename);
   } else {
-    if (!main_context.sanitize_sample_names) {
+    if (!main_context.flags.sanitize_sample_names) {
       memset(stm_sample_header->filename, 0, 12);
       return;
     };

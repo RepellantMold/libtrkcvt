@@ -11,16 +11,20 @@
 
 extern u8 original_order_count, order_count, sample_count, pattern_count;
 
+enum FOC_ConversionMode { FOC_S3MTOSTM = 0x00, FOC_S3MTOSTX = 0x01 };
+
 typedef struct {
   FILE* infile;
   FILE* outfile;
-  usize conversion_type;
-  bool verbose_mode;
-  bool sanitize_sample_names;
-  bool handle_effect_memory;
-} FOC_Context;
+  enum FOC_ConversionMode conversion_type;
 
-enum FOC_ConversionMode { FOC_S3MTOSTM = 0x00, FOC_S3MTOSTX = 0x01 };
+  struct {
+    bool verbose_mode;
+    bool sanitize_sample_names;
+    bool handle_effect_memory;
+  } flags;
+
+} internal_state_t;
 
 /* RM: stealing cs127's NTCheck's return values! */
 enum FOC_ReturnCode {
@@ -35,7 +39,7 @@ enum FOC_ReturnCode {
   FOC_SAMPLE_FAIL = 0x80
 };
 
-extern FOC_Context main_context;
+extern internal_state_t main_context;
 
 void eprintf(const char* format, ...);
 void eputs(const char* msg);

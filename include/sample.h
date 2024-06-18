@@ -5,10 +5,10 @@
 typedef struct {
   u8* pcm;
   usize length;
-} Sample_Context;
+} internal_sample_t;
 
-int dump_sample_data(FILE* file, usize position, Sample_Context* context);
-void pcm_swap_sign(Sample_Context* context);
+int dump_sample_data(FILE* file, usize position, internal_sample_t* context);
+void pcm_swap_sign(internal_sample_t* context);
 usize calculate_sample_padding(size_t sample_size);
 
 #endif

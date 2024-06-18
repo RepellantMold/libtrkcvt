@@ -7,18 +7,18 @@ u16 stx_pat_pointers[STX_MAXPAT] = {0};
 stx_pcm_parapointers stx_pcm_pointers[STX_MAXSMP] = {0};
 static u8 sample_data[USHRT_MAX] = {0};
 
-static void place_pattern_and_ins_parapointers_s3mtostx(FOC_Context* context, stx_parapointers* pointers,
+static void place_pattern_and_ins_parapointers_s3mtostx(internal_state_t* context, stx_parapointers* pointers,
                                                         usize pattern_count, usize sample_count);
-static void handle_sample_headers_s3mtostx(FOC_Context* context, usize sample_count);
-static void handle_patterns_s3mtostx(FOC_Context* context, usize pattern_count);
-static void handle_pattern_and_ins_parapointers_s3mtostx(FOC_Context* context, stx_parapointers* pointers,
+static void handle_sample_headers_s3mtostx(internal_state_t* context, usize sample_count);
+static void handle_patterns_s3mtostx(internal_state_t* context, usize pattern_count);
+static void handle_pattern_and_ins_parapointers_s3mtostx(internal_state_t* context, stx_parapointers* pointers,
                                                          usize pattern_count, usize sample_count);
-static void handle_pcm_parapointer_s3mtostx(FOC_Context* context, usize i);
-static int handle_pcm_s3mtostx(FOC_Context* context, usize sample_count);
+static void handle_pcm_parapointer_s3mtostx(internal_state_t* context, usize i);
+static int handle_pcm_s3mtostx(internal_state_t* context, usize sample_count);
 
-int convert_s3m_to_stx(FOC_Context* context) {
+int convert_s3m_to_stx(internal_state_t* context) {
   FILE *S3Mfile = context->infile, *STXfile = context->outfile;
-  const bool verbose = context->verbose_mode;
+  const bool verbose = context->flags.verbose_mode;
   u8* STXOrders = NULL;
   stx_parapointers parapointers;
 
@@ -72,7 +72,7 @@ int convert_s3m_to_stx(FOC_Context* context) {
   return FOC_SUCCESS;
 }
 
-static void handle_pattern_and_ins_parapointers_s3mtostx(FOC_Context* context, stx_parapointers* pointers,
+static void handle_pattern_and_ins_parapointers_s3mtostx(internal_state_t* context, stx_parapointers* pointers,
                                                          usize pattern_count, usize sample_count) {
   FILE* STXfile = context->outfile;
 
@@ -85,7 +85,7 @@ static void handle_pattern_and_ins_parapointers_s3mtostx(FOC_Context* context, s
   (void)!fwrite(stx_inst_pointers, sizeof(u16), sample_count, STXfile);
 }
 
-static void place_pattern_and_ins_parapointers_s3mtostx(FOC_Context* context, stx_parapointers* pointers,
+static void place_pattern_and_ins_parapointers_s3mtostx(internal_state_t* context, stx_parapointers* pointers,
                                                         usize pattern_count, usize sample_count) {
   FILE* STXfile = context->outfile;
   usize saved_pos = 0;
@@ -110,9 +110,9 @@ static void place_pattern_and_ins_parapointers_s3mtostx(FOC_Context* context, st
   fseek(STXfile, (long)saved_pos, SEEK_SET);
 }
 
-static void handle_sample_headers_s3mtostx(FOC_Context* context, usize sample_count) {
+static void handle_sample_headers_s3mtostx(internal_state_t* context, usize sample_count) {
   FILE *S3Mfile = context->infile, *STXfile = context->outfile;
-  const bool verbose = context->verbose_mode;
+  const bool verbose = context->flags.verbose_mode;
   register usize i = 0;
 
   for (; i < sample_count; i++) {
@@ -132,7 +132,7 @@ static void handle_sample_headers_s3mtostx(FOC_Context* context, usize sample_co
   }
 }
 
-static void handle_patterns_s3mtostx(FOC_Context* context, usize pattern_count) {
+static void handle_patterns_s3mtostx(internal_state_t* context, usize pattern_count) {
   FILE *S3Mfile = context->infile, *STXfile = context->outfile;
   register usize i = 0;
 
@@ -145,10 +145,10 @@ static void handle_patterns_s3mtostx(FOC_Context* context, usize pattern_count) 
   }
 }
 
-static int handle_pcm_s3mtostx(FOC_Context* context, usize sample_count) {
+static int handle_pcm_s3mtostx(internal_state_t* context, usize sample_count) {
   FILE *S3Mfile = context->infile, *STXfile = context->outfile;
   register usize i = 0, sample_len = 0, padding_len = 0;
-  Sample_Context sc;
+  internal_sample_t sc;
 
   for (; i < sample_count; i++) {
     sample_len = s3m_pcm_lens[i];
@@ -184,7 +184,7 @@ static int handle_pcm_s3mtostx(FOC_Context* context, usize sample_count) {
   return FOC_SUCCESS;
 }
 
-static void handle_pcm_parapointer_s3mtostx(FOC_Context* context, usize i) {
+static void handle_pcm_parapointer_s3mtostx(internal_state_t* context, usize i) {
   FILE* outfile = context->outfile;
   const usize saved_pos = (usize)ftell(outfile), header_pos = 64 + (pattern_count * 2) + ((80 * (i + 1)) - 67);
 

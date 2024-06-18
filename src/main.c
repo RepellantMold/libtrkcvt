@@ -21,7 +21,7 @@
 
 u8 original_order_count = 0, order_count = 0, sample_count = 0, pattern_count = 0;
 
-FOC_Context main_context;
+internal_state_t main_context;
 
 void print_help(void) {
   puts("Usage: screamverter [options] <inputfile> <outputfile>");
@@ -49,8 +49,8 @@ u16 s3m_cwtv;
 
 int check_valid_s3m(FILE* S3Mfile);
 
-int convert_s3m_to_stm(FOC_Context* context);
-int convert_s3m_to_stx(FOC_Context* context);
+int convert_s3m_to_stm(internal_state_t* context);
+int convert_s3m_to_stx(internal_state_t* context);
 
 int main(int argc, char* argv[]) {
   register int i = 0, return_value = FOC_SUCCESS;
@@ -65,11 +65,11 @@ int main(int argc, char* argv[]) {
 
   for (i = 1; i < argc; i++) {
     if (!(strcmp(argv[i], "-v")) || !(strcmp(argv[i], "--verbose"))) {
-      main_context.verbose_mode = true;
+      main_context.flags.verbose_mode = true;
     }
 
     else if (!(strcmp(argv[i], "-s")) || !(strcmp(argv[i], "--sanitize"))) {
-      main_context.sanitize_sample_names = true;
+      main_context.flags.sanitize_sample_names = true;
     }
 
     else if (!(strcmp(argv[i], "-h")) || !(strcmp(argv[i], "--help"))) {
@@ -77,7 +77,7 @@ int main(int argc, char* argv[]) {
     }
 
     else if (!(strcmp(argv[i], "-m")) || !(strcmp(argv[i], "--memory"))) {
-      main_context.handle_effect_memory = true;
+      main_context.flags.handle_effect_memory = true;
     }
 
     else if (!(strcmp(argv[i], "-stm"))) {

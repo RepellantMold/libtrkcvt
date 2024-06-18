@@ -8,13 +8,13 @@ u8 stm_pattern[64][4][4] = {{{0xFF, 0x01, 0x80, 0x00}}};
 
 u16 stm_pcm_pointers[STM_MAXSMP] = {0};
 
-static int handle_pcm_s3mtostm(FOC_Context* context, usize sample_count);
-static void handle_pcm_parapointer_s3mtostm(FOC_Context* context, usize i);
-static void handle_sample_headers_s3mtostm(FOC_Context* context, usize sample_count,
+static int handle_pcm_s3mtostm(internal_state_t* context, usize sample_count);
+static void handle_pcm_parapointer_s3mtostm(internal_state_t* context, usize i);
+static void handle_sample_headers_s3mtostm(internal_state_t* context, usize sample_count,
                                            stm_instrument_header_t* stm_instrument_header);
-static void handle_patterns_s3mtostm(FOC_Context* context, usize pattern_count);
+static void handle_patterns_s3mtostm(internal_state_t* context, usize pattern_count);
 
-int convert_s3m_to_stm(FOC_Context* context) {
+int convert_s3m_to_stm(internal_state_t* context) {
   FILE *S3Mfile = context->infile, *STMfile = context->outfile;
 
   if (!S3Mfile || !STMfile)
@@ -52,10 +52,10 @@ int convert_s3m_to_stm(FOC_Context* context) {
   return FOC_SUCCESS;
 }
 
-static void handle_sample_headers_s3mtostm(FOC_Context* context, usize sample_count,
+static void handle_sample_headers_s3mtostm(internal_state_t* context, usize sample_count,
                                            stm_instrument_header_t* stm_instrument_header) {
   FILE *S3Mfile = context->infile, *STMfile = context->outfile;
-  const bool verbose = context->verbose_mode;
+  const bool verbose = context->flags.verbose_mode;
   register usize i = 0;
 
   for (; i < STM_MAXSMP; i++) {
@@ -81,7 +81,7 @@ static void handle_sample_headers_s3mtostm(FOC_Context* context, usize sample_co
   }
 }
 
-static void handle_patterns_s3mtostm(FOC_Context* context, usize pattern_count) {
+static void handle_patterns_s3mtostm(internal_state_t* context, usize pattern_count) {
   FILE *S3Mfile = context->infile, *STMfile = context->outfile;
   register usize i = 0;
 
@@ -96,10 +96,10 @@ static void handle_patterns_s3mtostm(FOC_Context* context, usize pattern_count) 
   }
 }
 
-static int handle_pcm_s3mtostm(FOC_Context* context, usize sample_count) {
+static int handle_pcm_s3mtostm(internal_state_t* context, usize sample_count) {
   FILE *S3Mfile = context->infile, *STMfile = context->outfile;
   register usize i = 0, sample_len = 0, padding_len = 0;
-  Sample_Context sc;
+  internal_sample_t sc;
 
   for (; i < STM_MAXSMP; i++) {
     if (i >= sample_count)
@@ -137,7 +137,7 @@ static int handle_pcm_s3mtostm(FOC_Context* context, usize sample_count) {
   return FOC_SUCCESS;
 }
 
-static void handle_pcm_parapointer_s3mtostm(FOC_Context* context, usize i) {
+static void handle_pcm_parapointer_s3mtostm(internal_state_t* context, usize i) {
   const usize saved_pos = (usize)ftell(context->outfile), header_pos = 48 + ((32 * (i + 1)) - 18);
 
   stm_pcm_pointers[i] = calculate_stm_sample_parapointer();

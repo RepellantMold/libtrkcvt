@@ -12,7 +12,7 @@
 
 #include "sample.h"
 
-int dump_sample_data(FILE* file, usize position, Sample_Context* context) {
+int dump_sample_data(FILE* file, usize position, internal_sample_t* context) {
   if (!file || !context)
     return FOC_MALFORMED_BUFFER;
 
@@ -24,7 +24,7 @@ int dump_sample_data(FILE* file, usize position, Sample_Context* context) {
   return FOC_SUCCESS;
 }
 
-void pcm_swap_sign(Sample_Context* context) {
+void pcm_swap_sign(internal_sample_t* context) {
   register usize i = 0;
 
   if (!context)
