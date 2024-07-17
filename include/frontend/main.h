@@ -5,26 +5,12 @@
 
 #include "ext.h"
 
+#include "struct.h"
 #include "fmt/s3m.h"
 #include "fmt/stm.h"
 #include "fmt/stx.h"
 
 extern u8 original_order_count, order_count, sample_count, pattern_count;
-
-enum FOC_ConversionMode { FOC_S3MTOSTM = 0x00, FOC_S3MTOSTX = 0x01 };
-
-typedef struct {
-  FILE* infile;
-  FILE* outfile;
-  enum FOC_ConversionMode conversion_type;
-
-  struct {
-    bool verbose_mode;
-    bool sanitize_sample_names;
-    bool handle_effect_memory;
-  } flags;
-
-} internal_state_t;
 
 /* RM: stealing cs127's NTCheck's return values! */
 enum FOC_ReturnCode {
