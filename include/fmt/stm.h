@@ -63,7 +63,9 @@ extern u8 stm_sample_data[USHRT_MAX];
 
 extern u8 stm_order_list[STM_ORDER_LIST_SIZE];
 
-extern u8 stm_pattern[64][4][4];
+typedef struct {
+  u8 data[64][4][4];
+} stm_pattern_t;
 
 extern u16 stm_pcm_pointers[STM_MAXSMP];
 

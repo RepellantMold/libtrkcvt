@@ -5,7 +5,7 @@
 
 #include "envcheck.h"
 #include "ext.h"
-#include "main.h"
+#include "struct.h"
 
 #include "fmt/s3m.h"
 #include "fmt/stm.h"

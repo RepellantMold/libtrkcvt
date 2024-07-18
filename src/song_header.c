@@ -5,7 +5,7 @@
 
 #include "envcheck.h"
 #include "ext.h"
-#include "main.h"
+#include "struct.h"
 
 #include "fmt/s3m.h"
 #include "fmt/stm.h"
@@ -16,7 +16,6 @@
 #include "parapnt.h"
 #include "sample.h"
 #include "song_header.h"
-
 
 #include "crc.h"
 
@@ -31,27 +30,7 @@ void show_s3m_song_header(void) {
          s3m_song_header.title, global_volume, initial_speed, initial_tempo, song_flags);
 }
 
-void grab_s3m_orders(FILE* file) {
-  register usize i = 0, count = 0;
 
-  if (!file || feof(file) || ferror(file))
-    return;
-
-  fseek(file, S3M_ORDERPOS, SEEK_SET);
-
-  (void)!fread(s3m_order_array, sizeof(u8), original_order_count, file);
-
-  /* see section "2.6 Load Order Data" from "FireLight S3M Player Tutorial.txt" */
-  for (count = 0; count < original_order_count; ++count) {
-    if (s3m_order_array[count] < S3M_ORDER_MARKER) {
-      s3m_order_array[i] = s3m_order_array[count];
-      if (s3m_order_array[count] > pattern_count)
-        pattern_count = s3m_order_array[count];
-      print_diagnostic("Order %zu -> %zu", count, i++);
-    }
-  }
-  order_count = (u8)i;
-}
 
 void check_s3m_channels(void) {
   register usize i = 0, channel = 0;
@@ -68,11 +47,11 @@ void check_s3m_channels(void) {
     }
 
     if (channel & S3MCHN_MUTE)
-      print_warning("Channel %u is muted which is unsupported, the notes will be converted anyway.", i);
+      print_warning("Channel %lu is muted which is unsupported, the notes will be converted anyway.", (u32)i);
 
     if (channel >= S3MCHN_ADLIBMEL1 && channel <= S3MCHN_ADLIBHATDRUM) {
       print_warning(
-          "Adlib channel detected (channel %u), the notes will be converted as is without the instrument data.", i);
+          "Adlib channel detected (channel %lu), the notes will be converted as is without the instrument data.", (u32)i);
     }
   }
 }
@@ -102,8 +81,8 @@ void grab_s3m_song_header(FILE* S3Mfile) {
   fread(s3m_song_header.reserved2, 8, 1, S3Mfile);
   s3m_song_header.special = fgetw(S3Mfile);
   s3m_cwtv = s3m_song_header.created_with_tracker_version;
-  original_order_count = (u8)s3m_song_header.total_orders;
-  sample_count = (u8)s3m_song_header.total_instruments;
+  main_context.stats.original_order_count = (u8)s3m_song_header.total_orders;
+  main_context.stats.sample_count = (u8)s3m_song_header.total_instruments;
   if (verbose)
     show_s3m_song_header();
 
@@ -179,7 +158,7 @@ void convert_song_header_s3mtostm(void) {
 
   stm_song_header.global_volume = global_volume;
 
-  stm_song_header.total_patterns = pattern_count;
+  stm_song_header.total_patterns = main_context.stats.pattern_count;
 }
 
 void convert_song_header_s3mtostx(void) {
@@ -202,32 +181,9 @@ void convert_song_header_s3mtostx(void) {
 
   stx_song_header.global_volume = global_volume;
 
-  stx_song_header.total_patterns = pattern_count;
-  stx_song_header.total_instruments = sample_count;
-  stx_song_header.total_orders = order_count;
+  stx_song_header.total_patterns = main_context.stats.pattern_count;
+  stx_song_header.total_instruments = main_context.stats.sample_count;
+  stx_song_header.total_orders = main_context.stats.order_count;
 }
 
-void convert_song_orders_s3mtostm(usize length) {
-  register usize i = 0;
 
-  memset(stm_order_list, STM_ORDER_END, STM_ORDER_LIST_SIZE);
-
-  do {
-    if (i >= length)
-      break;
-
-    stm_order_list[i] = (s3m_order_array[i] > STM_MAXPAT) ? STM_ORDER_END : s3m_order_array[i];
-  } while (++i < STM_ORDER_LIST_SIZE);
-}
-
-void convert_song_orders_s3mtostx(usize length, u8* order_list) {
-  register usize i = 0;
-
-  if (!order_list)
-    return;
-
-  do {
-    /* I have no idea why STX specifically has its order list like this... */
-    order_list[i * STX_ORDERMULTIPLIER] = s3m_order_array[i];
-  } while (++i < length);
-}

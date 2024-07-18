@@ -7,12 +7,14 @@
 
 #include "file.h"
 #include "log.h"
-#include "main.h"
-#include "pattern.h"
+#include "struct.h"
+
 #include "effects.h"
+#include "pattern.h"
 
 #include "fmt/s3m.h"
 #include "fmt/stm.h"
+#include "fmt/stx.h"
 
 s3mevent_t unpacked_pattern[64][32] = {{{0xFF, 0x00, 0xFF, 0x00, 0x00}}};
 
@@ -147,18 +149,17 @@ void flush_s3m_pattern_array(void) {
   } while (++row < MAXROWS);
 }
 
-void convert_s3m_pattern_to_stm(void) {
+void convert_s3m_pattern_to_stm(stm_pattern_t* stm_pattern) {
   usize row = 0, channel = 0;
   u8 proper_octave = 0;
   Pattern_Context pattern;
 
-  blank_stm_pattern();
+  blank_stm_pattern(stm_pattern);
 
   do {
     for (channel = 0; channel < STM_MAXCHN; ++channel) {
       pattern.row = (u8)row, pattern.channel = (u8)channel;
-      pattern.note = unpacked_pattern[row][channel].note,
-      pattern.instrument = unpacked_pattern[row][channel].ins,
+      pattern.note = unpacked_pattern[row][channel].note, pattern.instrument = unpacked_pattern[row][channel].ins,
       pattern.volume = unpacked_pattern[row][channel].vol, pattern.effect = unpacked_pattern[row][channel].eff,
       pattern.parameter = unpacked_pattern[row][channel].prm;
 
@@ -172,20 +173,20 @@ void convert_s3m_pattern_to_stm(void) {
 
       handle_s3m_effect(&pattern);
 
-      stm_pattern[row][channel][0] = pattern.note,
-      stm_pattern[row][channel][1] = (u8)((pattern.instrument & 31) << 3) | (pattern.volume & 7),
-      stm_pattern[row][channel][2] = (u8)((pattern.volume & 0x78) << 1) | (pattern.effect & 15),
-      stm_pattern[row][channel][3] = pattern.parameter;
+      stm_pattern->data[row][channel][0] = pattern.note,
+      stm_pattern->data[row][channel][1] = (u8)((pattern.instrument & 31) << 3) | (pattern.volume & 7),
+      stm_pattern->data[row][channel][2] = (u8)((pattern.volume & 0x78) << 1) | (pattern.effect & 15),
+      stm_pattern->data[row][channel][3] = pattern.parameter;
     }
   } while (++row < MAXROWS);
 }
 
-void blank_stm_pattern(void) {
+void blank_stm_pattern(stm_pattern_t* stm_pattern) {
   usize row = 0, channel = 0;
   do {
     for (channel = 0; channel < STM_MAXCHN; ++channel) {
-      stm_pattern[row][channel][0] = 0xFF, stm_pattern[row][channel][1] = 0x01, stm_pattern[row][channel][2] = 0x80,
-      stm_pattern[row][channel][3] = 0x00;
+      stm_pattern->data[row][channel][0] = 0xFF, stm_pattern->data[row][channel][1] = 0x01,
+      stm_pattern->data[row][channel][2] = 0x80, stm_pattern->data[row][channel][3] = 0x00;
     }
   } while (++row < MAXROWS);
 }

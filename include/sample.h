@@ -9,6 +9,6 @@ typedef struct {
 
 int dump_sample_data(FILE* file, usize position, internal_sample_t* context);
 void pcm_swap_sign(internal_sample_t* context);
-usize calculate_sample_padding(size_t sample_size);
+usize calculate_sample_padding(internal_sample_t context);
 
 #endif

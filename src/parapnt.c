@@ -6,11 +6,11 @@
 
 #include "file.h"
 #include "log.h"
-#include "main.h"
+#include "struct.h"
+
 #include "parapnt.h"
 #include "sample.h"
 #include "song_header.h"
-
 
 #include "fmt/s3m.h"
 #include "fmt/stm.h"
@@ -49,15 +49,15 @@ void grab_s3m_parapointers(FILE* file) {
   if (!file || feof(file) || ferror(file))
     return;
 
-  fseek(file, S3M_ORDERPOS + original_order_count, SEEK_SET);
+  fseek(file, S3M_ORDERPOS + main_context.stats.original_order_count, SEEK_SET);
 
-  for (i = 0; i < sample_count; i++) {
+  for (i = 0; i < main_context.stats.sample_count; i++) {
     s3m_inst_pointers[i] = fgetw(file);
     print_diagnostic("Sample %zu:", i);
     s3m_inst_pointers[i] = (u16)convert_from_parapointer(s3m_inst_pointers[i]);
   }
 
-  for (i = 0; i < pattern_count; i++) {
+  for (i = 0; i < main_context.stats.pattern_count; i++) {
     s3m_pat_pointers[i] = fgetw(file);
     print_diagnostic("Pattern %zu:", i);
     s3m_pat_pointers[i] = (u16)convert_from_parapointer(s3m_pat_pointers[i]);

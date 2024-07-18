@@ -5,11 +5,10 @@
 #include "envcheck.h"
 #include "ext.h"
 #include "log.h"
+#include "struct.h"
 
 #include "effects.h"
-#include "main.h"
 #include "pattern.h"
-
 
 #include "fmt/s3m.h"
 #include "fmt/stm.h"
@@ -37,8 +36,8 @@ u8 search_for_last_nonzero_param2(usize startingrow, usize channel, usize effect
   const u8 effect_display = (u8)effect + EFFBASE;
   register u8 lownib = 0, hinib = 0, param = 0;
 
-  print_diagnostic("searching for last nonzero param for %c starting at row %02u and channel %02u", effect_display, i,
-                   channel);
+  print_diagnostic("searching for last nonzero param for %c starting at row %02u and channel %02u", effect_display,
+                   (u8)i, (u8)channel);
 
   i = startingrow;
   while (i--) {

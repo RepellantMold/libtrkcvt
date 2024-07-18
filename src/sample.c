@@ -4,11 +4,7 @@
 
 #include "envcheck.h"
 #include "ext.h"
-
-#include "main.h"
-
-#include "fmt/s3m.h"
-#include "fmt/stm.h"
+#include "struct.h"
 
 #include "sample.h"
 
@@ -38,4 +34,4 @@ void pcm_swap_sign(internal_sample_t* context) {
   } while (i++ < context->length);
 }
 
-usize calculate_sample_padding(usize sample_size) { return 16 - (sample_size & 15); }
+usize calculate_sample_padding(internal_sample_t context) { return 16 - (context.length & 15); }
