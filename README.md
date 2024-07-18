@@ -10,6 +10,7 @@ C90 library for converting between module formats
 - [Maintainers](#maintainers)
 - [Contributing](#contributing)
 - [License](#license)
+- [Acknowledgements](#acknowledgements)
 
 ## API
 
@@ -30,3 +31,8 @@ Small note: If editing the README, please conform to the
 ## License
 
 [ISC](LICENSE) © 2024 RepellantMold
+
+## Acknowledgements
+
+- Future Crew: [Scream Tracker 2](https://github.com/libxmp/libxmp/blob/master/docs/formats/stm.txt) and [3](http://www.textfiles.com/programming/FORMATS/s3m-form.txt) specifications
+- [Claudio Matsuoka: unofficial Scream Tracker Music Interface Kit format specifications](https://github.com/libxmp/libxmp/blob/master/docs/formats/stx-format.txt)
