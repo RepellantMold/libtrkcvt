@@ -14,9 +14,17 @@ typedef unsigned long int u32;
 typedef signed long int i32;
 typedef size_t usize;
 
-typedef size_t bool;
+#ifdef __STDC_VERSION__
+#if __STDC_VERSION__ >= 199901L
+#include <stdbool.h>
+#else
+typedef _Bool bool;
 #define true 1
 #define false 0
+#endif
+#else
+typedef enum { false, true } bool;
+#endif
 
 #define GET_BIT(byte, bit) ((byte) & (1 << (bit)))
 
